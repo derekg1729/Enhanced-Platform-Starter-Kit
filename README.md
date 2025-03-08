@@ -30,7 +30,7 @@ https://github.com/vercel/platforms/assets/28986134/bd370257-0c27-4cf5-8a56-2858
 
 1. **Multi-tenancy:** Programmatically assign unlimited custom domains, subdomains, and SSL certificates to your users using the [Vercel Domains API](https://vercel.com/docs/rest-api/endpoints#domains)
 2. **Performance**: Fast & beautiful blog posts cached via [Vercel's Edge Network](https://vercel.com/docs/concepts/edge-network/overview), with the ability to invalidate the cache on-demand (when users make changes) using [Incremental Static Regeneration](https://vercel.com/docs/concepts/next.js/incremental-static-regeneration) + Next.js' `revalidateTag` API
-3. **AI Editor**: AI-powered Markdown editor for a Notion-style writing experience powered by [Novel](https://novel.sh/)
+3. **Simple Editor**: Clean and efficient Markdown editor for writing blog posts
 4. **Image Uploads**: Drag & drop / copy & paste image uploads, backed by [Vercel Blob](https://vercel.com/storage/blob)
 5. **Custom styles**: Custom fonts, 404 pages, favicons, sitemaps for each site via the [Next.js file-based Metadata API](https://nextjs.org/docs/app/api-reference/file-conventions/metadata)
 6. **Dynamic OG Cards**: Each blog post comes with a dynamic OG image powered by [@vercel/og](https://vercel.com/docs/concepts/functions/edge-functions/og-image-generation)
@@ -81,7 +81,7 @@ Vercel customers like [Hashnode](https://vercel.com/customers/hashnode), [Super]
 
 These are content-heavy platforms (blogs) with simple, standardized page layouts and route structure.
 
-> “With Vercel, we spend less time managing our infrastructure and more time delivering value to our users.” — Sandeep Panda, Co-founder, Hashnode
+> "With Vercel, we spend less time managing our infrastructure and more time delivering value to our users." — Sandeep Panda, Co-founder, Hashnode
 
 1. [Hashnode](https://hashnode.com)
 2. [Mintlify](https://mintlify.com/)
@@ -114,7 +114,6 @@ This working demo site was built using the Platforms Starter Kit and:
 - [Next.js](https://nextjs.org/) as the React framework
 - [Tailwind](https://tailwindcss.com/) for CSS styling
 - [Drizzle](https://orm.drizzle.team/) as the ORM for database access
-- [Novel](https://novel.sh/) for the WYSIWYG editor
 - [Vercel Postgres](https://vercel.com/storage/postgres) for the database
 - [Vercel Blob](https://vercel.com/storage/blob) for image uploads
 - [NextAuth.js](https://next-auth.js.org/) for authentication

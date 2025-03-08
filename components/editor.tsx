@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { updatePost, updatePostMetadata } from "@/lib/actions";
-import { Editor as NovelEditor } from "novel";
 import TextareaAutosize from "react-textarea-autosize";
 import { cn } from "@/lib/utils";
 import LoadingDots from "./icons/loading-dots";
@@ -16,7 +15,6 @@ export default function Editor({ post }: { post: PostWithSite }) {
   let [isPendingSaving, startTransitionSaving] = useTransition();
   let [isPendingPublishing, startTransitionPublishing] = useTransition();
   const [data, setData] = useState<PostWithSite>(post);
-  const [hydrated, setHydrated] = useState(false);
 
   const url = process.env.NEXT_PUBLIC_VERCEL_ENV
     ? `https://${data.site?.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${data.slug}`
@@ -103,27 +101,17 @@ export default function Editor({ post }: { post: PostWithSite }) {
           className="dark:placeholder-text-600 w-full resize-none border-none px-0 placeholder:text-stone-400 focus:outline-none focus:ring-0 dark:bg-black dark:text-white"
         />
       </div>
-      <NovelEditor
-        className="relative block"
-        defaultValue={post?.content || undefined}
-        onUpdate={(editor) => {
-          setData((prev) => ({
-            ...prev,
-            content: editor?.storage.markdown.getMarkdown(),
-          }));
-        }}
-        onDebouncedUpdate={() => {
-          if (
-            data.title === post.title &&
-            data.description === post.description &&
-            data.content === post.content
-          ) {
-            return;
-          }
+      <TextareaAutosize
+        placeholder="Write your post content here..."
+        defaultValue={post?.content || ""}
+        onChange={(e) => {
+          setData((prev) => ({ ...prev, content: e.target.value }));
           startTransitionSaving(async () => {
-            await updatePost(data);
+            await updatePost({ ...data, content: e.target.value });
           });
         }}
+        className="dark:placeholder-text-600 w-full resize-none border-none px-0 font-mono placeholder:text-stone-400 focus:outline-none focus:ring-0 dark:bg-black dark:text-white"
+        minRows={20}
       />
     </div>
   );
