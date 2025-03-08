@@ -16,6 +16,7 @@ A test-driven fork of the [Vercel Platforms Starter Kit](https://vercel.com/guid
    - GitHub OAuth email requirement ([#409](https://github.com/vercel/platforms/issues/409))
    - Added test infrastructure
    - Enhanced public homepage
+   - Improved preview deployment URLs
 
 ## Getting Started
 

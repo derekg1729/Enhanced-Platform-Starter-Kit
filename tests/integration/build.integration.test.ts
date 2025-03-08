@@ -5,82 +5,103 @@ import * as dotenv from 'dotenv'
 
 describe('Build Prerequisites', () => {
   describe('Environment Configuration', () => {
-    const requiredVars = [
-      // Authentication
-      'AUTH_BEARER_TOKEN',
-      'AUTH_GITHUB_ID',
-      'AUTH_GITHUB_SECRET',
-      
-      // Database Configuration
-      'DATABASE_URL',
-      'DATABASE_URL_UNPOOLED',
-      
-      // NextAuth Configuration
-      'NEXTAUTH_SECRET',
-      'NEXTAUTH_URL',
-      
-      // Domain Configuration
-      'NEXT_PUBLIC_ROOT_DOMAIN',
-      'NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX',
-      
-      // Database Connection Details
-      'PGDATABASE',
-      'PGHOST',
-      'PGHOST_UNPOOLED',
-      'PGPASSWORD',
-      'PGUSER',
-      
-      // Postgres Configuration
-      'POSTGRES_DATABASE',
-      'POSTGRES_HOST',
-      'POSTGRES_PASSWORD',
-      'POSTGRES_PRISMA_URL',
-      'POSTGRES_URL',
-      'POSTGRES_URL_NON_POOLING',
-      'POSTGRES_URL_NO_SSL',
-      'POSTGRES_USER',
-      
-      // Vercel Configuration
-      'PROJECT_ID_VERCEL',
-      'TEAM_ID_VERCEL'
-    ]
+    const requiredVars = {
+      core: [
+        // Authentication
+        'AUTH_BEARER_TOKEN',
+        'AUTH_GITHUB_ID',
+        'AUTH_GITHUB_SECRET',
+        
+        // Database Configuration
+        'DATABASE_URL',
+        'DATABASE_URL_UNPOOLED',
+        
+        // NextAuth Configuration
+        'NEXTAUTH_SECRET',
+        'NEXTAUTH_URL',
+        
+        // Domain Configuration
+        'NEXT_PUBLIC_ROOT_DOMAIN',
+        'NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX', // Required for all environments
+        
+        // Database Connection Details
+        'PGDATABASE',
+        'PGHOST',
+        'PGHOST_UNPOOLED',
+        'PGPASSWORD',
+        'PGUSER',
+        
+        // Postgres Configuration
+        'POSTGRES_DATABASE',
+        'POSTGRES_HOST',
+        'POSTGRES_PASSWORD',
+        'POSTGRES_PRISMA_URL',
+        'POSTGRES_URL',
+        'POSTGRES_URL_NON_POOLING',
+        'POSTGRES_URL_NO_SSL',
+        'POSTGRES_USER',
+        
+        // Vercel Configuration
+        'PROJECT_ID_VERCEL',
+        'TEAM_ID_VERCEL'
+      ],
+      preview: [
+        'NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX' // Explicitly required for preview
+      ]
+    }
 
-    const envFiles = [
-      '.env.local',
-      '.env.production',
-      '.env.production.local'
-    ]
+    const envFiles = {
+      local: '.env.local',
+      preview: '.env.preview',
+      production: '.env.production'
+    }
 
-    const exampleFiles = [
-      '.env.local.example',
-      '.env.production.example',
-      '.env.production.local.example'
-    ]
+    const exampleFiles = {
+      local: '.env.local.example',
+      preview: '.env.preview.example',
+      production: '.env.production.example'
+    }
 
     it('should have all required environment files', () => {
-      const missingFiles = envFiles.filter(file => !fs.existsSync(file))
+      const missingFiles = Object.values(envFiles).filter(file => !fs.existsSync(file))
       if (missingFiles.length > 0) {
         throw new Error(`Missing required environment files: ${missingFiles.join(', ')}`)
       }
     })
 
-    it.each(envFiles)('should have all required variables in %s', (envFile) => {
+    it.each(Object.entries(envFiles))('should have all required variables in %s', (envType, envFile) => {
       const envContent = fs.readFileSync(envFile, 'utf8')
       const parsedEnv = dotenv.parse(envContent)
       
-      const missingVars = requiredVars.filter(variable => {
+      // Check core variables
+      const missingCoreVars = requiredVars.core.filter(variable => {
         const value = parsedEnv[variable]
         return !value || value.trim() === '' || value === 'undefined'
       })
 
-      if (missingVars.length > 0) {
-        throw new Error(`Missing or empty required environment variables in ${envFile}: ${missingVars.join(', ')}`)
+      if (missingCoreVars.length > 0) {
+        throw new Error(`Missing or empty required environment variables in ${envFile}: ${missingCoreVars.join(', ')}`)
+      }
+
+      // Special check for preview deployment variables
+      if (envType === 'preview') {
+        const missingPreviewVars = requiredVars.preview.filter(variable => {
+          const value = parsedEnv[variable]
+          return !value || value.trim() === '' || value === 'undefined'
+        })
+
+        if (missingPreviewVars.length > 0) {
+          throw new Error(
+            `Missing or empty preview deployment variables in ${envFile}: ${missingPreviewVars.join(', ')}. ` +
+            `These are required for preview deployments to work correctly.`
+          )
+        }
       }
     })
 
     it('should have consistent domain configuration across env files', () => {
       const domainVars = ['NEXT_PUBLIC_ROOT_DOMAIN', 'NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX']
-      const domains = envFiles.reduce((acc, file) => {
+      const domains = Object.values(envFiles).reduce((acc, file) => {
         const content = fs.readFileSync(file, 'utf8')
         const parsed = dotenv.parse(content)
         acc[file] = domainVars.reduce((vars, key) => {
@@ -91,8 +112,8 @@ describe('Build Prerequisites', () => {
       }, {} as Record<string, Record<string, string>>)
 
       // Check that all files have the same domain values
-      const firstFile = envFiles[0]
-      envFiles.slice(1).forEach(file => {
+      const firstFile = Object.values(envFiles)[0]
+      Object.values(envFiles).slice(1).forEach(file => {
         domainVars.forEach(variable => {
           if (domains[file][variable] !== domains[firstFile][variable]) {
             throw new Error(
@@ -105,7 +126,7 @@ describe('Build Prerequisites', () => {
     })
 
     it('should have correct NEXTAUTH_URL format', () => {
-      envFiles.forEach(file => {
+      Object.entries(envFiles).forEach(([envType, file]) => {
         const content = fs.readFileSync(file, 'utf8')
         const parsed = dotenv.parse(content)
         const url = parsed.NEXTAUTH_URL
@@ -114,12 +135,12 @@ describe('Build Prerequisites', () => {
           throw new Error(`Missing NEXTAUTH_URL in ${file}`)
         }
 
-        // Production files should use https://app.domain
-        if (file.includes('production')) {
+        // Production and preview should use https://app.domain
+        if (envType === 'production' || envType === 'preview') {
           if (!url.startsWith('https://app.')) {
             throw new Error(
               `Invalid NEXTAUTH_URL in ${file}: ${url}\n` +
-              'Production NEXTAUTH_URL should start with https://app.'
+              'Production and preview NEXTAUTH_URL should start with https://app.'
             )
           }
         } else {
@@ -136,22 +157,34 @@ describe('Build Prerequisites', () => {
 
     it('should have environment documentation', () => {
       // Check that all example files exist
-      const missingExamples = exampleFiles.filter(file => !fs.existsSync(file))
+      const missingExamples = Object.values(exampleFiles).filter(file => !fs.existsSync(file))
       if (missingExamples.length > 0) {
         throw new Error(`Missing environment example files: ${missingExamples.join(', ')}`)
       }
 
       // Check that each example file contains all required variables
-      exampleFiles.forEach(file => {
+      Object.entries(exampleFiles).forEach(([envType, file]) => {
         const content = fs.readFileSync(file, 'utf8')
-        const missingVars = requiredVars.filter(variable => !content.includes(variable))
-        if (missingVars.length > 0) {
-          throw new Error(`Missing documentation for required variables in ${file}: ${missingVars.join(', ')}`)
+        
+        // Check core variables
+        const missingCoreVars = requiredVars.core.filter(variable => !content.includes(variable))
+        if (missingCoreVars.length > 0) {
+          throw new Error(`Missing documentation for required variables in ${file}: ${missingCoreVars.join(', ')}`)
         }
 
-        // Check that NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX has detailed documentation
-        if (!content.includes('This is used by the middleware to handle preview deployment URLs')) {
-          throw new Error(`${file} is missing detailed documentation for NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX`)
+        // Check preview variables
+        if (envType === 'preview') {
+          const missingPreviewVars = requiredVars.preview.filter(variable => {
+            return !content.includes(variable) || 
+                   !content.includes('This is used by the middleware to handle preview deployment URLs')
+          })
+          
+          if (missingPreviewVars.length > 0) {
+            throw new Error(
+              `${file} is missing detailed documentation for preview deployment variables: ${missingPreviewVars.join(', ')}. ` +
+              `Each preview variable must include explanation of its use in preview deployments.`
+            )
+          }
         }
       })
     })
