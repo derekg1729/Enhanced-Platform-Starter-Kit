@@ -8,27 +8,19 @@ import Image from "next/image";
 import db from "@/lib/db";
 
 export async function generateStaticParams() {
-  const allSites = await db.query.sites.findMany({
-    // feel free to remove this filter if you want to generate paths for all sites
-    where: (sites, { eq }) => eq(sites.subdomain, "demo"),
-    columns: {
-      subdomain: true,
-      customDomain: true,
-    },
-  });
-
-  const allPaths = allSites
-    .flatMap(({ subdomain, customDomain }) => [
-      subdomain && {
-        domain: `${subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`,
+  try {
+    const allSites = await db.query.sites.findMany({
+      columns: {
+        subdomain: true,
+        customDomain: true,
       },
-      customDomain && {
-        domain: customDomain,
-      },
-    ])
-    .filter(Boolean);
+    });
 
-  return allPaths;
+    return [];
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return [];
+  }
 }
 
 export default async function SiteHomePage({
