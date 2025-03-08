@@ -23,6 +23,15 @@ describe('Build Prerequisites', () => {
     expect(pkg.scripts.start).toBeDefined()
   })
 
+  it('should have package.json in sync with pnpm-lock.yaml', () => {
+    try {
+      execSync('pnpm install --frozen-lockfile', { stdio: 'pipe' })
+    } catch (error: any) {
+      const output = error.stdout?.toString() || error.stderr?.toString() || error.message
+      throw new Error(`Dependencies are out of sync: ${output}`)
+    }
+  })
+
   it('should pass TypeScript compilation', () => {
     try {
       execSync('pnpm tsc --noEmit', { stdio: 'pipe' })
