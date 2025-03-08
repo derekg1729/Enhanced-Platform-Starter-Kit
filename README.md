@@ -1,82 +1,53 @@
-# Test-Driven Platform Starter Kit
+# Platform Starter Kit
 
-A test-driven fork of the [Vercel Platforms Starter Kit](https://vercel.com/guides/nextjs-multi-tenant-application) with a few fixes, features and tests.
+A test-driven fork of the [Vercel Platforms Starter Kit](https://vercel.com/guides/nextjs-multi-tenant-application).
 
-## Overview
+## Changes from Original
 
-This project extends the Platforms Starter Kit with:
+1. **Added Test Coverage**
+   ```
+   tests/
+   ├── unit/              # Component and utility tests
+   ├── integration/       # API and database tests
+   └── __helpers__/      # Test utilities
+   ```
 
-1. **Comprehensive Test Coverage**
-   - Unit tests with Vitest
-   - End-to-end tests with Playwright
-   - Integration tests for core platform features
-
-2. **Enhanced Features**
-   - Clean and efficient Markdown editor
-   - Public homepage with modern design
-   - Pageview tracking capabilities
-   - Fixed GitHub authentication email handling
-
-3. **Original Platform Features**
-   - Multi-tenancy with custom domains
-   - Performance optimized with Vercel Edge Network
-   - Image uploads with Vercel Blob
-   - Dynamic OG cards and dark mode
+2. **Fixed Issues**
+   - GitHub OAuth email requirement ([#409](https://github.com/vercel/platforms/issues/409))
+   - Added test infrastructure
+   - Enhanced public homepage
 
 ## Getting Started
 
-1. Clone the repository:
+1. Clone and install:
    ```bash
    git clone https://github.com/derekg1729/agent-platform.git
    cd agent-platform
-   ```
-
-2. Install dependencies:
-   ```bash
    pnpm install
    ```
 
-3. Copy `.env.example` to `.env.local` and fill in the required environment variables.
-
-4. Run the development server:
+2. Configure environment:
    ```bash
-   pnpm run dev
+   cp .env.example .env.local
+   ```
+   Required variables:
+   - `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` for GitHub OAuth
+   - `POSTGRES_URL` for database
+   - `NEXT_PUBLIC_ROOT_DOMAIN` for domain config
+
+3. Development:
+   ```bash
+   pnpm dev     # Start development server
+   pnpm test    # Run tests
    ```
 
-5. Run tests:
-   ```bash
-   pnpm test        # Unit tests
-   pnpm test:e2e    # E2E tests
-   ```
-
-## Fixed Issues
-
-This fork addresses several issues from the original starter kit:
-
-1. **GitHub Authentication Email**: Fixed email requirement issue ([#409](https://github.com/vercel/platforms/issues/409))
-2. **Build Process**: Resolved Novel editor dependencies and build configuration
-3. **Test Infrastructure**: Added comprehensive test coverage following [ai-platform](https://github.com/derekg1729/ai-platform) patterns
+For full documentation of the original starter kit features, see the [Vercel Platform Starter Kit Guide](https://vercel.com/guides/nextjs-multi-tenant-application).
 
 ## Tech Stack
 
-- **Framework**: [Next.js 14](https://nextjs.org/) with App Router
-- **Database**: [Vercel Postgres](https://vercel.com/storage/postgres) with [Drizzle ORM](https://orm.drizzle.team/)
-- **Authentication**: [NextAuth.js](https://next-auth.js.org/) with GitHub
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Testing**: 
-  - [Vitest](https://vitest.dev/) for unit testing
-  - [Playwright](https://playwright.dev/) for E2E testing
-- **Deployment**: [Vercel](https://vercel.com)
-
-## Development
-
-- Run `pnpm dev` to start the development server
-- Run `pnpm build` to create a production build
-- Run `pnpm test` to execute the test suite
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+Same as original starter kit, plus:
+- Testing: Vitest + React Testing Library
+- Database: Drizzle ORM migrations
 
 ## License
 
