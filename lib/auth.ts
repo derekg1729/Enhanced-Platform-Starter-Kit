@@ -11,14 +11,47 @@ export const authOptions: NextAuthOptions = {
     GitHubProvider({
       clientId: process.env.AUTH_GITHUB_ID as string,
       clientSecret: process.env.AUTH_GITHUB_SECRET as string,
-      profile(profile) {
-        return {
-          id: profile.id.toString(),
-          name: profile.name || profile.login,
-          gh_username: profile.login,
-          email: profile.email,
-          image: profile.avatar_url,
-        };
+      authorization: {
+        params: {
+          scope: 'read:user user:email'
+        }
+      },
+      profile(profile, tokens) {
+        console.log('GitHub profile:', JSON.stringify(profile, null, 2));
+        return (async () => {
+          let primaryEmail = null;
+          try {
+            // Fetch user's emails from GitHub API
+            const emailRes = await fetch('https://api.github.com/user/emails', {
+              headers: {
+                'Authorization': `Bearer ${tokens.access_token}`,
+                'Accept': 'application/vnd.github.v3+json',
+              },
+            });
+            if (emailRes.ok) {
+              const emails = await emailRes.json();
+              console.log('GitHub emails:', JSON.stringify(emails, null, 2));
+              primaryEmail = emails.find((email: any) => email.primary)?.email || emails[0]?.email;
+            } else {
+              console.log('Failed to fetch GitHub emails:', await emailRes.text());
+            }
+          } catch (error) {
+            console.error('Error fetching GitHub emails:', error);
+          }
+
+          // If we couldn't get the email, generate a placeholder one
+          if (!primaryEmail) {
+            primaryEmail = `${profile.id}@users.noreply.github.com`;
+          }
+          
+          return {
+            id: profile.id.toString(),
+            name: profile.name || profile.login,
+            gh_username: profile.login,
+            email: primaryEmail,
+            image: profile.avatar_url,
+          };
+        })();
       },
     }),
   ],
@@ -28,9 +61,13 @@ export const authOptions: NextAuthOptions = {
     error: "/login", // Error code passed in query string as ?error=
   },
   adapter: DrizzleAdapter(db, {
+    // @ts-ignore - Type compatibility issues with DrizzleAdapter
     usersTable: users,
+    // @ts-ignore - Type compatibility issues with DrizzleAdapter
     accountsTable: accounts,
+    // @ts-ignore - Type compatibility issues with DrizzleAdapter
     sessionsTable: sessions,
+    // @ts-ignore - Type compatibility issues with DrizzleAdapter
     verificationTokensTable: verificationTokens,
   }) as Adapter,
   session: { strategy: "jwt" },
