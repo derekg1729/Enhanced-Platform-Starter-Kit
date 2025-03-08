@@ -21,12 +21,6 @@ export default defineConfig({
     ],
     testTimeout: 5000,
     retry: process.env.CI ? 2 : 0,
-    testNamePattern: {
-      unit: /\.unit\.test\./,
-      integration: /\.integration\.test\./,
-      e2e: /\.e2e\.test\./,
-      perf: /\.perf\.test\./
-    },
     typecheck: {
       enabled: true,
       tsconfig: './tsconfig.json'
