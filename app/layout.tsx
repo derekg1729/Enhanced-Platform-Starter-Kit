@@ -5,6 +5,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Providers } from "./providers";
 import { Metadata } from "next";
 import { cn } from "@/lib/utils";
+import PageViewTracker from "@/components/analytics/page-view-tracker";
 
 const title =
   "Platforms Starter Kit – The all-in-one starter kit for building multi-tenant applications.";
@@ -44,7 +45,10 @@ export default function RootLayout({
           <Analytics />
           {/* Add Google Analytics - only loads if NEXT_PUBLIC_GA_ID is set */}
           {process.env.NEXT_PUBLIC_GA_ID && (
-            <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+            <>
+              <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+              <PageViewTracker />
+            </>
           )}
         </Providers>
       </body>
