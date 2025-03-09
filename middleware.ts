@@ -15,59 +15,54 @@ export const config = {
 };
 
 export default async function middleware(req: NextRequest) {
-  const url = req.nextUrl;
+  const url = req.nextUrl.clone();
+  const { pathname } = url;
+  const hostname = req.headers.get("host")!;
 
-  // Get hostname of request (e.g. demo.vercel.pub, demo.localhost:3000)
-  let hostname = req.headers
-    .get("host")!
-    .replace(".localhost:3000", `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`);
-
-  // special case for Vercel preview deployment URLs
-  if (
-    hostname.includes("---") &&
-    hostname.endsWith(`.${process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)
-  ) {
-    hostname = `${hostname.split("---")[0]}.${
-      process.env.NEXT_PUBLIC_ROOT_DOMAIN
-    }`;
-  }
-
-  const searchParams = req.nextUrl.searchParams.toString();
-  // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${
-    searchParams.length > 0 ? `?${searchParams}` : ""
-  }`;
-
-  // rewrites for app pages
-  if (hostname == `app.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
+  // 1. Handle authentication for app subdomains (all environments)
+  if (hostname.startsWith('app.') || hostname.startsWith('app-')) {
     const session = await getToken({ req });
-    if (!session && path !== "/login") {
+    if (!session && pathname !== "/login") {
       return NextResponse.redirect(new URL("/login", req.url));
-    } else if (session && path == "/login") {
+    } else if (session && pathname === "/login") {
       return NextResponse.redirect(new URL("/", req.url));
     }
-    return NextResponse.rewrite(
-      new URL(`/app${path === "/" ? "" : path}`, req.url),
-    );
+    
+    url.pathname = `/app${pathname === "/" ? "" : pathname}`;
+    return NextResponse.rewrite(url);
   }
 
-  // special case for `vercel.pub` domain
+  // 2. Handle preview deployments and localhost
+  const isPreviewDeployment = process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX && 
+    hostname.endsWith(`.${process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`);
+  const isVercelPreviewUrl = hostname.includes('-dereks-projects-32c37a6a.vercel.app');
+  const isLocalhost = hostname === "localhost:3000" || hostname.includes('.localhost:3000');
+  
+  if (isPreviewDeployment || isVercelPreviewUrl || isLocalhost) {
+    // Handle local subdomains
+    if (hostname.includes('.localhost:3000')) {
+      const subdomain = hostname.replace('.localhost:3000', '');
+      url.pathname = `/${subdomain}${pathname === '/' ? '/' : pathname}`;
+      return NextResponse.rewrite(url);
+    }
+    
+    // For preview and localhost root, serve home
+    url.pathname = pathname === "/" ? "/home" : pathname;
+    return NextResponse.rewrite(url);
+  }
+
+  // 3. Special redirects (could be moved to configuration)
   if (hostname === "vercel.pub") {
-    return NextResponse.redirect(
-      "https://vercel.com/blog/platforms-starter-kit",
-    );
+    return NextResponse.redirect("https://vercel.com/blog/platforms-starter-kit");
   }
 
-  // rewrite root application to `/home` folder
-  if (
-    hostname === "localhost:3000" ||
-    hostname === process.env.NEXT_PUBLIC_ROOT_DOMAIN
-  ) {
-    return NextResponse.rewrite(
-      new URL(`/home${path === "/" ? "" : path}`, req.url),
-    );
+  // 4. Root domain handling
+  if (hostname === process.env.NEXT_PUBLIC_ROOT_DOMAIN) {
+    url.pathname = pathname === "/" ? "/home" : pathname;
+    return NextResponse.rewrite(url);
   }
 
-  // rewrite everything else to `/[domain]/[slug] dynamic route
-  return NextResponse.rewrite(new URL(`/${hostname}${path}`, req.url));
+  // 5. Default case: multi-tenant site lookup
+  url.pathname = `/${hostname}${pathname}`;
+  return NextResponse.rewrite(url);
 }
