@@ -95,7 +95,30 @@
   "dependencies": {
     "node": "18.x",
     "packageManager": "pnpm",
-    "nextjs": "14.x"
+    "nextjs": "14.x",
+    "commonCliTools": {
+      "git": {
+        "description": "Version control system",
+        "warning": "NEVER commit via command line! Always use the GitHub UI or a Git client. Never commit sensitive information or environment files (.env*)!"
+      },
+      "vercel": {
+        "description": "Deployment platform CLI",
+        "projectCommands": [
+          "vercel env pull - Pull environment variables to local .env files",
+          "vercel deploy - Deploy the project to a preview environment"
+        ]
+      },
+      "pnpm": {
+        "description": "Fast, disk space efficient package manager"
+      },
+      "drizzle": {
+        "description": "Database ORM and migration tool",
+        "projectCommands": [
+          "pnpm drizzle-kit generate - Generate migrations from schema changes",
+          "pnpm drizzle-kit push - Apply migrations to database"
+        ]
+      }
+    }
   },
   "security": {
     "envFiles": {
