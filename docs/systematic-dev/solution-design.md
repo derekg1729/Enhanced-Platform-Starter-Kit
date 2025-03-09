@@ -53,6 +53,72 @@ The Agent Platform is built on a multi-tenant architecture with a Next.js fronte
 - **Kubernetes**: Container orchestration for agent runtime
 - **GitHub Actions**: CI/CD pipeline
 
+## Authentication System Testing
+
+### Overview
+The authentication system is a critical component of our platform, handling user authentication, session management, and authorization. A comprehensive testing strategy has been implemented to ensure the reliability and security of this system.
+
+### Components Tested
+1. **GitHub OAuth Profile Transformation**: Tests for the transformation of GitHub profiles into our application's user format.
+2. **Session Management**: Tests for the `getSession` function that retrieves and validates user sessions.
+3. **Authorization**: Tests for the `withSiteAuth` and `withPostAuth` middleware functions that protect routes.
+
+### Testing Approach
+#### Unit Testing
+- **GitHub OAuth Profile**: Unit tests for the transformation of GitHub profiles, including handling of various email scenarios and error cases.
+- **Auth Module**: Unit tests for the `getSession`, `withSiteAuth`, and `withPostAuth` functions, mocking NextAuth and database dependencies.
+
+#### Integration Testing
+- **NextAuth Configuration**: Integration tests for the NextAuth configuration, including session handling and cookie settings.
+- **Authorization Flows**: Tests for the complete authorization flow, from session retrieval to route protection.
+
+### Mocking Strategy
+To isolate components for testing, we've implemented a comprehensive mocking strategy:
+- **NextAuth**: Mocked to simulate authentication without requiring actual OAuth providers.
+- **Database Queries**: Mocked to test database interactions without requiring a real database.
+
+### Test Coverage
+Our tests cover the following scenarios:
+- **GitHub OAuth Profile Transformation**:
+  - Successful transformation with primary email
+  - Fallback to first email when no primary is marked
+  - Using login as name when name is not provided
+  - Generating fallback email when no emails are available
+  - Handling errors during email retrieval
+
+- **Session Management**:
+  - Retrieving valid sessions
+  - Handling missing or invalid sessions
+  - Proper cookie settings for different environments
+
+- **Authorization**:
+  - Protecting routes based on user authentication
+  - Validating site ownership for site-specific routes
+  - Validating post ownership for post-specific routes
+  - Handling unauthorized access attempts
+
+### Implementation Results
+- **Total Tests**: 27 tests implemented across unit and integration tests
+- **Test Status**: All tests passing
+- **Coverage**: High coverage of critical authentication paths
+
+### Challenges and Solutions
+- **Mocking NextAuth**: Implemented proper mocking order to ensure NextAuth's `getServerSession` function is correctly mocked.
+- **Environment-Dependent Configurations**: Created tests that account for different behaviors in development, preview, and production environments.
+- **API Call Mocking**: Used Vitest's mocking capabilities to simulate API calls to GitHub and other services.
+
+### Future Improvements
+- **End-to-End Testing**: Add end-to-end tests for complete user flows, including login and protected route access.
+- **Performance Testing**: Implement tests for authentication performance under load.
+- **Security Testing**: Add specific tests for security vulnerabilities in the authentication system.
+
+### Module Registry
+
+| Module | File Path | Description |
+|--------|-----------|-------------|
+| Authentication | `lib/auth.ts` | Core authentication module with NextAuth.js configuration, session management, and authorization functions |
+| GitHub OAuth Profile | `lib/auth.ts` (profile function) | Transforms GitHub profile data into application user format |
+
 ## Module Registry
 
 ### Core Modules
@@ -160,6 +226,26 @@ The Agent Platform is built on a multi-tenant architecture with a Next.js fronte
 - **Status**: Planned
 - **Related Tasks**: [TASK-015]
 - **Last Updated**: 2023-07-01
+
+### Authentication Module
+
+- **File**: `lib/auth.ts`
+- **Purpose**: Handles authentication and authorization
+- **Exports**:
+  - `authOptions`: Configuration for NextAuth.js
+  - `getSession`: Function to retrieve the current user session
+  - `withSiteAuth`: Higher-order function for protecting site-specific resources
+  - `withPostAuth`: Higher-order function for protecting post-specific resources
+
+### GitHub OAuth Profile Transformation
+
+- **File**: `lib/auth.ts` (part of the authentication module)
+- **Purpose**: Transforms GitHub profile data into our application's user format
+- **Functionality**:
+  - Selects the primary email from the user's GitHub emails
+  - Falls back to the first email if no primary email is marked
+  - Generates a fallback email if no emails are available
+  - Handles error cases gracefully
 
 ## Implementation Details
 
