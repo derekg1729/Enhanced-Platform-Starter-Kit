@@ -12,10 +12,12 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:build": "vitest run tests/build.test.ts",
-    "test:ci": "vitest run"
+    "test:ci": "vitest run",
+    "test:ga": "vitest run --pool=forks tests/integration/analytics/google-analytics.integration.test.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.1.0",
+    "@next/third-parties": "^15.2.1",
     "@paralleldrive/cuid2": "^2.2.2",
     "@tremor/react": "^3.11.1",
     "@upstash/ratelimit": "^0.4.4",

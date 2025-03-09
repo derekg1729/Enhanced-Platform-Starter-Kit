@@ -1,12 +1,13 @@
 import "@/styles/globals.css";
 import { cal, inter } from "@/styles/fonts";
 import { Analytics } from "@vercel/analytics/react";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Providers } from "./providers";
 import { Metadata } from "next";
 import { cn } from "@/lib/utils";
 
 const title =
-  "Platforms Starter Kit – The all-in-one starter kit for building multi-tenant applications.";
+  "Platforms Starter Kit – The all-in-one starter kit for building multi-tenant applications.";
 const description =
   "The Platforms Starter Kit is a full-stack Next.js app with multi-tenancy and custom domain support. Built with Next.js App Router, Vercel Postgres and the Vercel Domains API.";
 const image = "https://vercel.pub/thumbnail.png";
@@ -41,6 +42,10 @@ export default function RootLayout({
         <Providers>
           {children}
           <Analytics />
+          {/* Add Google Analytics - only loads if NEXT_PUBLIC_GA_ID is set */}
+          {process.env.NEXT_PUBLIC_GA_ID && (
+            <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+          )}
         </Providers>
       </body>
     </html>
