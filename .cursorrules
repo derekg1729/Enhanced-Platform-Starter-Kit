@@ -279,7 +279,17 @@
             "End-to-end tests for complete user flows",
             "Manual verification in Google Analytics Debug mode"
           ],
-          "command": "npm run test:ga"
+          "commands": {
+            "basic": "npm run test:ga",
+            "build": "npm run test:ga:build",
+            "deployment": "npm run test:ga:deployment"
+          },
+          "when": [
+            "After adding new analytics events",
+            "Before deploying to production",
+            "After updating the Google Analytics configuration",
+            "When changing the application layout or structure"
+          ]
         }
       }
     }

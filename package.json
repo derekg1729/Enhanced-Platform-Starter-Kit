@@ -13,7 +13,9 @@
     "test:coverage": "vitest run --coverage",
     "test:build": "vitest run tests/build.test.ts",
     "test:ci": "vitest run",
-    "test:ga": "vitest run --pool=forks tests/integration/analytics/google-analytics.integration.test.ts"
+    "test:ga": "vitest run --pool=forks tests/integration/analytics/google-analytics.integration.test.ts",
+    "test:ga:build": "RUN_BUILD_TESTS=true vitest run --pool=forks tests/integration/analytics/google-analytics-build.integration.test.ts",
+    "test:ga:deployment": "RUN_DEPLOYMENT_TESTS=true vitest run --pool=forks tests/integration/analytics/google-analytics-deployment.integration.test.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.1.0",
