@@ -158,6 +158,99 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Systematic Development Workflow Section */}
+      <div className="relative z-10 border-t border-white/20 px-4 py-16 text-center bg-black/30 backdrop-blur-md">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="font-cal text-3xl font-bold text-cyan-300 mb-2">
+            Systematic Development Workflow
+          </h2>
+          <p className="text-white/60 mb-8 max-w-2xl mx-auto">
+            A structured approach to AI-driven development with minimal human intervention
+          </p>
+          
+          {/* Workflow Visualization */}
+          <div className="mb-10 overflow-auto">
+            <pre className="text-xs md:text-sm bg-black/50 p-4 rounded-lg border border-cyan-500/30 text-cyan-100 overflow-auto mx-auto max-w-3xl text-left">
+              {`┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Workflow       │     │  Development    │     │  Bug Resolution │
+│  Decision       │────►│  Workflow       │     │  Workflow       │
+└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
+         │                       │                       │
+         │                       ▼                       │
+         │              ┌─────────────────┐              │
+         └─────────────►│  Documentation  │◄─────────────┘
+                        │  Workflow       │
+                        └────────┬────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │  Error Recovery │
+                        │  Workflow       │
+                        └─────────────────┘`}
+            </pre>
+          </div>
+          
+          {/* Feature Cards */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-6 backdrop-blur-sm transition-all hover:bg-cyan-900/30 hover:shadow-lg">
+              <h3 className="font-cal text-xl text-cyan-300 mb-2">Workflow Automation</h3>
+              <p className="text-stone-300">
+                Self-sustaining development process with clear steps and transitions
+              </p>
+            </div>
+            <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-6 backdrop-blur-sm transition-all hover:bg-cyan-900/30 hover:shadow-lg">
+              <h3 className="font-cal text-xl text-cyan-300 mb-2">Quality Gates</h3>
+              <p className="text-stone-300">
+                Built-in quality checks at each stage of development
+              </p>
+            </div>
+            <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-6 backdrop-blur-sm transition-all hover:bg-cyan-900/30 hover:shadow-lg">
+              <h3 className="font-cal text-xl text-cyan-300 mb-2">Error Recovery</h3>
+              <p className="text-stone-300">
+                Robust error handling and recovery mechanisms
+              </p>
+            </div>
+            <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-6 backdrop-blur-sm transition-all hover:bg-cyan-900/30 hover:shadow-lg">
+              <h3 className="font-cal text-xl text-cyan-300 mb-2">Documentation Integration</h3>
+              <p className="text-stone-300">
+                Seamless integration with project documentation
+              </p>
+            </div>
+          </div>
+          
+          {/* Documentation Links */}
+          <div className="mt-10">
+            <h3 className="font-cal text-2xl text-white mb-4">Learn More</h3>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <a
+                href="https://github.com/derekg1729/agent-platform/blob/main/docs/systematic-dev/README.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-cyan-500/30 bg-cyan-900/20 px-6 py-3 font-cal text-cyan-300 transition-all hover:bg-cyan-900/30 hover:shadow-lg"
+              >
+                Framework Overview
+              </a>
+              <a
+                href="https://github.com/derekg1729/agent-platform/blob/main/docs/systematic-dev/workflow.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-cyan-500/30 bg-cyan-900/20 px-6 py-3 font-cal text-cyan-300 transition-all hover:bg-cyan-900/30 hover:shadow-lg"
+              >
+                Workflow Documentation
+              </a>
+              <a
+                href="https://github.com/derekg1729/agent-platform/blob/main/docs/systematic-dev/project-description.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-cyan-500/30 bg-cyan-900/20 px-6 py-3 font-cal text-cyan-300 transition-all hover:bg-cyan-900/30 hover:shadow-lg"
+              >
+                Project Description
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Bugfixes Section */}
       <div className="relative z-10 border-t border-white/20 px-4 py-16 text-center bg-black/50 backdrop-blur-md">
         <div className="mx-auto max-w-5xl">
