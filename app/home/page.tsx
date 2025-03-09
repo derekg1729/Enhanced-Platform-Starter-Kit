@@ -60,7 +60,7 @@ export default function HomePage() {
             Original Starter Kit Features
           </h2>
           <p className="text-white/60 mb-8 max-w-2xl mx-auto">
-            The foundation from Vercel's Platform Starter Kit
+            The foundation from Vercel&apos;s Platform Starter Kit
           </p>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

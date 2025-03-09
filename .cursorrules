@@ -145,7 +145,8 @@
       "tests": true,
       "coverage": true,
       "lint": true,
-      "types": true
+      "types": true,
+      "build": true
     },
     "deployment": {
       "platform": "vercel",
@@ -161,10 +162,114 @@
       "autoDeploy": {
         "branch": "main",
         "enabled": true
+      },
+      "requiredChecksBeforeDeployment": [
+        {
+          "name": "linting",
+          "description": "Ensure code meets style and quality standards",
+          "command": "npm run lint",
+          "required": true
+        },
+        {
+          "name": "testing",
+          "description": "Verify all tests pass",
+          "command": "npm run test",
+          "required": true
+        },
+        {
+          "name": "buildCheck",
+          "description": "Ensure application builds successfully",
+          "command": "npm run build",
+          "required": true
+        },
+        {
+          "name": "typeCheck",
+          "description": "Verify TypeScript types are correct",
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "deploymentWorkflow": {
+        "development": {
+          "description": "Local development deployment",
+          "steps": [
+            "Run tests: npm run test",
+            "Build locally: npm run build",
+            "Test build locally: npm run start"
+          ]
+        },
+        "preview": {
+          "description": "Preview deployment for testing",
+          "steps": [
+            "Commit changes to feature branch",
+            "Push to GitHub to trigger preview build",
+            "Verify Vercel build succeeds",
+            "Verify functionality in preview environment"
+          ]
+        },
+        "production": {
+          "description": "Production deployment",
+          "steps": [
+            "Commit changes to feature branch",
+            "Push to GitHub and create pull request",
+            "Verify all CI checks pass on the PR",
+            "Merge PR to main branch",
+            "Vercel automatically deploys main branch to production",
+            "Verify functionality in production environment"
+          ],
+          "approvalRequired": true,
+          "rollbackPlan": "Use Vercel dashboard to rollback to previous deployment if issues are detected"
+        }
       }
     }
   },
   "bestPractices": {
+    "preCommitWorkflow": {
+      "description": "MANDATORY steps that MUST be followed before committing any changes",
+      "criticalWarning": "NEVER BYPASS THESE STEPS! Committing code that doesn't pass all checks can break the build for everyone.",
+      "enforcementMechanism": "Use 'npm run setup-hooks' to install Git hooks that enforce this workflow",
+      "steps": [
+        {
+          "name": "environmentCheck",
+          "command": "npm run check-env",
+          "description": "Verify environment variables are consistent across environments",
+          "required": true
+        },
+        {
+          "name": "linting",
+          "command": "npm run lint",
+          "description": "Run linting to catch syntax and style issues",
+          "required": true
+        },
+        {
+          "name": "typeCheck",
+          "command": "npm run typecheck",
+          "description": "Verify TypeScript types are correct",
+          "required": true
+        },
+        {
+          "name": "testing",
+          "command": "npm run test",
+          "description": "Run all tests to ensure functionality works as expected",
+          "required": true
+        },
+        {
+          "name": "buildCheck",
+          "command": "npm run build",
+          "description": "Verify the application builds successfully",
+          "required": true,
+          "criticalWarning": "NEVER commit code that doesn't build successfully"
+        }
+      ],
+      "automatedEnforcement": {
+        "preCommitHook": "npm run pre-commit",
+        "ciChecks": ["lint", "test", "build", "typecheck"]
+      },
+      "troubleshooting": {
+        "testFailures": "Fix the issues before committing. Do not modify tests to make them pass unless the test itself is incorrect.",
+        "buildFailures": "Fix the code issues before committing. Common problems include syntax errors, missing dependencies, or configuration issues."
+      }
+    },
     "testDrivenDevelopment": {
       "workflow": {
         "step1_planning": {
@@ -215,12 +320,14 @@
         "step6_deployment": {
           "description": "Validate locally and in a real environment before committing",
           "actions": [
-            "Build and run locally to validate functionality",
-            "Deploy to a preview environment",
-            "Verify functionality in the preview deployment",
-            "Only then commit and merge changes"
+            "FOLLOW THE COMPLETE PRE-COMMIT WORKFLOW - Run 'npm run pre-commit'",
+            "Fix ANY build errors before proceeding - NEVER commit code that doesn't build",
+            "ONLY AFTER all checks pass: Commit changes to feature branch",
+            "Push to GitHub to trigger preview deployment",
+            "Verify functionality in the preview deployment"
           ],
-          "rule": "Never commit code until tests pass, local builds run successfully, and preview deployments are validated"
+          "rule": "Never commit code until all validation checks pass",
+          "criticalWarning": "Bypassing these steps can lead to broken builds and failed deployments"
         }
       },
       "warnings": [

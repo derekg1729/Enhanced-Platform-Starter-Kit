@@ -15,7 +15,20 @@
     "test:ci": "vitest run",
     "test:ga": "vitest run --pool=forks tests/unit/analytics/google-analytics-events.unit.test.ts tests/unit/analytics/page-view-tracker.unit.test.tsx tests/integration/analytics/google-analytics.integration.test.ts",
     "test:ga:build": "RUN_BUILD_TESTS=true vitest run --pool=forks tests/integration/analytics/google-analytics-build.integration.test.ts",
-    "test:ga:deployment": "RUN_DEPLOYMENT_TESTS=true vitest run --pool=forks tests/integration/analytics/google-analytics-deployment.integration.test.ts"
+    "test:ga:deployment": "RUN_DEPLOYMENT_TESTS=true vitest run --pool=forks tests/integration/analytics/google-analytics-deployment.integration.test.ts",
+    "typecheck": "tsc --noEmit",
+    "pre-commit": "npm run check-env && npm run lint && npm run typecheck && npm run test && npm run build",
+    "setup-hooks": "npx husky install && npx husky add .husky/pre-commit \"npm run pre-commit\"",
+    "check-env": "node scripts/check-env-consistency.js"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,json,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.1.0",
@@ -71,7 +84,9 @@
     "drizzle-kit": "^0.22.5",
     "eslint": "8.53.0",
     "eslint-config-next": "^14.0.2",
+    "husky": "^9.0.11",
     "jsdom": "^26.0.0",
+    "lint-staged": "^15.2.2",
     "msw": "^2.7.3",
     "node-mocks-http": "^1.16.2",
     "postcss": "^8.4.31",
