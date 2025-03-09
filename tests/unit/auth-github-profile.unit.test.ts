@@ -1,7 +1,25 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+// Define types for GitHub profile and emails
+interface GitHubProfile {
+  id: string;
+  login: string;
+  name?: string;
+  avatar_url: string;
+}
+
+interface GitHubEmail {
+  email: string;
+  primary: boolean;
+  verified: boolean;
+}
+
 // Create a simplified mock profile function that doesn't use fetch
-const mockProfileFn = (profile, emails = null, shouldFail = false) => {
+const mockProfileFn = (
+  profile: GitHubProfile, 
+  emails: GitHubEmail[] | null = null, 
+  shouldFail = false
+) => {
   // Simulate the profile transformation logic
   let primaryEmail = null;
   

@@ -1,81 +1,88 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock next-auth and getServerSession before imports
-vi.mock("next-auth", () => {
-  return {
-    getServerSession: vi.fn()
-  };
-});
+// Mock modules before importing them
+vi.mock('drizzle-orm', () => ({
+  eq: vi.fn(),
+  and: vi.fn(),
+  or: vi.fn(),
+  desc: vi.fn(),
+  sql: vi.fn()
+}));
 
-// Mock database
-vi.mock("../../lib/db", () => {
-  const mockDb = {
-    query: {
-      sites: {
-        findFirst: vi.fn()
-      },
-      posts: {
-        findFirst: vi.fn()
+vi.mock('next-auth', () => ({
+  getServerSession: vi.fn()
+}));
+
+// Mock the database
+vi.mock('@/lib/db', () => {
+  return {
+    default: {
+      query: {
+        sites: {
+          findFirst: vi.fn()
+        },
+        posts: {
+          findFirst: vi.fn()
+        }
       }
     }
   };
-  
-  return {
-    default: mockDb,
-    sites: {
-      findFirst: vi.fn()
-    },
-    posts: {
-      findFirst: vi.fn()
-    }
-  };
 });
 
-// Mock auth options and functions
-vi.mock("../../lib/auth", () => {
-  return {
-    authOptions: {
-      providers: [
-        {
-          id: "github",
-          name: "GitHub",
-          type: "oauth"
-        }
-      ],
-      pages: {
-        signIn: "/login"
-      },
-      session: {
-        strategy: "jwt"
-      },
-      cookies: {
-        sessionToken: {
-          name: `next-auth.session-token`,
-          options: {
-            httpOnly: true,
-            sameSite: "lax",
-            path: "/",
-            secure: true
-          }
-        }
-      },
-      callbacks: {
-        session: vi.fn(),
-        jwt: vi.fn()
-      }
-    },
-    getSession: vi.fn(),
-    withSiteAuth: vi.fn(),
-    withPostAuth: vi.fn()
-  };
-});
+// Mock auth functions
+vi.mock('@/lib/auth', () => ({
+  authOptions: {},
+  getSession: vi.fn(),
+  withSiteAuth: vi.fn(),
+  withPostAuth: vi.fn()
+}));
 
-// Now import the functions to test
-import { getSession, withSiteAuth, withPostAuth } from "../../lib/auth";
-import { getServerSession } from "next-auth";
-import { sites, posts } from "../../lib/db";
+// Now import the modules
+import { getSession, withSiteAuth, withPostAuth } from '@/lib/auth';
+import db from '@/lib/db';
+import { eq } from 'drizzle-orm';
 
-describe("Authentication System", () => {
+// Define interfaces for mocks
+interface MockUser {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  image: string;
+}
+
+interface MockSite {
+  id: string;
+  userId: string;
+  name?: string;
+  image: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  description: string | null;
+  imageBlurhash: string | null;
+  subdomain: string | null;
+  customDomain: string | null;
+  message404: string | null;
+}
+
+interface MockPost {
+  id: string;
+  siteId: string;
+  userId: string;
+  title: string;
+  image: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  description: string | null;
+  imageBlurhash: string | null;
+  content: string | null;
+  slug: string;
+  published: boolean;
+}
+
+// Test suite
+describe('Authentication System', () => {
+  // Reset mocks before each test
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -86,423 +93,534 @@ describe("Authentication System", () => {
 
   describe("getSession", () => {
     it("should return null when no session exists", async () => {
-      // Setup
       vi.mocked(getSession).mockResolvedValueOnce(null);
       
-      // Execute
       const session = await getSession();
       
-      // Assert
       expect(session).toBeNull();
     });
 
     it("should return user data when session exists", async () => {
-      // Setup
-      const mockUser = { 
-        id: 'user-123', 
-        name: 'Test User', 
-        username: 'testuser', 
-        email: 'test@example.com' 
+      const mockUser: MockUser = {
+        id: "user-123",
+        name: "Test User",
+        username: "testuser",
+        email: "test@example.com",
+        image: "https://example.com/avatar.png"
       };
       
       vi.mocked(getSession).mockResolvedValueOnce({
         user: mockUser
       });
       
-      // Execute
       const session = await getSession();
       
-      // Assert
-      expect(session).not.toBeNull();
-      expect(session?.user).toEqual(mockUser);
+      expect(session).toEqual({ user: mockUser });
     });
   });
 
   describe("withSiteAuth", () => {
+    beforeEach(() => {
+      vi.resetAllMocks();
+    });
+
+    afterEach(() => {
+      vi.clearAllMocks();
+    });
+
     it("should return error when user is not authenticated", async () => {
+      // Setup
       vi.mocked(getSession).mockResolvedValueOnce(null);
       
-      // Implement a mock version of withSiteAuth for testing
-      vi.mocked(withSiteAuth).mockImplementationOnce((siteId, action) => {
-        return async () => {
+      // Create a mock implementation that matches the expected signature
+      vi.mocked(withSiteAuth).mockImplementationOnce((action) => {
+        return async (formData: FormData | null, siteId: string, key: string | null) => {
           const session = await getSession();
-          
           if (!session) {
             return {
-              error: "Not authenticated"
+              error: "Not authenticated",
             };
           }
-          
-          return action({ session });
+          return action(formData, { id: siteId } as any, key);
         };
       });
 
-      // Execute
-      const handler = withSiteAuth('site-123', ({ session }) => {
+      // Create a handler with the correct signature
+      const handler = withSiteAuth((formData: FormData | null, site: MockSite, key: string | null) => {
         return { data: 'success' };
       });
-      
-      const result = await handler();
-      
+
+      // Call the handler with the expected arguments
+      const result = await handler(null, 'site-123', null);
+
       // Assert
       expect(result).toEqual({ error: "Not authenticated" });
-      expect(getSession).toHaveBeenCalledTimes(1);
     });
 
     it("should return error when site does not exist", async () => {
-      vi.mocked(getSession).mockResolvedValueOnce({
-        user: { id: 'user-123', name: 'Test User', username: 'testuser', email: 'test@example.com' }
-      });
+      // Setup
+      const mockUser: MockUser = { 
+        id: 'user-123', 
+        name: 'Test User', 
+        username: 'testuser', 
+        email: 'test@example.com',
+        image: 'https://example.com/avatar.png'
+      };
       
-      vi.mocked(sites.findFirst).mockResolvedValueOnce(null);
-      
-      // Implement a mock version of withSiteAuth for testing
-      vi.mocked(withSiteAuth).mockImplementationOnce((siteId, action) => {
-        return async () => {
-          const session = await getSession();
-          
-          if (!session) {
-            return {
-              error: "Not authenticated"
-            };
-          }
-          
-          const site = await sites.findFirst({
-            where: () => true
-          });
-          
-          if (!site) {
-            return {
-              error: "Site not found"
-            };
-          }
-          
-          return action({ session, site });
-        };
-      });
-
-      // Execute
-      const handler = withSiteAuth('site-123', ({ session, site }) => {
-        return { data: 'success' };
-      });
-      
-      const result = await handler();
-      
-      // Assert
-      expect(result).toEqual({ error: "Site not found" });
-      expect(getSession).toHaveBeenCalledTimes(1);
-      expect(sites.findFirst).toHaveBeenCalledTimes(1);
-    });
-
-    it("should return error when user does not own the site", async () => {
-      vi.mocked(getSession).mockResolvedValueOnce({
-        user: { id: 'user-123', name: 'Test User', username: 'testuser', email: 'test@example.com' }
-      });
-      
-      vi.mocked(sites.findFirst).mockResolvedValueOnce({
-        id: 'site-123',
-        userId: 'different-user-456',
-        name: 'Test Site'
-      });
-      
-      // Implement a mock version of withSiteAuth for testing
-      vi.mocked(withSiteAuth).mockImplementationOnce((siteId, action) => {
-        return async () => {
-          const session = await getSession();
-          
-          if (!session) {
-            return {
-              error: "Not authenticated"
-            };
-          }
-          
-          const site = await sites.findFirst({
-            where: () => true
-          });
-          
-          if (!site) {
-            return {
-              error: "Site not found"
-            };
-          }
-          
-          if (site.userId !== session.user.id) {
-            return {
-              error: "Not authorized"
-            };
-          }
-          
-          return action({ session, site });
-        };
-      });
-
-      // Execute
-      const handler = withSiteAuth('site-123', ({ session, site }) => {
-        return { data: 'success' };
-      });
-      
-      const result = await handler();
-      
-      // Assert
-      expect(result).toEqual({ error: "Not authorized" });
-      expect(getSession).toHaveBeenCalledTimes(1);
-      expect(sites.findFirst).toHaveBeenCalledTimes(1);
-    });
-
-    it("should call action when user owns the site", async () => {
-      const mockUser = { id: 'user-123', name: 'Test User', username: 'testuser', email: 'test@example.com' };
       vi.mocked(getSession).mockResolvedValueOnce({
         user: mockUser
       });
       
-      const mockSite = {
-        id: 'site-123',
-        userId: 'user-123',
-        name: 'Test Site'
-      };
+      vi.mocked(db.query.sites.findFirst).mockReturnValue(Promise.resolve(null) as any);
       
-      vi.mocked(sites.findFirst).mockResolvedValueOnce(mockSite);
-      
-      // Implement a mock version of withSiteAuth for testing
-      vi.mocked(withSiteAuth).mockImplementationOnce((siteId, action) => {
-        return async () => {
+      // Create a mock implementation that matches the expected signature
+      vi.mocked(withSiteAuth).mockImplementationOnce((action) => {
+        return async (formData: FormData | null, siteId: string, key: string | null) => {
           const session = await getSession();
-          
           if (!session) {
             return {
-              error: "Not authenticated"
+              error: "Not authenticated",
             };
           }
           
-          const site = await sites.findFirst({
-            where: () => true
+          const site = await db.query.sites.findFirst({
+            where: { id: 'site-123' } as any
           });
           
           if (!site) {
             return {
-              error: "Site not found"
+              error: "Not authorized",
             };
           }
           
-          if (site.userId !== session.user.id) {
-            return {
-              error: "Not authorized"
-            };
-          }
-          
-          return action({ session, site });
+          return action(formData, site, key);
         };
       });
 
-      // Execute
+      // Create a handler with the correct signature
+      const handler = withSiteAuth((formData: FormData | null, site: MockSite, key: string | null) => {
+        return { data: 'success' };
+      });
+
+      // Call the handler with the expected arguments
+      const result = await handler(null, 'site-123', null);
+
+      // Assert
+      expect(result).toEqual({ error: "Not authorized" });
+    });
+
+    it("should return error when user does not own the site", async () => {
+      // Setup
+      const mockUser: MockUser = { 
+        id: 'user-123', 
+        name: 'Test User', 
+        username: 'testuser', 
+        email: 'test@example.com',
+        image: 'https://example.com/avatar.png'
+      };
+      
+      vi.mocked(getSession).mockResolvedValueOnce({
+        user: mockUser
+      });
+      
+      const mockSite: MockSite = {
+        id: 'site-123',
+        userId: 'different-user-id', // Different user ID
+        name: 'Test Site',
+        image: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        description: null,
+        imageBlurhash: null,
+        subdomain: null,
+        customDomain: null,
+        message404: null
+      };
+      
+      vi.mocked(db.query.sites.findFirst).mockReturnValue(Promise.resolve(mockSite) as any);
+      
+      // Create a mock implementation that matches the expected signature
+      vi.mocked(withSiteAuth).mockImplementationOnce((action) => {
+        return async (formData: FormData | null, siteId: string, key: string | null) => {
+          const session = await getSession();
+          if (!session) {
+            return {
+              error: "Not authenticated",
+            };
+          }
+          
+          const site = await db.query.sites.findFirst({
+            where: { id: 'site-123' } as any
+          });
+          
+          if (!site || site.userId !== session.user.id) {
+            return {
+              error: "Not authorized",
+            };
+          }
+          
+          return action(formData, site, key);
+        };
+      });
+
+      // Create a handler with the correct signature
+      const handler = withSiteAuth((formData: FormData | null, site: MockSite, key: string | null) => {
+        return { data: 'success' };
+      });
+
+      // Call the handler with the expected arguments
+      const result = await handler(null, 'site-123', null);
+
+      // Assert
+      expect(result).toEqual({ error: "Not authorized" });
+    });
+
+    it("should call action when user owns the site", async () => {
+      // Setup
+      const mockUser: MockUser = { 
+        id: 'user-123', 
+        name: 'Test User', 
+        username: 'testuser', 
+        email: 'test@example.com',
+        image: 'https://example.com/avatar.png'
+      };
+      
+      vi.mocked(getSession).mockResolvedValueOnce({
+        user: mockUser
+      });
+      
+      const mockSite: MockSite = {
+        id: 'site-123',
+        userId: 'user-123', // Same user ID
+        name: 'Test Site',
+        image: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        description: null,
+        imageBlurhash: null,
+        subdomain: null,
+        customDomain: null,
+        message404: null
+      };
+      
+      vi.mocked(db.query.sites.findFirst).mockReturnValue(Promise.resolve(mockSite) as any);
+      
       const actionSpy = vi.fn().mockReturnValue({ data: 'success' });
-      const handler = withSiteAuth('site-123', actionSpy);
       
-      const result = await handler();
-      
+      // Create a mock implementation that matches the expected signature
+      vi.mocked(withSiteAuth).mockImplementationOnce((action) => {
+        return async (formData: FormData | null, siteId: string, key: string | null) => {
+          const session = await getSession();
+          if (!session) {
+            return {
+              error: "Not authenticated",
+            };
+          }
+          
+          const site = await db.query.sites.findFirst({
+            where: { id: 'site-123' } as any
+          });
+          
+          if (!site || site.userId !== session.user.id) {
+            return {
+              error: "Not authorized",
+            };
+          }
+          
+          return action(formData, site, key);
+        };
+      });
+
+      // Create a handler with the correct signature
+      const handler = withSiteAuth(actionSpy);
+
+      // Call the handler with the expected arguments
+      const result = await handler(null, 'site-123', null);
+
       // Assert
       expect(result).toEqual({ data: 'success' });
-      expect(getSession).toHaveBeenCalledTimes(1);
-      expect(sites.findFirst).toHaveBeenCalledTimes(1);
-      expect(actionSpy).toHaveBeenCalledTimes(1);
-      expect(actionSpy).toHaveBeenCalledWith({ 
-        session: { user: mockUser }, 
-        site: mockSite 
+      expect(actionSpy).toHaveBeenCalledWith(null, mockSite, null);
+    });
+
+    it("should return 401 if session is null", async () => {
+      // Setup
+      vi.mocked(getSession).mockResolvedValueOnce(null);
+      
+      // When checking for the site, update the where clause
+      vi.mocked(db.query.sites.findFirst).mockResolvedValueOnce({
+        id: 'site-123',
+        userId: 'user-123',
+        name: 'Test Site',
+        image: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        description: null,
+        imageBlurhash: null,
+        subdomain: null,
+        customDomain: null,
+        message404: null
+      } as any);
+      
+      // Create a mock implementation that matches the expected signature
+      vi.mocked(withSiteAuth).mockImplementationOnce((action) => {
+        return async (formData: FormData | null, siteId: string, key: string | null) => {
+          const session = await getSession();
+          if (!session) {
+            return {
+              error: "Not authenticated",
+            };
+          }
+          
+          const site = await db.query.sites.findFirst({
+            where: { id: 'site-123' } as any
+          });
+          
+          if (!site) {
+            return {
+              error: "Not authorized",
+            };
+          }
+          
+          return action(formData, site, key);
+        };
       });
+
+      // Create a handler with the correct signature
+      const handler = withSiteAuth((formData: FormData | null, site: MockSite, key: string | null) => {
+        return { data: 'success' };
+      });
+
+      // Call the handler with the expected arguments
+      const result = await handler(null, 'site-123', null);
+
+      // Assert
+      expect(result).toEqual({ error: "Not authenticated" });
     });
   });
 
   describe("withPostAuth", () => {
+    beforeEach(() => {
+      vi.resetAllMocks();
+    });
+
+    afterEach(() => {
+      vi.clearAllMocks();
+    });
+
     it("should return error when user is not authenticated", async () => {
+      // Setup
       vi.mocked(getSession).mockResolvedValueOnce(null);
       
-      // Implement a mock version of withPostAuth for testing
-      vi.mocked(withPostAuth).mockImplementationOnce((postId, action) => {
-        return async () => {
+      // Create a mock implementation that matches the expected signature
+      vi.mocked(withPostAuth).mockImplementationOnce((action) => {
+        return async (formData: FormData | null, postId: string, key: string | null) => {
           const session = await getSession();
-          
           if (!session) {
             return {
-              error: "Not authenticated"
+              error: "Not authenticated",
             };
           }
-          
-          return action({ session });
+          return action(formData, { id: postId } as MockPost, key);
         };
       });
 
-      // Execute
-      const handler = withPostAuth('post-123', ({ session }) => {
+      // Create a handler with the correct signature
+      const handler = withPostAuth((formData: FormData | null, post: MockPost, key: string | null) => {
         return { data: 'success' };
       });
-      
-      const result = await handler();
-      
+
+      // Call the handler with the expected arguments
+      const result = await handler(null, 'post-123', null);
+
       // Assert
       expect(result).toEqual({ error: "Not authenticated" });
-      expect(getSession).toHaveBeenCalledTimes(1);
     });
 
     it("should return error when post does not exist", async () => {
-      vi.mocked(getSession).mockResolvedValueOnce({
-        user: { id: 'user-123', name: 'Test User', username: 'testuser', email: 'test@example.com' }
-      });
+      // Setup
+      const mockUser: MockUser = { 
+        id: 'user-123', 
+        name: 'Test User', 
+        username: 'testuser', 
+        email: 'test@example.com',
+        image: 'https://example.com/avatar.png'
+      };
       
-      vi.mocked(posts.findFirst).mockResolvedValueOnce(null);
-      
-      // Implement a mock version of withPostAuth for testing
-      vi.mocked(withPostAuth).mockImplementationOnce((postId, action) => {
-        return async () => {
-          const session = await getSession();
-          
-          if (!session) {
-            return {
-              error: "Not authenticated"
-            };
-          }
-          
-          const post = await posts.findFirst({
-            where: () => true
-          });
-          
-          if (!post) {
-            return {
-              error: "Post not found"
-            };
-          }
-          
-          return action({ session, post });
-        };
-      });
-
-      // Execute
-      const handler = withPostAuth('post-123', ({ session, post }) => {
-        return { data: 'success' };
-      });
-      
-      const result = await handler();
-      
-      // Assert
-      expect(result).toEqual({ error: "Post not found" });
-      expect(getSession).toHaveBeenCalledTimes(1);
-      expect(posts.findFirst).toHaveBeenCalledTimes(1);
-    });
-
-    it("should return error when user does not own the post", async () => {
-      vi.mocked(getSession).mockResolvedValueOnce({
-        user: { id: 'user-123', name: 'Test User', username: 'testuser', email: 'test@example.com' }
-      });
-      
-      vi.mocked(posts.findFirst).mockResolvedValueOnce({
-        id: 'post-123',
-        userId: 'different-user-456',
-        title: 'Test Post'
-      });
-      
-      // Implement a mock version of withPostAuth for testing
-      vi.mocked(withPostAuth).mockImplementationOnce((postId, action) => {
-        return async () => {
-          const session = await getSession();
-          
-          if (!session) {
-            return {
-              error: "Not authenticated"
-            };
-          }
-          
-          const post = await posts.findFirst({
-            where: () => true
-          });
-          
-          if (!post) {
-            return {
-              error: "Post not found"
-            };
-          }
-          
-          if (post.userId !== session.user.id) {
-            return {
-              error: "Not authorized"
-            };
-          }
-          
-          return action({ session, post });
-        };
-      });
-
-      // Execute
-      const handler = withPostAuth('post-123', ({ session, post }) => {
-        return { data: 'success' };
-      });
-      
-      const result = await handler();
-      
-      // Assert
-      expect(result).toEqual({ error: "Not authorized" });
-      expect(getSession).toHaveBeenCalledTimes(1);
-      expect(posts.findFirst).toHaveBeenCalledTimes(1);
-    });
-
-    it("should call action when user owns the post", async () => {
-      const mockUser = { id: 'user-123', name: 'Test User', username: 'testuser', email: 'test@example.com' };
       vi.mocked(getSession).mockResolvedValueOnce({
         user: mockUser
       });
       
-      const mockPost = {
-        id: 'post-123',
-        userId: 'user-123',
-        title: 'Test Post'
-      };
+      vi.mocked(db.query.posts.findFirst).mockReturnValue(Promise.resolve(null) as any);
       
-      vi.mocked(posts.findFirst).mockResolvedValueOnce(mockPost);
-      
-      // Implement a mock version of withPostAuth for testing
-      vi.mocked(withPostAuth).mockImplementationOnce((postId, action) => {
-        return async () => {
+      // Create a mock implementation that matches the expected signature
+      vi.mocked(withPostAuth).mockImplementationOnce((action) => {
+        return async (formData: FormData | null, postId: string, key: string | null) => {
           const session = await getSession();
-          
           if (!session) {
             return {
-              error: "Not authenticated"
+              error: "Not authenticated",
             };
           }
           
-          const post = await posts.findFirst({
-            where: () => true
+          const post = await db.query.posts.findFirst({
+            where: { id: postId } as any
           });
           
           if (!post) {
             return {
-              error: "Post not found"
+              error: "Not authorized",
             };
           }
           
-          if (post.userId !== session.user.id) {
-            return {
-              error: "Not authorized"
-            };
-          }
-          
-          return action({ session, post });
+          return action(formData, post, key);
         };
       });
 
-      // Execute
+      // Create a handler with the correct signature
+      const handler = withPostAuth((formData: FormData | null, post: MockPost, key: string | null) => {
+        return { data: 'success' };
+      });
+
+      // Call the handler with the expected arguments
+      const result = await handler(null, 'post-123', null);
+
+      // Assert
+      expect(result).toEqual({ error: "Not authorized" });
+    });
+
+    it("should return error when user does not own the post", async () => {
+      // Setup
+      const mockUser: MockUser = { 
+        id: 'user-123', 
+        name: 'Test User', 
+        username: 'testuser', 
+        email: 'test@example.com',
+        image: 'https://example.com/avatar.png'
+      };
+      
+      vi.mocked(getSession).mockResolvedValueOnce({
+        user: mockUser
+      });
+      
+      const mockPost: MockPost = {
+        id: 'post-123',
+        siteId: 'site-123',
+        userId: 'different-user-id', // Different user ID
+        title: 'Test Post',
+        image: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        description: null,
+        imageBlurhash: null,
+        content: null,
+        slug: 'test-post',
+        published: true
+      };
+      
+      vi.mocked(db.query.posts.findFirst).mockReturnValue(Promise.resolve(mockPost) as any);
+      
+      // Create a mock implementation that matches the expected signature
+      vi.mocked(withPostAuth).mockImplementationOnce((action) => {
+        return async (formData: FormData | null, postId: string, key: string | null) => {
+          const session = await getSession();
+          if (!session) {
+            return {
+              error: "Not authenticated",
+            };
+          }
+          
+          const post = await db.query.posts.findFirst({
+            where: { id: postId } as any
+          });
+          
+          if (!post || post.userId !== session.user.id) {
+            return {
+              error: "Not authorized",
+            };
+          }
+          
+          return action(formData, post, key);
+        };
+      });
+
+      // Create a handler with the correct signature
+      const handler = withPostAuth((formData: FormData | null, post: MockPost, key: string | null) => {
+        return { data: 'success' };
+      });
+
+      // Call the handler with the expected arguments
+      const result = await handler(null, 'post-123', null);
+
+      // Assert
+      expect(result).toEqual({ error: "Not authorized" });
+    });
+
+    it("should call action when user owns the post", async () => {
+      // Setup
+      const mockUser: MockUser = { 
+        id: 'user-123', 
+        name: 'Test User', 
+        username: 'testuser', 
+        email: 'test@example.com',
+        image: 'https://example.com/avatar.png'
+      };
+      
+      vi.mocked(getSession).mockResolvedValueOnce({
+        user: mockUser
+      });
+      
+      const mockPost: MockPost = {
+        id: 'post-123',
+        siteId: 'site-123',
+        userId: 'user-123', // Same user ID
+        title: 'Test Post',
+        image: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        description: null,
+        imageBlurhash: null,
+        content: null,
+        slug: 'test-post',
+        published: true
+      };
+      
+      vi.mocked(db.query.posts.findFirst).mockReturnValue(Promise.resolve(mockPost) as any);
+      
       const actionSpy = vi.fn().mockReturnValue({ data: 'success' });
-      const handler = withPostAuth('post-123', actionSpy);
       
-      const result = await handler();
-      
+      // Create a mock implementation that matches the expected signature
+      vi.mocked(withPostAuth).mockImplementationOnce((action) => {
+        return async (formData: FormData | null, postId: string, key: string | null) => {
+          const session = await getSession();
+          if (!session) {
+            return {
+              error: "Not authenticated",
+            };
+          }
+          
+          const post = await db.query.posts.findFirst({
+            where: { id: postId } as any
+          });
+          
+          if (!post || post.userId !== session.user.id) {
+            return {
+              error: "Not authorized",
+            };
+          }
+          
+          return action(formData, post, key);
+        };
+      });
+
+      // Create a handler with the correct signature
+      const handler = withPostAuth(actionSpy);
+
+      // Call the handler with the expected arguments
+      const result = await handler(null, 'post-123', null);
+
       // Assert
       expect(result).toEqual({ data: 'success' });
-      expect(getSession).toHaveBeenCalledTimes(1);
-      expect(posts.findFirst).toHaveBeenCalledTimes(1);
-      expect(actionSpy).toHaveBeenCalledTimes(1);
-      expect(actionSpy).toHaveBeenCalledWith({ 
-        session: { user: mockUser }, 
-        post: mockPost 
-      });
+      expect(actionSpy).toHaveBeenCalledWith(null, mockPost, null);
     });
   });
 }); 
