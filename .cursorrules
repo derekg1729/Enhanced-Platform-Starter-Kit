@@ -1,0 +1,232 @@
+{
+  "version": "1.0",
+  "project": {
+    "name": "agent-platform",
+    "type": "fullstack",
+    "description": "Multi-tenant platform with Next.js, Vercel, and PostgreSQL"
+  },
+  "structure": {
+    "frontend": {
+      "root": "app",
+      "framework": "next.js",
+      "styling": "tailwindcss",
+      "routing": "app-router",
+      "state": "react-hooks",
+      "auth": {
+        "provider": "next-auth",
+        "components": ["app/app/(auth)", "middleware.ts"]
+      }
+    },
+    "middleware": {
+      "platform": "vercel",
+      "services": [
+        "edge-functions",
+        "hosting",
+        "postgres",
+        "preview-deployments"
+      ],
+      "security": {
+        "database": "row-level-security",
+        "auth": "next-auth"
+      },
+      "routing": {
+        "file": "middleware.ts",
+        "patterns": [
+          "app-subdomain",
+          "preview-deployment",
+          "multi-tenant"
+        ]
+      }
+    },
+    "backend": {
+      "language": "typescript",
+      "runtime": "node.js",
+      "database": {
+        "type": "postgres",
+        "orm": "drizzle",
+        "migrations": "drizzle/migrations"
+      },
+      "api": {
+        "type": "next.js-api-routes",
+        "pattern": "app/api"
+      }
+    }
+  },
+  "development": {
+    "versionControl": {
+      "branchPrefixes": {
+        "feature": "feature/",
+        "fix": "fix/",
+        "refactor": "refactor/",
+        "test": "test/"
+      },
+      "commitStyle": "conventional",
+      "mainProtection": true
+    },
+    "testing": {
+      "framework": "vitest",
+      "coverageThreshold": 80,
+      "setupFile": "tests/__helpers__/setup.ts",
+      "directories": {
+        "unit": "tests/unit/",
+        "integration": "tests/integration/",
+        "db": "tests/integration/db/",
+        "api": "tests/integration/api/",
+        "components": "tests/integration/components/",
+        "e2e": "tests/e2e/",
+        "performance": "tests/performance/"
+      },
+      "process": {
+        "tdd": true,
+        "writeTestsFirst": true,
+        "validateBeforeCommit": true
+      },
+      "runBeforePush": true
+    },
+    "codeQuality": {
+      "typescript": {
+        "strict": true,
+        "status": "implemented"
+      },
+      "linting": "eslint",
+      "formatting": "prettier"
+    }
+  },
+  "dependencies": {
+    "node": "18.x",
+    "packageManager": "pnpm",
+    "nextjs": "14.x"
+  },
+  "security": {
+    "envFiles": {
+      "allowCommit": false,
+      "examples": [
+        ".env.example",
+        ".env.local.example",
+        ".env.preview.example",
+        ".env.production.example"
+      ]
+    },
+    "apiKeys": {
+      "storage": "environment-variables"
+    },
+    "auth": {
+      "required": true,
+      "provider": "github-oauth",
+      "databaseSecurity": "row-level",
+      "middleware": "path-based"
+    }
+  },
+  "cicd": {
+    "checks": {
+      "tests": true,
+      "coverage": true,
+      "lint": true,
+      "types": true
+    },
+    "deployment": {
+      "platform": "vercel",
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "domains": {
+        "production": "wackywavelength.fyi",
+        "preview": "dereks-projects-32c37a6a.vercel.app"
+      },
+      "autoDeploy": {
+        "branch": "main",
+        "enabled": true
+      }
+    }
+  },
+  "bestPractices": {
+    "testDrivenDevelopment": {
+      "workflow": {
+        "step1_planning": {
+          "description": "Clearly define the desired feature or change",
+          "actions": [
+            "Document the expected behavior",
+            "Identify edge cases and failure modes",
+            "Determine acceptance criteria"
+          ]
+        },
+        "step2_testing": {
+          "description": "Write failing tests that validate the desired functionality",
+          "actions": [
+            "Create new test file if needed",
+            "Write tests that cover all expected behaviors",
+            "Include edge cases and error handling",
+            "Run tests to confirm they fail as expected"
+          ],
+          "validation": "Tests should fail at this stage, confirming they actually test something"
+        },
+        "step3_implementation": {
+          "description": "Implement the minimal code needed to pass tests",
+          "actions": [
+            "Focus on making tests pass, not perfect code",
+            "Implement core functionality first",
+            "Run tests frequently to track progress"
+          ],
+          "validation": "All new tests should now pass"
+        },
+        "step4_verification": {
+          "description": "Verify all tests pass and no regressions were introduced",
+          "actions": [
+            "Run the full test suite",
+            "Verify no existing tests are failing",
+            "If any existing tests fail, STOP and analyze"
+          ],
+          "criticalWarning": "If ANY existing tests start failing, this is a RED ALERT. Take a hard look at recent changes and strongly consider reverting them completely."
+        },
+        "step5_refactoring": {
+          "description": "Clean up and optimize the implementation while maintaining test coverage",
+          "actions": [
+            "Refactor for readability and maintainability",
+            "Optimize performance if needed",
+            "Run tests after each significant change"
+          ],
+          "validation": "All tests should continue to pass"
+        },
+        "step6_deployment": {
+          "description": "Validate locally and in a real environment before committing",
+          "actions": [
+            "Build and run locally to validate functionality",
+            "Deploy to a preview environment",
+            "Verify functionality in the preview deployment",
+            "Only then commit and merge changes"
+          ],
+          "rule": "Never commit code until tests pass, local builds run successfully, and preview deployments are validated"
+        }
+      },
+      "warnings": [
+        "Never skip writing tests first - this is the foundation of TDD",
+        "If ANY tests start failing unexpectedly, stop and investigate immediately",
+        "Failing tests are a signal that something is wrong, not that the tests need to be changed",
+        "Always run the full test suite before committing changes",
+        "Tests should be treated as first-class citizens in the codebase"
+      ],
+      "benefits": [
+        "Ensures code meets requirements before implementation begins",
+        "Prevents regressions when making changes",
+        "Provides documentation of expected behavior",
+        "Enables confident refactoring and optimization"
+      ]
+    },
+    "middleware": {
+      "principles": [
+        "Keep middleware logic simple and focused",
+        "Avoid special cases when possible",
+        "Use environment-agnostic code",
+        "Ensure testability with clear behavior-focused tests",
+        "Optimize for performance by minimizing branching logic"
+      ]
+    },
+    "multiTenant": {
+      "dataIsolation": "row-level-security",
+      "routing": "hostname-based",
+      "customization": "per-tenant-configuration"
+    }
+  }
+} 
