@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { trackAuth } from "@/lib/analytics";
 
 export default function LoginButton() {
   const [loading, setLoading] = useState(false);
@@ -23,6 +24,8 @@ export default function LoginButton() {
       disabled={loading}
       onClick={() => {
         setLoading(true);
+        // Track login attempt
+        trackAuth.login();
         signIn("github");
       }}
       className={`${

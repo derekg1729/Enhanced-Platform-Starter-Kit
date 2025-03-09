@@ -250,6 +250,71 @@
       "dataIsolation": "row-level-security",
       "routing": "hostname-based",
       "customization": "per-tenant-configuration"
+    },
+    "analytics": {
+      "googleAnalytics": {
+        "description": "Guidelines for maintaining and extending Google Analytics implementation",
+        "updateTriggers": [
+          "Adding new pages or routes",
+          "Implementing new user interactions (e.g., buttons, forms)",
+          "Adding new features that represent business value",
+          "Changing user flows or navigation patterns",
+          "Implementing new conversion funnels",
+          "Adding new tenant-specific features"
+        ],
+        "requiredActions": [
+          "Update tests first (TDD approach) to verify new analytics requirements",
+          "Add appropriate event tracking for new user interactions",
+          "Document new events in the analytics documentation",
+          "Verify events are firing correctly in development environment",
+          "Add appropriate data attributes for tracking in the markup",
+          "Ensure privacy compliance with new tracking"
+        ],
+        "eventNamingConventions": {
+          "pattern": "[object]_[action]",
+          "examples": [
+            "button_click",
+            "form_submit",
+            "page_view",
+            "feature_enable",
+            "tenant_create"
+          ]
+        },
+        "dataAttributes": {
+          "description": "Use data attributes to track elements without modifying JS",
+          "pattern": "data-ga-[type]=\"[value]\"",
+          "examples": [
+            "data-ga-category=\"navigation\"",
+            "data-ga-action=\"click\"",
+            "data-ga-label=\"signup\""
+          ]
+        },
+        "tenantSpecificTracking": {
+          "description": "Guidelines for tracking tenant-specific events",
+          "implementation": "Include tenant ID as a custom dimension in all relevant events",
+          "privacy": "Ensure tenant data is anonymized and complies with privacy regulations"
+        },
+        "testing": {
+          "description": "Guidelines for testing analytics implementation",
+          "approaches": [
+            "Unit tests for event handlers",
+            "Integration tests for event firing",
+            "End-to-end tests for complete user flows",
+            "Manual verification in Google Analytics Debug mode"
+          ],
+          "commands": {
+            "basic": "npm run test:ga",
+            "build": "npm run test:ga:build",
+            "deployment": "npm run test:ga:deployment"
+          },
+          "when": [
+            "After adding new analytics events",
+            "Before deploying to production",
+            "After updating the Google Analytics configuration",
+            "When changing the application layout or structure"
+          ]
+        }
+      }
     }
   }
 } 
