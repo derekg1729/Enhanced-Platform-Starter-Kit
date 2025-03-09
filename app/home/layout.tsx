@@ -1,18 +1,18 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Platform Starter Kit - A Test-Driven Multi-Tenant Platform",
-  description: "A production-ready starter kit for building multi-tenant applications with Next.js, featuring comprehensive test coverage and modern development practices.",
+  title: "Enhanced Platform Starter Kit - Multi-Tenant Platform with Tests & Analytics",
+  description: "A production-ready starter kit for building multi-tenant applications with Next.js, featuring comprehensive test coverage, Google Analytics integration, and modern development practices.",
   openGraph: {
-    title: "Platform Starter Kit - A Test-Driven Multi-Tenant Platform",
-    description: "Build your own multi-tenant platform with comprehensive test coverage and modern development practices.",
-    url: "https://vercel.pub",
-    siteName: "Platform Starter Kit",
+    title: "Enhanced Platform Starter Kit - Multi-Tenant Platform with Tests & Analytics",
+    description: "Build your own multi-tenant platform with comprehensive test coverage, Google Analytics integration, and modern development practices.",
+    url: "https://wackywavelength.fyi",
+    siteName: "Enhanced Platform Starter Kit",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Platform Starter Kit - A Test-Driven Multi-Tenant Platform",
-    description: "Build your own multi-tenant platform with comprehensive test coverage and modern development practices.",
+    title: "Enhanced Platform Starter Kit - Multi-Tenant Platform with Tests & Analytics",
+    description: "Build your own multi-tenant platform with comprehensive test coverage, Google Analytics integration, and modern development practices.",
   },
 };
 
