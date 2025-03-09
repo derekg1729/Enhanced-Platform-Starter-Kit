@@ -423,5 +423,375 @@
         }
       }
     }
+  },
+  "rules": [
+    {
+      "name": "Workflow Transition Decision",
+      "description": "Determine which workflow to follow based on current state",
+      "steps": [
+        {
+          "name": "Assess Current State",
+          "description": "Evaluate the current state of the project",
+          "instructions": [
+            "Check if there are any open bugs with 'Critical' or 'High' severity in docs/systematic-dev/bug-tracker.md",
+            "If critical bugs exist, transition to the Bug Resolution Workflow",
+            "Check if documentation is out of date based on recent changes in docs/systematic-dev/change-log.md",
+            "If documentation needs updating, transition to the Documentation Update Workflow",
+            "Otherwise, continue with the Systematic Development Workflow"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Systematic Development Workflow",
+      "description": "A structured workflow for systematic development with minimal human intervention",
+      "steps": [
+        {
+          "name": "Initialize",
+          "description": "Read project documentation and understand the context",
+          "instructions": [
+            "Read the project description in docs/systematic-dev/project-description.md",
+            "Review the development rules in docs/systematic-dev/development-rules.md",
+            "Acknowledge understanding of the project and rules"
+          ]
+        },
+        {
+          "name": "Select Task",
+          "description": "Select the highest priority task from the backlog",
+          "instructions": [
+            "Open docs/systematic-dev/backlog.md",
+            "Identify the highest priority task with status 'To Do'",
+            "Report the selected task ID and title"
+          ]
+        },
+        {
+          "name": "Start Task",
+          "description": "Update documentation to reflect task has started",
+          "instructions": [
+            "Update the task status in backlog.md to 'In Progress'",
+            "Add an entry to change-log.md with the task ID, 'Started' status, description, and current timestamp",
+            "Confirm the updates have been made"
+          ]
+        },
+        {
+          "name": "Design Solution",
+          "description": "Design a solution for the selected task",
+          "instructions": [
+            "Review the current solution design in docs/systematic-dev/solution-design.md",
+            "Design a solution for the selected task that aligns with the existing architecture",
+            "Update solution-design.md with the new design",
+            "Confirm the design has been documented"
+          ]
+        },
+        {
+          "name": "Design Validation",
+          "description": "Validate the design against requirements and best practices",
+          "instructions": [
+            "Review the design against the task's acceptance criteria",
+            "Check for alignment with architectural principles in development-rules.md",
+            "Identify potential edge cases or failure modes",
+            "Consider performance, security, and scalability implications",
+            "Refine the design if necessary based on this validation"
+          ]
+        },
+        {
+          "name": "Implement Solution",
+          "description": "Implement the designed solution",
+          "instructions": [
+            "Implement the solution according to the design",
+            "Follow the coding standards defined in development-rules.md",
+            "If new modules are created, update the Module Registry section in solution-design.md",
+            "Confirm the implementation is complete"
+          ]
+        },
+        {
+          "name": "Verify Implementation",
+          "description": "Verify the implementation meets the acceptance criteria",
+          "instructions": [
+            "Review the implementation against the acceptance criteria in backlog.md",
+            "Check for potential bugs or issues",
+            "If issues are found, add them to bug-tracker.md",
+            "Confirm the verification is complete"
+          ]
+        },
+        {
+          "name": "Quality Gate",
+          "description": "Ensure the implementation meets quality standards",
+          "instructions": [
+            "Verify that the implementation follows all coding standards in development-rules.md",
+            "Confirm that all acceptance criteria are met with specific evidence",
+            "Check that appropriate tests have been created or updated",
+            "Document any technical debt or future improvements needed",
+            "Only proceed if all quality criteria are met"
+          ]
+        },
+        {
+          "name": "Complete Task",
+          "description": "Update documentation to reflect task completion",
+          "instructions": [
+            "Update the task status in backlog.md to 'Done'",
+            "Add an entry to change-log.md with the task ID, 'Completed' status, description, and current timestamp",
+            "Confirm the updates have been made"
+          ]
+        },
+        {
+          "name": "Progress Report",
+          "description": "Summarize progress and plan next steps",
+          "instructions": [
+            "Summarize what was accomplished in this task",
+            "Identify any lessons learned or challenges encountered",
+            "Recommend any follow-up tasks that should be added to the backlog",
+            "Provide a brief plan for the next steps"
+          ]
+        },
+        {
+          "name": "Repeat Process",
+          "description": "Return to task selection and continue the workflow",
+          "instructions": [
+            "Run the 'Workflow Transition Decision' to determine the next workflow to follow",
+            "If no tasks remain with 'To Do' status, report completion of all tasks",
+            "Otherwise, continue with the next task"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bug Resolution Workflow",
+      "description": "A workflow for resolving bugs identified during development",
+      "steps": [
+        {
+          "name": "Select Bug",
+          "description": "Select the highest priority bug from the bug tracker",
+          "instructions": [
+            "Open docs/systematic-dev/bug-tracker.md",
+            "Identify the highest priority bug with status 'Open'",
+            "Report the selected bug ID and title"
+          ]
+        },
+        {
+          "name": "Start Bug Resolution",
+          "description": "Update documentation to reflect bug resolution has started",
+          "instructions": [
+            "Update the bug status in bug-tracker.md to 'In Progress'",
+            "Add an entry to change-log.md with the bug ID, 'Started' status, description, and current timestamp",
+            "Confirm the updates have been made"
+          ]
+        },
+        {
+          "name": "Analyze Bug",
+          "description": "Analyze the bug to understand its cause",
+          "instructions": [
+            "Review the bug description and related code",
+            "Identify the root cause of the bug",
+            "Document the analysis in bug-tracker.md",
+            "Confirm the analysis is complete"
+          ]
+        },
+        {
+          "name": "Design Fix",
+          "description": "Design a fix for the bug",
+          "instructions": [
+            "Design a fix that addresses the root cause",
+            "Update solution-design.md if the fix requires design changes",
+            "Confirm the fix design is documented"
+          ]
+        },
+        {
+          "name": "Implement Fix",
+          "description": "Implement the designed fix",
+          "instructions": [
+            "Implement the fix according to the design",
+            "Follow the coding standards defined in development-rules.md",
+            "Confirm the implementation is complete"
+          ]
+        },
+        {
+          "name": "Verify Fix",
+          "description": "Verify the fix resolves the bug",
+          "instructions": [
+            "Test the fix to ensure it resolves the bug",
+            "Check for any regressions or new issues",
+            "If new issues are found, add them to bug-tracker.md",
+            "Confirm the verification is complete"
+          ]
+        },
+        {
+          "name": "Quality Gate",
+          "description": "Ensure the fix meets quality standards",
+          "instructions": [
+            "Verify that the fix follows all coding standards in development-rules.md",
+            "Confirm that the bug is fully resolved with specific evidence",
+            "Check that appropriate tests have been created or updated to prevent regression",
+            "Document any technical debt or future improvements needed",
+            "Only proceed if all quality criteria are met"
+          ]
+        },
+        {
+          "name": "Complete Bug Resolution",
+          "description": "Update documentation to reflect bug resolution completion",
+          "instructions": [
+            "Update the bug status in bug-tracker.md to 'Fixed'",
+            "Add an entry to change-log.md with the bug ID, 'Fixed' status, description, and current timestamp",
+            "Confirm the updates have been made"
+          ]
+        },
+        {
+          "name": "Progress Report",
+          "description": "Summarize bug resolution and lessons learned",
+          "instructions": [
+            "Summarize the bug, its root cause, and how it was fixed",
+            "Identify any lessons learned or process improvements to prevent similar bugs",
+            "Recommend any follow-up tasks that should be added to the backlog",
+            "Provide a brief plan for the next steps"
+          ]
+        },
+        {
+          "name": "Return to Development",
+          "description": "Return to the main development workflow",
+          "instructions": [
+            "Run the 'Workflow Transition Decision' to determine the next workflow to follow",
+            "Continue with the appropriate workflow based on the decision"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Documentation Update Workflow",
+      "description": "A workflow for updating documentation",
+      "steps": [
+        {
+          "name": "Identify Documentation Needs",
+          "description": "Identify documentation that needs to be updated",
+          "instructions": [
+            "Review recent changes in the change-log.md",
+            "Identify documentation that needs to be updated based on these changes",
+            "Report the documentation that needs updating"
+          ]
+        },
+        {
+          "name": "Update Documentation",
+          "description": "Update the identified documentation",
+          "instructions": [
+            "Update the identified documentation with the latest information",
+            "Ensure consistency across all documentation",
+            "Confirm the documentation updates are complete"
+          ]
+        },
+        {
+          "name": "Verify Documentation",
+          "description": "Verify the documentation is accurate and complete",
+          "instructions": [
+            "Review the updated documentation for accuracy and completeness",
+            "Check for any inconsistencies or gaps",
+            "Confirm the verification is complete"
+          ]
+        },
+        {
+          "name": "Quality Gate",
+          "description": "Ensure the documentation meets quality standards",
+          "instructions": [
+            "Verify that the documentation follows the project's documentation standards",
+            "Check for clarity, completeness, and correctness",
+            "Ensure all links and references are valid",
+            "Only proceed if all quality criteria are met"
+          ]
+        },
+        {
+          "name": "Record Documentation Update",
+          "description": "Record the documentation update in the change log",
+          "instructions": [
+            "Add an entry to change-log.md with 'Documentation Update' as the ID, 'Completed' status, description, and current timestamp",
+            "Confirm the update has been recorded"
+          ]
+        },
+        {
+          "name": "Progress Report",
+          "description": "Summarize documentation updates and next steps",
+          "instructions": [
+            "Summarize the documentation updates that were made",
+            "Identify any areas that may need future documentation improvements",
+            "Recommend any follow-up tasks that should be added to the backlog",
+            "Provide a brief plan for the next steps"
+          ]
+        },
+        {
+          "name": "Return to Development",
+          "description": "Return to the main development workflow",
+          "instructions": [
+            "Run the 'Workflow Transition Decision' to determine the next workflow to follow",
+            "Continue with the appropriate workflow based on the decision"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Error Recovery Workflow",
+      "description": "A workflow for recovering from errors or blockers",
+      "steps": [
+        {
+          "name": "Identify Error",
+          "description": "Clearly identify the error or blocker",
+          "instructions": [
+            "Document the specific error or blocker encountered",
+            "Capture any error messages or symptoms",
+            "Identify the context in which the error occurred",
+            "Determine the severity and impact of the error"
+          ]
+        },
+        {
+          "name": "Analyze Error",
+          "description": "Analyze the error to understand its cause",
+          "instructions": [
+            "Investigate the potential causes of the error",
+            "Review related code or documentation",
+            "Identify any dependencies or external factors that may be involved",
+            "Document the analysis findings"
+          ]
+        },
+        {
+          "name": "Determine Recovery Path",
+          "description": "Determine the best path for recovery",
+          "instructions": [
+            "Consider possible solutions or workarounds",
+            "Evaluate the pros and cons of each approach",
+            "Select the most appropriate recovery path",
+            "Document the selected recovery approach"
+          ]
+        },
+        {
+          "name": "Implement Recovery",
+          "description": "Implement the recovery solution",
+          "instructions": [
+            "Execute the selected recovery approach",
+            "Document any changes made during recovery",
+            "Verify that the error has been resolved",
+            "Update relevant documentation if needed"
+          ]
+        },
+        {
+          "name": "Document Lessons Learned",
+          "description": "Document lessons learned from the error",
+          "instructions": [
+            "Summarize the error, its cause, and the recovery process",
+            "Identify any process improvements to prevent similar errors",
+            "Update documentation or add notes to help others avoid the same issue",
+            "Consider adding a new task to the backlog if systemic improvements are needed"
+          ]
+        },
+        {
+          "name": "Return to Previous Workflow",
+          "description": "Return to the workflow that was interrupted",
+          "instructions": [
+            "Determine which workflow was active when the error occurred",
+            "Return to the appropriate step in that workflow",
+            "Continue with the development process"
+          ]
+        }
+      ]
+    }
+  ],
+  "instructions": {
+    "default": "Follow the 'Systematic Development Workflow' to implement tasks from the backlog. Before starting each new task, run the 'Workflow Transition Decision' to determine if you should address bugs or update documentation first. If you encounter any errors or get stuck, use the 'Error Recovery Workflow' to identify and resolve the issue. Always ensure quality gates are passed before completing any task.",
+    "onStart": "Begin by running the 'Workflow Transition Decision' to determine which workflow to follow first."
   }
 } 
