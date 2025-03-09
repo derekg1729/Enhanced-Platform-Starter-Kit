@@ -102,7 +102,7 @@ export default function HomePage() {
             Additional features and improvements in this enhanced edition
           </p>
           
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-900/20 p-6 backdrop-blur-sm transition-all hover:bg-emerald-900/30 hover:shadow-lg">
               <h3 className="font-cal text-xl text-emerald-300 mb-2">Comprehensive Tests</h3>
               <p className="text-stone-300">
@@ -121,10 +121,37 @@ export default function HomePage() {
                 Modern, responsive design with improved aesthetics
               </p>
             </div>
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-900/20 p-6 backdrop-blur-sm transition-all hover:bg-emerald-900/30 hover:shadow-lg">
-              <h3 className="font-cal text-xl text-emerald-300 mb-2">CursorRules</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Development Enhancements Section */}
+      <div className="relative z-10 border-t border-white/20 px-4 py-16 text-center bg-black/40 backdrop-blur-md">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="font-cal text-3xl font-bold text-purple-300 mb-2">
+            AI Development Enhancements
+          </h2>
+          <p className="text-white/60 mb-8 max-w-2xl mx-auto">
+            Features that enhance AI-assisted development workflows
+          </p>
+          
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-6 backdrop-blur-sm transition-all hover:bg-purple-900/30 hover:shadow-lg">
+              <h3 className="font-cal text-xl text-purple-300 mb-2">CursorRules</h3>
               <p className="text-stone-300">
-                Structured project metadata for AI-assisted development
+                Structured project metadata that guides AI-assisted development with best practices
+              </p>
+            </div>
+            <div className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-6 backdrop-blur-sm transition-all hover:bg-purple-900/30 hover:shadow-lg">
+              <h3 className="font-cal text-xl text-purple-300 mb-2">Test-Driven Development</h3>
+              <p className="text-stone-300">
+                Comprehensive test infrastructure with clear TDD workflow documentation
+              </p>
+            </div>
+            <div className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-6 backdrop-blur-sm transition-all hover:bg-purple-900/30 hover:shadow-lg">
+              <h3 className="font-cal text-xl text-purple-300 mb-2">Pre-commit Guardrails</h3>
+              <p className="text-stone-300">
+                Automated checks for environment variables, linting, type safety, tests, and build verification
               </p>
             </div>
           </div>

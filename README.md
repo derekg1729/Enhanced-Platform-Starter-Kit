@@ -23,6 +23,11 @@ A test-driven fork of the [Vercel Platforms Starter Kit](https://vercel.com/guid
    - Page view tracking
    - Comprehensive test coverage
 
+4. **Automated Pre-commit Guardrails**
+   - Husky Git hooks and CursorRules integration
+   - Environment consistency validation
+   - Comprehensive code quality checks
+
 ## Getting Started
 
 1. Clone and install:
@@ -32,16 +37,45 @@ A test-driven fork of the [Vercel Platforms Starter Kit](https://vercel.com/guid
    pnpm install
    ```
 
-2. Configure environment:
+2. Set up environment variables:
+
    ```bash
    cp .env.example .env.local
    ```
-   Required variables:
-   - `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` for GitHub OAuth
-   - `POSTGRES_URL` for database
-   - `NEXT_PUBLIC_ROOT_DOMAIN` for domain config
 
-3. Development:
+   ### Required Services Setup
+
+   #### GitHub OAuth (Authentication)
+   1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+   2. Click "New OAuth App"
+   3. Set Homepage URL to `http://localhost:3000` (for development) or your production domain
+   4. Set Authorization callback URLs:
+      - Development: `http://app.localhost:3000/api/auth/callback/github`
+      - Production: `https://app.yourdomain.com/api/auth/callback/github` (replace with your actual domain)
+   5. Copy Client ID to `AUTH_GITHUB_ID` and Client Secret to `AUTH_GITHUB_SECRET`
+   6. For production, you may need to create a separate OAuth app with the production URLs
+
+   #### Vercel (Deployment & Project Config)
+   1. Create a project on [Vercel](https://vercel.com/new)
+   2. Go to Project Settings → General → Project ID and copy to `PROJECT_ID_VERCEL`
+   3. Go to Team Settings → General → Team ID and copy to `TEAM_ID_VERCEL`
+   4. Create a token at [Vercel Tokens](https://vercel.com/account/tokens) and copy to `AUTH_BEARER_TOKEN`
+
+   #### Neon (PostgreSQL Database)
+   1. Create a database on [Neon](https://neon.tech/)
+   2. Copy the connection string to `DATABASE_URL` and `POSTGRES_URL`
+   3. Copy the unpooled connection string to `DATABASE_URL_UNPOOLED` and `POSTGRES_URL_NON_POOLING`
+
+   #### Google Analytics (Optional)
+   1. Create a property in [Google Analytics](https://analytics.google.com/)
+   2. Copy the Measurement ID (G-XXXXXXXX) to `NEXT_PUBLIC_GA_ID`
+
+3. Set up Git hooks:
+   ```bash
+   npm run setup-hooks
+   ```
+
+4. Development:
    ```bash
    pnpm dev     # Start development server
    pnpm test    # Run tests
@@ -51,39 +85,18 @@ For full documentation of the original starter kit features, see the [Vercel Pla
 
 ## Development Workflow
 
-### Pre-Commit Validation (MANDATORY)
+### Pre-Commit Validation
 
-⚠️ **CRITICAL: NEVER BYPASS THESE STEPS!** Committing code that doesn't pass all checks can break the build.
+The project uses Husky and CursorRules to enforce code quality. Pre-commit checks run automatically when you commit changes, or you can run them manually:
 
-Run the complete pre-commit workflow:
 ```bash
 npm run pre-commit
 ```
 
-This runs:
-1. Environment consistency check
-2. Linting
-3. Type checking
-4. Tests
-5. Build verification
-
-#### Enforcement
-
-Set up Git hooks to enforce this workflow:
-```bash
-npm run setup-hooks
-```
-
-#### Troubleshooting
-
-- **Test Failures**: Fix issues before committing. Don't modify tests to make them pass unless the test itself is incorrect.
-- **Build Failures**: Fix code issues before committing. Common problems include syntax errors, missing dependencies, or configuration issues.
-- **Environment Issues**: Run `npm run check-env` to verify environment variables are consistent.
-
 ### Deployment Workflow
 
 #### Preview Deployments
-1. **ONLY AFTER all pre-commit checks pass**: Commit changes to a feature branch
+1. Commit changes to a feature branch
 2. Push to GitHub to trigger a preview build
 3. Verify functionality in the preview environment
 
@@ -99,6 +112,7 @@ Same as original starter kit, plus:
 - Testing: Vitest + React Testing Library
 - Database: Drizzle ORM migrations
 - Analytics: Google Analytics via @next/third-parties
+- Quality: Husky Git hooks and CursorRules
 
 ## License
 
