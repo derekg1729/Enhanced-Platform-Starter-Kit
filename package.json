@@ -18,8 +18,9 @@
     "test:ga:deployment": "RUN_DEPLOYMENT_TESTS=true vitest run --pool=forks tests/integration/analytics/google-analytics-deployment.integration.test.ts",
     "typecheck": "tsc --noEmit",
     "pre-commit": "npm run check-env && npm run lint && npm run typecheck && npm run test && npm run build",
-    "setup-hooks": "npx husky install && npx husky add .husky/pre-commit \"npm run pre-commit\"",
-    "check-env": "node scripts/check-env-consistency.js"
+    "setup-hooks": "npx husky init && chmod +x .husky/pre-commit",
+    "check-env": "node scripts/check-env-consistency.js",
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
