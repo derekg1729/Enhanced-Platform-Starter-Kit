@@ -423,5 +423,69 @@
         }
       }
     }
+  },
+  "agentPlatform": {
+    "description": "Guidelines for building and extending the Agent Platform",
+    "architecture": {
+      "agentDefinition": {
+        "components": [
+          "Metadata (name, description, version)",
+          "Configuration (parameters, settings)",
+          "Tools (API connections, capabilities)",
+          "Prompts (instructions, templates)",
+          "Execution (runtime settings, memory)"
+        ],
+        "schema": "See lib/schema.ts for the agent schema definition"
+      },
+      "containerization": {
+        "strategy": "Each agent runs in its own isolated container",
+        "scaling": "Containers scale independently based on usage",
+        "security": "Containers have limited access to resources and are isolated from each other"
+      },
+      "apiConnections": {
+        "storage": "API keys are encrypted and stored securely",
+        "access": "Keys are only decrypted at runtime in the agent container",
+        "management": "Users can add, update, and revoke API connections"
+      },
+      "multiTenancy": {
+        "isolation": "Agents are isolated by tenant",
+        "sharing": "Agents can be shared with specific permissions",
+        "marketplace": "Agents can be published to the marketplace for others to use"
+      }
+    },
+    "bestPractices": {
+      "agentDevelopment": {
+        "principles": [
+          "Focus on a single task or capability",
+          "Use clear, concise prompts",
+          "Implement proper error handling",
+          "Include comprehensive testing",
+          "Document usage and limitations"
+        ],
+        "testing": [
+          "Test with various inputs",
+          "Verify error handling",
+          "Check performance under load",
+          "Validate security measures",
+          "Test integration with other systems"
+        ],
+        "security": [
+          "Never expose API keys in client-side code",
+          "Validate all inputs",
+          "Limit agent permissions",
+          "Monitor for unusual behavior",
+          "Implement rate limiting"
+        ]
+      },
+      "userExperience": {
+        "principles": [
+          "Make agent capabilities clear",
+          "Provide helpful error messages",
+          "Design intuitive configuration interfaces",
+          "Include examples and templates",
+          "Offer progressive disclosure of advanced features"
+        ]
+      }
+    }
   }
 } 
