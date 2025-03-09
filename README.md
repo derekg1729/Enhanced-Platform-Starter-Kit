@@ -62,9 +62,9 @@ A test-driven fork of the [Vercel Platforms Starter Kit](https://vercel.com/guid
    4. Create a token at [Vercel Tokens](https://vercel.com/account/tokens) and copy to `AUTH_BEARER_TOKEN`
 
    #### Neon (PostgreSQL Database)
-   1. Create a database on [Neon](https://neon.tech/)
-   2. Copy the connection string to `DATABASE_URL` and `POSTGRES_URL`
-   3. Copy the unpooled connection string to `DATABASE_URL_UNPOOLED` and `POSTGRES_URL_NON_POOLING`
+   1. Via Vercel, Create a [Neon](https://neon.tech/) database
+   2. [If Needed] Copy the connection string to `DATABASE_URL` and `POSTGRES_URL`
+   3. [If Needed] Copy the unpooled connection string to `DATABASE_URL_UNPOOLED` and `POSTGRES_URL_NON_POOLING`
 
    #### Google Analytics (Optional)
    1. Create a property in [Google Analytics](https://analytics.google.com/)
