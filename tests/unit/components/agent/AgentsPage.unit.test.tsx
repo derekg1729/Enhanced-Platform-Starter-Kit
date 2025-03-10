@@ -1,35 +1,24 @@
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 import AgentsPage from '../../../../app/app/(dashboard)/agents/page';
+import AgentsPageClient from '../../../../app/app/(dashboard)/agents/AgentsPageClient';
 
-// Mock the AgentDashboard component
-vi.mock('../../../../components/agent/AgentDashboard', () => ({
-  default: ({ agents, isLoading }: { agents: any[]; isLoading: boolean }) => (
-    <div data-testid="agent-dashboard">
-      <div>Agents Count: {agents.length}</div>
-      <div>Loading: {isLoading ? 'true' : 'false'}</div>
-    </div>
-  )
+// Mock the AgentsPageClient component
+vi.mock('../../../../app/app/(dashboard)/agents/AgentsPageClient', () => ({
+  __esModule: true,
+  default: vi.fn(() => <div data-testid="agents-page-client">Mocked AgentsPageClient</div>),
 }));
 
 describe('AgentsPage', () => {
-  it('renders the AgentDashboard component', () => {
+  it('renders the AgentsPageClient component', () => {
     render(<AgentsPage />);
-    
-    expect(screen.getByTestId('agent-dashboard')).toBeInTheDocument();
+    expect(screen.getByTestId('agents-page-client')).toBeInTheDocument();
+    expect(screen.getByText('Mocked AgentsPageClient')).toBeInTheDocument();
   });
 
-  it('passes mock agents to the AgentDashboard', () => {
+  it('passes no props to AgentsPageClient', () => {
     render(<AgentsPage />);
-    
-    // The mock agents array in the page has 2 items
-    expect(screen.getByText('Agents Count: 2')).toBeInTheDocument();
-  });
-
-  it('passes isLoading=false to the AgentDashboard', () => {
-    render(<AgentsPage />);
-    
-    expect(screen.getByText('Loading: false')).toBeInTheDocument();
+    expect(AgentsPageClient).toHaveBeenCalledWith({}, {});
   });
 }); 

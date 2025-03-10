@@ -20,7 +20,7 @@ describe('Agent Routes Content', () => {
     
     // Check if the content contains the expected components
     expect(dashboardMainPage).not.toBe('');
-    expect(dashboardMainPage.includes('AgentDashboard')).toBe(true);
+    expect(dashboardMainPage.includes('AgentsPageClient')).toBe(true);
     
     expect(dashboardDetailsPage).not.toBe('');
     expect(dashboardDetailsPage.includes('Agent Details')).toBe(true);
