@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { createApiConnection, getApiConnectionsByUserId } from '../../../lib/agent-db';
+
+// Define a custom session type
+interface CustomSession {
+  user: {
+    id: string;
+    name?: string;
+    email?: string;
+    image?: string;
+  };
+  expires: string;
+}
 
 /**
  * POST /api/api-connections
@@ -11,7 +22,7 @@ import { createApiConnection, getApiConnectionsByUserId } from '../../../lib/age
  */
 export async function POST(req: NextRequest) {
   // Check if the user is authenticated
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as CustomSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -25,13 +36,15 @@ export async function POST(req: NextRequest) {
   }
 
   // Create the API connection
-  const apiConnection = await createApiConnection({
-    name: body.name,
-    service: body.service,
-    apiKey: body.apiKey,
-    userId: session.user.id,
-    metadata: body.metadata || {},
-  });
+  const apiConnection = await createApiConnection(
+    session.user.id,
+    {
+      name: body.name,
+      service: body.service,
+      apiKey: body.apiKey,
+      metadata: body.metadata || {},
+    }
+  );
 
   // Return the created API connection (without the API key)
   const { apiKey, ...apiConnectionWithoutKey } = apiConnection;
@@ -46,7 +59,7 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   // Check if the user is authenticated
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as CustomSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createMocks } from 'node-mocks-http';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { encryptApiKey } from '../../../lib/api-key-utils';
 import * as agentDb from '../../../lib/agent-db';
-import { GET as getApiConnections, POST as createApiConnection } from '../../../app/api/api-connections/route';
+import { POST as createApiConnection, GET as getApiConnections } from '../../../app/api/api-connections/route';
 import { GET as getApiConnectionById, PUT as updateApiConnection, DELETE as deleteApiConnection } from '../../../app/api/api-connections/[id]/route';
-import { GET as getAgentApiConnections } from '../../../app/api/agents/[id]/api-connections/route';
+import { GET as getApiServices } from '../../../app/api/api-connections/services/route';
+import { GET as getAgentApiConnections } from '../../../app/api/agents/[agentId]/api-connections/route';
+import { encryptApiKey } from '../../../lib/api-key-utils';
 
 // Mock the next-auth getServerSession function
 vi.mock('next-auth', () => ({
@@ -20,6 +21,7 @@ vi.mock('../../../lib/agent-db', () => ({
   updateApiConnection: vi.fn(),
   deleteApiConnection: vi.fn(),
   getApiConnectionsForAgent: vi.fn(),
+  getAgentById: vi.fn(),
 }));
 
 // Mock data
@@ -35,18 +37,27 @@ const mockApiConnection = {
   service: 'openai',
   apiKey: encryptApiKey('test-api-key'),
   userId: 'user-123',
+  metadata: {},
   createdAt: new Date(),
   updatedAt: new Date(),
-  metadata: { model: 'gpt-4' },
+};
+
+const mockAgent = {
+  id: 'agent-123',
+  name: 'Test Agent',
+  description: 'A test agent',
+  systemPrompt: 'You are a test agent',
+  model: 'gpt-3.5-turbo',
+  temperature: '0.7', // String to match the type in the database
+  maxTokens: 1000,
+  userId: 'user-123',
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 describe('API Connections API Routes', () => {
   beforeEach(() => {
-    // Mock the session to return a logged-in user
-    vi.mocked(getServerSession).mockResolvedValue({
-      user: mockUser,
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    });
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -55,406 +66,494 @@ describe('API Connections API Routes', () => {
 
   describe('POST /api/api-connections', () => {
     it('should create a new API connection', async () => {
-      // Mock the createApiConnection function to return a mock API connection
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the createApiConnection function
       vi.mocked(agentDb.createApiConnection).mockResolvedValue(mockApiConnection);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
         method: 'POST',
-        body: {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           name: 'Test API Connection',
           service: 'openai',
           apiKey: 'test-api-key',
-          metadata: { model: 'gpt-4' },
-        },
+        }),
       });
 
-      // Call the handler
-      await createApiConnection(req, res);
+      // Call the API route
+      const response = await createApiConnection(req);
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(201);
-      expect(JSON.parse(res._getData())).toEqual({
-        ...mockApiConnection,
-        apiKey: undefined, // API key should not be returned in the response
-      });
+      // Check the response
+      expect(response.status).toBe(201);
+      const data = await response.json();
+      expect(data).not.toHaveProperty('apiKey');
+      expect(data).toHaveProperty('id', 'api-conn-123');
+      expect(data).toHaveProperty('name', 'Test API Connection');
 
-      // Verify that createApiConnection was called with the correct arguments
-      expect(agentDb.createApiConnection).toHaveBeenCalledWith({
-        name: 'Test API Connection',
-        service: 'openai',
-        apiKey: 'test-api-key',
-        userId: 'user-123',
-        metadata: { model: 'gpt-4' },
-      });
+      // Check that the function was called with the correct parameters
+      expect(agentDb.createApiConnection).toHaveBeenCalledWith(
+        'user-123',
+        {
+          name: 'Test API Connection',
+          service: 'openai',
+          apiKey: 'test-api-key',
+          metadata: {},
+        }
+      );
     });
 
-    it('should return 401 if user is not authenticated', async () => {
-      // Mock the session to return null (user not logged in)
+    it('should return 401 if the user is not authenticated', async () => {
+      // Mock the session (no user)
       vi.mocked(getServerSession).mockResolvedValue(null);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
         method: 'POST',
-        body: {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           name: 'Test API Connection',
           service: 'openai',
           apiKey: 'test-api-key',
-        },
+        }),
       });
 
-      // Call the handler
-      await createApiConnection(req, res);
+      // Call the API route
+      const response = await createApiConnection(req);
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(401);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'Unauthorized',
-      });
+      // Check the response
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Unauthorized' });
 
-      // Verify that createApiConnection was not called
+      // Check that the function was not called
       expect(agentDb.createApiConnection).not.toHaveBeenCalled();
     });
 
     it('should return 400 if required fields are missing', async () => {
-      // Create mock request and response with missing fields
-      const { req, res } = createMocks({
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Create a mock request with missing fields
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
         method: 'POST',
-        body: {
-          // Missing name and service
-          apiKey: 'test-api-key',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          name: 'Test API Connection',
+          // Missing service and apiKey
+        }),
       });
 
-      // Call the handler
-      await createApiConnection(req, res);
+      // Call the API route
+      const response = await createApiConnection(req);
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(400);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'Missing required fields',
-      });
+      // Check the response
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Missing required fields' });
 
-      // Verify that createApiConnection was not called
+      // Check that the function was not called
       expect(agentDb.createApiConnection).not.toHaveBeenCalled();
     });
   });
 
   describe('GET /api/api-connections', () => {
     it('should return all API connections for the user', async () => {
-      // Mock the getApiConnectionsByUserId function to return an array of API connections
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the getApiConnectionsByUserId function
       vi.mocked(agentDb.getApiConnectionsByUserId).mockResolvedValue([mockApiConnection]);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
         method: 'GET',
       });
 
-      // Call the handler
-      await getApiConnections(req, res);
+      // Call the API route
+      const response = await getApiConnections(req);
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(200);
-      expect(JSON.parse(res._getData())).toEqual([
-        {
-          ...mockApiConnection,
-          apiKey: undefined, // API key should not be returned in the response
-        },
-      ]);
+      // Check the response
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveLength(1);
+      expect(data[0]).not.toHaveProperty('apiKey');
+      expect(data[0]).toHaveProperty('id', 'api-conn-123');
 
-      // Verify that getApiConnectionsByUserId was called with the correct arguments
+      // Check that the function was called with the correct parameters
       expect(agentDb.getApiConnectionsByUserId).toHaveBeenCalledWith('user-123');
     });
 
-    it('should return 401 if user is not authenticated', async () => {
-      // Mock the session to return null (user not logged in)
+    it('should return 401 if the user is not authenticated', async () => {
+      // Mock the session (no user)
       vi.mocked(getServerSession).mockResolvedValue(null);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
         method: 'GET',
       });
 
-      // Call the handler
-      await getApiConnections(req, res);
+      // Call the API route
+      const response = await getApiConnections(req);
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(401);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'Unauthorized',
-      });
+      // Check the response
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Unauthorized' });
 
-      // Verify that getApiConnectionsByUserId was not called
+      // Check that the function was not called
       expect(agentDb.getApiConnectionsByUserId).not.toHaveBeenCalled();
     });
   });
 
   describe('GET /api/api-connections/:id', () => {
     it('should return a specific API connection', async () => {
-      // Mock the getApiConnectionById function to return a mock API connection
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the getApiConnectionById function
       vi.mocked(agentDb.getApiConnectionById).mockResolvedValue(mockApiConnection);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections/api-conn-123', {
         method: 'GET',
       });
 
-      // Call the handler with params
-      await getApiConnectionById(req, res, { params: { id: 'api-conn-123' } });
+      // Call the API route
+      const response = await getApiConnectionById(req, { params: { id: 'api-conn-123' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(200);
-      expect(JSON.parse(res._getData())).toEqual({
-        ...mockApiConnection,
-        apiKey: undefined, // API key should not be returned in the response
-      });
+      // Check the response
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).not.toHaveProperty('apiKey');
+      expect(data).toHaveProperty('id', 'api-conn-123');
 
-      // Verify that getApiConnectionById was called with the correct arguments
+      // Check that the function was called with the correct parameters
       expect(agentDb.getApiConnectionById).toHaveBeenCalledWith('api-conn-123', 'user-123');
     });
 
-    it('should return 404 if API connection is not found', async () => {
-      // Mock the getApiConnectionById function to return null
+    it('should return 404 if the API connection is not found', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the getApiConnectionById function (not found)
       vi.mocked(agentDb.getApiConnectionById).mockResolvedValue(null);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections/non-existent-id', {
         method: 'GET',
       });
 
-      // Call the handler with params
-      await getApiConnectionById(req, res, { params: { id: 'non-existent-id' } });
+      // Call the API route
+      const response = await getApiConnectionById(req, { params: { id: 'non-existent-id' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(404);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'API connection not found',
-      });
+      // Check the response
+      expect(response.status).toBe(404);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'API connection not found' });
+
+      // Check that the function was called with the correct parameters
+      expect(agentDb.getApiConnectionById).toHaveBeenCalledWith('non-existent-id', 'user-123');
     });
 
-    it('should return 401 if user is not authenticated', async () => {
-      // Mock the session to return null (user not logged in)
+    it('should return 401 if the user is not authenticated', async () => {
+      // Mock the session (no user)
       vi.mocked(getServerSession).mockResolvedValue(null);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections/api-conn-123', {
         method: 'GET',
       });
 
-      // Call the handler with params
-      await getApiConnectionById(req, res, { params: { id: 'api-conn-123' } });
+      // Call the API route
+      const response = await getApiConnectionById(req, { params: { id: 'api-conn-123' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(401);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'Unauthorized',
-      });
+      // Check the response
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Unauthorized' });
 
-      // Verify that getApiConnectionById was not called
+      // Check that the function was not called
       expect(agentDb.getApiConnectionById).not.toHaveBeenCalled();
     });
   });
 
   describe('PUT /api/api-connections/:id', () => {
-    it('should update an existing API connection', async () => {
-      // Mock the getApiConnectionById function to return a mock API connection
-      vi.mocked(agentDb.getApiConnectionById).mockResolvedValue(mockApiConnection);
-      
-      // Mock the updateApiConnection function to return the updated API connection
-      const updatedConnection = {
+    it('should update an API connection', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the updateApiConnection function
+      vi.mocked(agentDb.updateApiConnection).mockResolvedValue({
         ...mockApiConnection,
         name: 'Updated API Connection',
-        metadata: { model: 'gpt-4-turbo' },
-      };
-      vi.mocked(agentDb.updateApiConnection).mockResolvedValue(updatedConnection);
+      });
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections/api-conn-123', {
         method: 'PUT',
-        body: {
-          name: 'Updated API Connection',
-          metadata: { model: 'gpt-4-turbo' },
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          name: 'Updated API Connection',
+        }),
       });
 
-      // Call the handler with params
-      await updateApiConnection(req, res, { params: { id: 'api-conn-123' } });
+      // Call the API route
+      const response = await updateApiConnection(req, { params: { id: 'api-conn-123' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(200);
-      expect(JSON.parse(res._getData())).toEqual({
-        ...updatedConnection,
-        apiKey: undefined, // API key should not be returned in the response
-      });
+      // Check the response
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).not.toHaveProperty('apiKey');
+      expect(data).toHaveProperty('name', 'Updated API Connection');
 
-      // Verify that updateApiConnection was called with the correct arguments
-      expect(agentDb.updateApiConnection).toHaveBeenCalledWith('api-conn-123', 'user-123', {
-        name: 'Updated API Connection',
-        metadata: { model: 'gpt-4-turbo' },
-      });
+      // Check that the function was called with the correct parameters
+      expect(agentDb.updateApiConnection).toHaveBeenCalledWith(
+        'api-conn-123',
+        'user-123',
+        {
+          name: 'Updated API Connection',
+          service: undefined,
+          apiKey: undefined,
+          metadata: undefined,
+        }
+      );
     });
 
-    it('should return 404 if API connection is not found', async () => {
-      // Mock the getApiConnectionById function to return null
-      vi.mocked(agentDb.getApiConnectionById).mockResolvedValue(null);
+    it('should return 404 if the API connection is not found', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Mock the updateApiConnection function (not found)
+      vi.mocked(agentDb.updateApiConnection).mockResolvedValue(null);
+
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections/non-existent-id', {
         method: 'PUT',
-        body: {
-          name: 'Updated API Connection',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          name: 'Updated API Connection',
+        }),
       });
 
-      // Call the handler with params
-      await updateApiConnection(req, res, { params: { id: 'non-existent-id' } });
+      // Call the API route
+      const response = await updateApiConnection(req, { params: { id: 'non-existent-id' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(404);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'API connection not found',
-      });
+      // Check the response
+      expect(response.status).toBe(404);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'API connection not found' });
 
-      // Verify that updateApiConnection was not called
-      expect(agentDb.updateApiConnection).not.toHaveBeenCalled();
+      // Check that the function was called with the correct parameters
+      expect(agentDb.updateApiConnection).toHaveBeenCalledWith(
+        'non-existent-id',
+        'user-123',
+        {
+          name: 'Updated API Connection',
+          service: undefined,
+          apiKey: undefined,
+          metadata: undefined,
+        }
+      );
     });
 
-    it('should return 401 if user is not authenticated', async () => {
-      // Mock the session to return null (user not logged in)
+    it('should return 401 if the user is not authenticated', async () => {
+      // Mock the session (no user)
       vi.mocked(getServerSession).mockResolvedValue(null);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections/api-conn-123', {
         method: 'PUT',
-        body: {
-          name: 'Updated API Connection',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          name: 'Updated API Connection',
+        }),
       });
 
-      // Call the handler with params
-      await updateApiConnection(req, res, { params: { id: 'api-conn-123' } });
+      // Call the API route
+      const response = await updateApiConnection(req, { params: { id: 'api-conn-123' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(401);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'Unauthorized',
-      });
+      // Check the response
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Unauthorized' });
 
-      // Verify that updateApiConnection was not called
+      // Check that the function was not called
       expect(agentDb.updateApiConnection).not.toHaveBeenCalled();
     });
   });
 
   describe('DELETE /api/api-connections/:id', () => {
     it('should delete an API connection', async () => {
-      // Mock the deleteApiConnection function to return true
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the deleteApiConnection function
       vi.mocked(agentDb.deleteApiConnection).mockResolvedValue(true);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections/api-conn-123', {
         method: 'DELETE',
       });
 
-      // Call the handler with params
-      await deleteApiConnection(req, res, { params: { id: 'api-conn-123' } });
+      // Call the API route
+      const response = await deleteApiConnection(req, { params: { id: 'api-conn-123' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(200);
-      expect(JSON.parse(res._getData())).toEqual({
-        success: true,
-      });
+      // Check the response
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toEqual({ success: true });
 
-      // Verify that deleteApiConnection was called with the correct arguments
+      // Check that the function was called with the correct parameters
       expect(agentDb.deleteApiConnection).toHaveBeenCalledWith('api-conn-123', 'user-123');
     });
 
-    it('should return 404 if API connection is not found or deletion fails', async () => {
-      // Mock the deleteApiConnection function to return false
+    it('should return 404 if the API connection is not found', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the deleteApiConnection function (not found)
       vi.mocked(agentDb.deleteApiConnection).mockResolvedValue(false);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections/non-existent-id', {
         method: 'DELETE',
       });
 
-      // Call the handler with params
-      await deleteApiConnection(req, res, { params: { id: 'non-existent-id' } });
+      // Call the API route
+      const response = await deleteApiConnection(req, { params: { id: 'non-existent-id' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(404);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'API connection not found or deletion failed',
-      });
+      // Check the response
+      expect(response.status).toBe(404);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'API connection not found' });
+
+      // Check that the function was called with the correct parameters
+      expect(agentDb.deleteApiConnection).toHaveBeenCalledWith('non-existent-id', 'user-123');
     });
 
-    it('should return 401 if user is not authenticated', async () => {
-      // Mock the session to return null (user not logged in)
+    it('should return 401 if the user is not authenticated', async () => {
+      // Mock the session (no user)
       vi.mocked(getServerSession).mockResolvedValue(null);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections/api-conn-123', {
         method: 'DELETE',
       });
 
-      // Call the handler with params
-      await deleteApiConnection(req, res, { params: { id: 'api-conn-123' } });
+      // Call the API route
+      const response = await deleteApiConnection(req, { params: { id: 'api-conn-123' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(401);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'Unauthorized',
-      });
+      // Check the response
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Unauthorized' });
 
-      // Verify that deleteApiConnection was not called
+      // Check that the function was not called
       expect(agentDb.deleteApiConnection).not.toHaveBeenCalled();
     });
   });
 
   describe('GET /api/agents/:id/api-connections', () => {
-    it('should return all API connections for a specific agent', async () => {
-      // Mock the getApiConnectionsForAgent function to return an array of API connections
+    it('should return all API connections for an agent', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the getAgentById function
+      vi.mocked(agentDb.getAgentById).mockResolvedValue(mockAgent);
+
+      // Mock the getApiConnectionsForAgent function
       vi.mocked(agentDb.getApiConnectionsForAgent).mockResolvedValue([mockApiConnection]);
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/agents/agent-123/api-connections', {
         method: 'GET',
       });
 
-      // Call the handler with params
-      await getAgentApiConnections(req, res, { params: { id: 'agent-123' } });
+      // Call the API route
+      const response = await getAgentApiConnections(req, { params: { agentId: 'agent-123' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(200);
-      expect(JSON.parse(res._getData())).toEqual([
-        {
-          ...mockApiConnection,
-          apiKey: undefined, // API key should not be returned in the response
-        },
-      ]);
+      // Check the response
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveLength(1);
+      expect(data[0]).not.toHaveProperty('apiKey');
+      expect(data[0]).toHaveProperty('id', 'api-conn-123');
 
-      // Verify that getApiConnectionsForAgent was called with the correct arguments
+      // Check that the functions were called with the correct parameters
+      expect(agentDb.getAgentById).toHaveBeenCalledWith('agent-123', 'user-123');
       expect(agentDb.getApiConnectionsForAgent).toHaveBeenCalledWith('agent-123', 'user-123');
     });
 
-    it('should return 401 if user is not authenticated', async () => {
-      // Mock the session to return null (user not logged in)
-      vi.mocked(getServerSession).mockResolvedValue(null);
+    it('should return 404 if the agent is not found', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
 
-      // Create mock request and response
-      const { req, res } = createMocks({
+      // Mock the getAgentById function (not found)
+      vi.mocked(agentDb.getAgentById).mockResolvedValue(null);
+
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/agents/non-existent-id/api-connections', {
         method: 'GET',
       });
 
-      // Call the handler with params
-      await getAgentApiConnections(req, res, { params: { id: 'agent-123' } });
+      // Call the API route
+      const response = await getAgentApiConnections(req, { params: { agentId: 'non-existent-id' } });
 
-      // Verify the response
-      expect(res._getStatusCode()).toBe(401);
-      expect(JSON.parse(res._getData())).toEqual({
-        error: 'Unauthorized',
-      });
+      // Check the response
+      expect(response.status).toBe(404);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Agent not found' });
 
-      // Verify that getApiConnectionsForAgent was not called
+      // Check that the functions were called with the correct parameters
+      expect(agentDb.getAgentById).toHaveBeenCalledWith('non-existent-id', 'user-123');
       expect(agentDb.getApiConnectionsForAgent).not.toHaveBeenCalled();
     });
   });

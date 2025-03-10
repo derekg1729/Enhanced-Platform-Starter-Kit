@@ -1,16 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { 
   getApiConnectionById, 
   updateApiConnection, 
   deleteApiConnection 
 } from '../../../../lib/agent-db';
 
+// Define a custom session type
+interface CustomSession {
+  user: {
+    id: string;
+    name?: string;
+    email?: string;
+    image?: string;
+  };
+  expires: string;
+}
+
 /**
  * GET /api/api-connections/:id
  * 
- * Returns a specific API connection by ID.
+ * Returns a specific API connection.
  * Requires authentication and ownership of the API connection.
  */
 export async function GET(
@@ -18,7 +29,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   // Check if the user is authenticated
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as CustomSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -37,7 +48,7 @@ export async function GET(
 /**
  * PUT /api/api-connections/:id
  * 
- * Updates a specific API connection by ID.
+ * Updates a specific API connection.
  * Requires authentication and ownership of the API connection.
  */
 export async function PUT(
@@ -45,26 +56,29 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   // Check if the user is authenticated
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as CustomSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  // Check if the API connection exists and belongs to the user
-  const existingConnection = await getApiConnectionById(params.id, session.user.id);
-  if (!existingConnection) {
-    return NextResponse.json({ error: 'API connection not found' }, { status: 404 });
   }
 
   // Parse the request body
   const body = await req.json();
 
   // Update the API connection
-  const updatedConnection = await updateApiConnection(params.id, session.user.id, {
-    name: body.name,
-    apiKey: body.apiKey,
-    metadata: body.metadata,
-  });
+  const updatedConnection = await updateApiConnection(
+    params.id,
+    session.user.id,
+    {
+      name: body.name,
+      service: body.service,
+      apiKey: body.apiKey,
+      metadata: body.metadata,
+    }
+  );
+
+  if (!updatedConnection) {
+    return NextResponse.json({ error: 'API connection not found' }, { status: 404 });
+  }
 
   // Return the updated API connection (without the API key)
   const { apiKey, ...updatedConnectionWithoutKey } = updatedConnection;
@@ -74,7 +88,7 @@ export async function PUT(
 /**
  * DELETE /api/api-connections/:id
  * 
- * Deletes a specific API connection by ID.
+ * Deletes a specific API connection.
  * Requires authentication and ownership of the API connection.
  */
 export async function DELETE(
@@ -82,7 +96,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   // Check if the user is authenticated
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as CustomSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -90,12 +104,8 @@ export async function DELETE(
   // Delete the API connection
   const success = await deleteApiConnection(params.id, session.user.id);
   if (!success) {
-    return NextResponse.json(
-      { error: 'API connection not found or deletion failed' },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: 'API connection not found' }, { status: 404 });
   }
 
-  // Return success
   return NextResponse.json({ success: true });
 } 

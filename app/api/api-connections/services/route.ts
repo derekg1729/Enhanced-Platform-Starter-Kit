@@ -1,54 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
-// Define the supported services
-const supportedServices = [
+// Define a custom session type
+interface CustomSession {
+  user: {
+    id: string;
+    name?: string;
+    email?: string;
+    image?: string;
+  };
+  expires: string;
+}
+
+// Define the supported API services
+const API_SERVICES = [
   {
     id: 'openai',
     name: 'OpenAI',
-    description: 'Connect to OpenAI API for GPT models',
-    logoUrl: '/images/services/openai.svg',
-    apiKeyName: 'API Key',
-    apiKeyPattern: '^sk-[a-zA-Z0-9]{48}$',
-    apiKeyLink: 'https://platform.openai.com/account/api-keys',
-    apiKeyInstructions: 'Create an API key in the OpenAI dashboard',
+    description: 'OpenAI API for GPT models',
+    url: 'https://platform.openai.com/api-keys',
+    models: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'],
+    keyFormat: /^sk-[A-Za-z0-9]{32,}$/,
+    keyName: 'API Key',
+    keyInstructions: 'Create an API key in the OpenAI dashboard',
   },
   {
     id: 'anthropic',
     name: 'Anthropic',
-    description: 'Connect to Anthropic API for Claude models',
-    logoUrl: '/images/services/anthropic.svg',
-    apiKeyName: 'API Key',
-    apiKeyPattern: '^sk-ant-[a-zA-Z0-9]{48}$',
-    apiKeyLink: 'https://console.anthropic.com/account/keys',
-    apiKeyInstructions: 'Create an API key in the Anthropic console',
+    description: 'Anthropic API for Claude models',
+    url: 'https://console.anthropic.com/keys',
+    models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
+    keyFormat: /^sk-ant-[A-Za-z0-9]{32,}$/,
+    keyName: 'API Key',
+    keyInstructions: 'Create an API key in the Anthropic console',
   },
   {
-    id: 'github',
-    name: 'GitHub',
-    description: 'Connect to GitHub API for repository access',
-    logoUrl: '/images/services/github.svg',
-    apiKeyName: 'Personal Access Token',
-    apiKeyPattern: '^ghp_[a-zA-Z0-9]{36}$',
-    apiKeyLink: 'https://github.com/settings/tokens',
-    apiKeyInstructions: 'Create a personal access token with repo scope',
+    id: 'google',
+    name: 'Google AI',
+    description: 'Google AI API for Gemini models',
+    url: 'https://ai.google.dev/',
+    models: ['gemini-pro', 'gemini-ultra'],
+    keyFormat: /^[A-Za-z0-9_-]{39}$/,
+    keyName: 'API Key',
+    keyInstructions: 'Create an API key in the Google AI Studio',
+  },
+  {
+    id: 'custom',
+    name: 'Custom API',
+    description: 'Custom API for other models',
+    url: '',
+    models: [],
+    keyFormat: /.+/,
+    keyName: 'API Key',
+    keyInstructions: 'Enter your custom API key',
   },
 ];
 
 /**
  * GET /api/api-connections/services
  * 
- * Returns a list of supported services for API connections.
+ * Returns a list of supported API services.
  * Requires authentication.
  */
 export async function GET(req: NextRequest) {
   // Check if the user is authenticated
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as CustomSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Return the list of supported services
-  return NextResponse.json(supportedServices);
+  // Return the list of supported API services
+  return NextResponse.json(API_SERVICES);
 } 
