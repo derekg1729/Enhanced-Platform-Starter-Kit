@@ -158,7 +158,6 @@ Our tests cover the following scenarios:
 - **Dependencies**: React, Next.js, TailwindCSS
 - **Status**: Planned
 - **Related Tasks**: [TASK-005]
-- **Last Updated**: 2023-07-01
 
 #### AgentDetailsModule
 - **Purpose**: Display agent details
@@ -617,4 +616,1046 @@ Database operations are performed using Drizzle ORM, which provides a type-safe 
 3. **Update**: Update existing records in the database.
 4. **Delete**: Remove records from the database.
 
-All operations are performed with row-level security to ensure data isolation between tenants. 
+All operations are performed with row-level security to ensure data isolation between tenants.
+
+## Implementation Plan for [TASK-HW019] Replace Mocked Agents with Database Integration
+
+### Overview
+
+Currently, the Agents Page displays mocked, hardcoded agents rather than fetching real agents from the database. This implementation plan outlines the steps needed to replace these mocked agents with real database integration.
+
+### Architecture
+
+The implementation will follow the Next.js App Router architecture with proper separation of server and client components:
+
+1. **Server Component (page.tsx)**: Will handle metadata and render the client component
+2. **Client Component (AgentsPageClient.tsx)**: Will handle state management and data fetching
+3. **API Route (/api/agents)**: Will handle database queries and return agent data
+
+### Database Schema
+
+We'll use the existing agent schema defined in the Drizzle ORM setup:
+
+```typescript
+export const agents = pgTable(
+  "agents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    systemPrompt: text("system_prompt").notNull(),
+    model: text("model").default("gpt-3.5-turbo"),
+    temperature: numeric("temperature").default("0.7"),
+    maxTokens: integer("max_tokens").default(2000),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    imageUrl: text("image_url"),
+    status: text("status").default("active"),
+    type: text("type").default("chat"),
+    userId: text("user_id").notNull(),
+    tenantId: text("tenant_id").notNull(),
+  },
+  (table) => {
+    return {
+      userIdIdx: index("agents_user_id_idx").on(table.userId),
+      tenantIdIdx: index("agents_tenant_id_idx").on(table.tenantId),
+      nameIdx: index("agents_name_idx").on(table.name),
+    };
+  }
+);
+```
+
+### Implementation Steps
+
+#### 1. Update API Route
+
+Ensure the `/api/agents` API route is properly implemented to:
+- Fetch agents from the database
+- Apply proper tenant isolation using row-level security
+- Handle errors gracefully
+- Return properly formatted agent data
+
+#### 2. Update AgentsPageClient Component
+
+Modify the `AgentsPageClient.tsx` component to:
+- Remove hardcoded mock data
+- Implement proper data fetching using `useEffect` and `fetch`
+- Add loading state management
+- Implement error handling
+- Update the UI to display real agents
+
+```typescript
+// Current implementation with mocked data
+const [agents, setAgents] = useState<Agent[]>(initialAgents);
+const [isLoading, setIsLoading] = useState<boolean>(initialLoading);
+const [error, setError] = useState<string | null>(initialError);
+
+useEffect(() => {
+  if (testMode) return;
+  
+  const fetchAgents = async () => {
+    try {
+      const response = await fetch('/api/agents');
+      if (!response.ok) {
+        throw new Error(`Error fetching agents: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setAgents(data);
+      setIsLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setIsLoading(false);
+    }
+  };
+
+  fetchAgents();
+}, [testMode]);
+```
+
+#### 3. Update Tests
+
+Update the tests to use Mock Service Worker (MSW) for mocking API responses:
+- Create MSW handlers for the `/api/agents` endpoint
+- Test different scenarios (success, empty, error)
+- Ensure tests are isolated and don't depend on actual API calls
+
+#### 4. Add Empty State
+
+Ensure the UI properly displays an empty state when no agents are returned from the API:
+- Create an empty state component
+- Display it when `agents.length === 0 && !isLoading`
+- Add a call-to-action to create a new agent
+
+#### 5. Add Loading State
+
+Enhance the loading state to provide a better user experience:
+- Use skeleton loaders instead of a simple spinner
+- Ensure loading state is visually consistent with the loaded content
+
+### Testing Strategy
+
+1. **Unit Tests**:
+   - Test the AgentsPageClient component in isolation
+   - Mock the fetch API to return different responses
+   - Verify the component renders correctly in different states
+
+2. **Integration Tests**:
+   - Test the integration between the component and the API
+   - Use MSW to mock API responses
+   - Verify the end-to-end flow works correctly
+
+3. **E2E Tests**:
+   - Test the complete flow from loading the page to displaying agents
+   - Verify navigation and interactions work correctly
+
+### Acceptance Criteria Verification
+
+1. **Update AgentsPageClient to fetch real agents**:
+   - Implement fetch in useEffect
+   - Remove hardcoded mock data
+
+2. **Implement proper error handling**:
+   - Add try/catch block
+   - Display error messages to the user
+   - Log errors for debugging
+
+3. **Add loading states**:
+   - Implement skeleton loaders
+   - Ensure loading state is visually consistent
+
+4. **Update tests**:
+   - Use MSW for API mocking
+   - Test all possible states (loading, success, empty, error)
+
+5. **Ensure empty state is displayed**:
+   - Create empty state component
+   - Display when no agents exist
+
+### Potential Challenges and Mitigations
+
+1. **Challenge**: Ensuring proper tenant isolation
+   **Mitigation**: Use middleware to extract tenant information and apply it to database queries
+
+2. **Challenge**: Handling API failures gracefully
+   **Mitigation**: Implement comprehensive error handling and retry mechanisms
+
+3. **Challenge**: Maintaining test coverage
+   **Mitigation**: Update tests in parallel with implementation changes
+
+### Dependencies
+
+- Existing agent database schema
+- Authentication middleware for tenant isolation
+- API route implementation
+
+### Timeline
+
+Estimated completion time: 1-2 days
+
+1. API route implementation and testing: 0.5 day
+2. AgentsPageClient updates: 0.5 day
+3. Test updates: 0.5 day
+4. UI refinements and empty state: 0.5 day 
+
+## Implementation Plan for [TASK-HW020] Implement Agent Creation Form Submission
+
+### Overview
+
+Currently, the agent creation form exists but doesn't submit data to create real agents in the database. This implementation plan outlines the steps needed to connect the form to the API and create real agents.
+
+### Architecture
+
+The implementation will follow the Next.js App Router architecture:
+
+1. **Client Component (AgentCreationForm.tsx)**: Will handle form state, validation, and submission
+2. **API Route (/api/agents)**: Will handle agent creation in the database
+3. **Server Actions**: Optionally, we could use Next.js server actions for form submission
+
+### Form Schema
+
+We'll define a Zod schema for form validation:
+
+```typescript
+import { z } from "zod";
+
+export const agentFormSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  description: z.string().optional(),
+  systemPrompt: z.string().min(1, "System prompt is required"),
+  model: z.string().default("gpt-3.5-turbo"),
+  temperature: z.string().default("0.7"),
+  maxTokens: z.number().int().positive().default(2000),
+  imageUrl: z.string().optional(),
+  type: z.string().default("chat"),
+});
+
+export type AgentFormValues = z.infer<typeof agentFormSchema>;
+```
+
+### Implementation Steps
+
+#### 1. Update API Route
+
+Ensure the POST handler for `/api/agents` is properly implemented to:
+- Validate incoming data using Zod
+- Create a new agent in the database
+- Apply proper tenant isolation
+- Handle errors gracefully
+- Return the created agent data
+
+```typescript
+// Example POST handler
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const tenantId = getTenantId();
+    const userId = session.user.id;
+    
+    const body = await request.json();
+    
+    // Validate request body
+    const validatedData = agentFormSchema.parse(body);
+    
+    // Create agent in database
+    const newAgent = await db.insert(agents).values({
+      ...validatedData,
+      userId,
+      tenantId,
+    }).returning();
+    
+    return new Response(JSON.stringify(newAgent[0]), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error creating agent:", error);
+    if (error instanceof z.ZodError) {
+      return new Response(JSON.stringify({ error: "Validation error", details: error.errors }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ error: "Failed to create agent" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+```
+
+#### 2. Update Agent Creation Form
+
+Modify the `AgentCreationForm.tsx` component to:
+- Use a form library like react-hook-form with Zod validation
+- Implement form submission logic
+- Add loading state during submission
+- Handle success and error states
+- Redirect to the agent details page on success
+
+```typescript
+// Example form implementation
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { agentFormSchema, AgentFormValues } from "@/lib/schemas/agent";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function AgentCreationForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  
+  const form = useForm<AgentFormValues>({
+    resolver: zodResolver(agentFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      systemPrompt: "",
+      model: "gpt-3.5-turbo",
+      temperature: "0.7",
+      maxTokens: 2000,
+      type: "chat",
+    },
+  });
+  
+  const onSubmit = async (data: AgentFormValues) => {
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const response = await fetch("/api/agents", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create agent");
+      }
+      
+      const newAgent = await response.json();
+      
+      // Show success message
+      toast.success("Agent created successfully!");
+      
+      // Redirect to agent details page
+      router.push(`/agents/${newAgent.id}`);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      {/* Form fields */}
+      {error && <div className="text-red-500">{error}</div>}
+      <button 
+        type="submit" 
+        disabled={isSubmitting}
+        className="btn btn-primary"
+      >
+        {isSubmitting ? "Creating..." : "Create Agent"}
+      </button>
+    </form>
+  );
+}
+```
+
+#### 3. Add Form Validation
+
+Implement client-side validation using Zod and react-hook-form:
+- Validate required fields
+- Add validation messages
+- Show validation errors in the UI
+
+#### 4. Implement Success and Error Handling
+
+Add proper feedback for form submission:
+- Show loading state during submission
+- Display success message on successful creation
+- Show error messages for failed submissions
+- Add toast notifications for better UX
+
+#### 5. Add Redirect Logic
+
+Implement redirection after successful form submission:
+- Redirect to the agent details page
+- Pass the new agent ID in the URL
+- Refresh the router to update the UI
+
+#### 6. Update Tests
+
+Create comprehensive tests for the form submission:
+- Test form validation
+- Test successful submission
+- Test error handling
+- Mock API responses using MSW
+
+### Testing Strategy
+
+1. **Unit Tests**:
+   - Test form validation logic
+   - Test form submission handling
+   - Verify error handling works correctly
+
+2. **Integration Tests**:
+   - Test the integration between the form and the API
+   - Use MSW to mock API responses
+   - Verify the end-to-end flow works correctly
+
+3. **E2E Tests**:
+   - Test the complete flow from filling out the form to successful submission
+   - Verify redirection works correctly
+   - Test error scenarios
+
+### Acceptance Criteria Verification
+
+1. **Implement form submission to the `/api/agents` endpoint**:
+   - Add fetch call in form submission handler
+   - Handle response appropriately
+
+2. **Add validation for required fields**:
+   - Implement Zod schema
+   - Connect to react-hook-form
+   - Display validation errors
+
+3. **Display success message on successful creation**:
+   - Add toast notification
+   - Show success message in UI
+
+4. **Show error messages for failed submissions**:
+   - Add error state
+   - Display error messages
+   - Provide clear feedback to users
+
+5. **Redirect to the agent details page after creation**:
+   - Use router.push to navigate
+   - Pass agent ID in URL
+   - Refresh router to update UI
+
+6. **Update tests to verify form submission**:
+   - Add unit tests for validation
+   - Add integration tests for submission
+   - Test error scenarios
+
+### Potential Challenges and Mitigations
+
+1. **Challenge**: Handling form validation errors
+   **Mitigation**: Use Zod with react-hook-form for robust validation
+
+2. **Challenge**: Managing form state during submission
+   **Mitigation**: Use React state to track submission status
+
+3. **Challenge**: Providing good UX during form submission
+   **Mitigation**: Add loading states, disable submit button, and show clear feedback
+
+### Dependencies
+
+- Existing agent creation form UI
+- API route for agent creation
+- Authentication middleware
+- Form validation libraries (Zod, react-hook-form)
+
+### Timeline
+
+Estimated completion time: 1-2 days
+
+1. API route implementation: 0.5 day
+2. Form validation and submission: 0.5 day
+3. Success/error handling and redirection: 0.5 day
+4. Testing: 0.5 day 
+
+## Implementation Plan for [TASK-HW021] Implement Agent CRUD Operations
+
+### Overview
+
+Currently, the agent dashboard allows viewing agents but lacks complete CRUD (Create, Read, Update, Delete) functionality. This implementation plan outlines the steps needed to implement the full set of CRUD operations for agents.
+
+### Architecture
+
+The implementation will follow the Next.js App Router architecture:
+
+1. **Client Components**:
+   - `AgentCard.tsx`: Will include edit and delete actions
+   - `AgentEditForm.tsx`: Will handle agent editing
+   - `DeleteAgentDialog.tsx`: Will handle agent deletion confirmation
+
+2. **API Routes**:
+   - `/api/agents/[agentId]`: Will handle GET, PUT, and DELETE operations
+
+### Implementation Steps
+
+#### 1. Update API Routes
+
+Implement or enhance the `/api/agents/[agentId]` API route to handle:
+
+**GET**: Fetch a single agent by ID
+```typescript
+export async function GET(
+  request: Request,
+  { params }: { params: { agentId: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const tenantId = getTenantId();
+    const { agentId } = params;
+    
+    const agent = await db.query.agents.findFirst({
+      where: and(
+        eq(agents.id, agentId),
+        eq(agents.tenantId, tenantId)
+      ),
+    });
+    
+    if (!agent) {
+      return new Response(JSON.stringify({ error: "Agent not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    
+    return new Response(JSON.stringify(agent), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error fetching agent:", error);
+    return new Response(JSON.stringify({ error: "Failed to fetch agent" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+```
+
+**PUT**: Update an existing agent
+```typescript
+export async function PUT(
+  request: Request,
+  { params }: { params: { agentId: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const tenantId = getTenantId();
+    const { agentId } = params;
+    
+    // Check if agent exists and belongs to tenant
+    const existingAgent = await db.query.agents.findFirst({
+      where: and(
+        eq(agents.id, agentId),
+        eq(agents.tenantId, tenantId)
+      ),
+    });
+    
+    if (!existingAgent) {
+      return new Response(JSON.stringify({ error: "Agent not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    
+    const body = await request.json();
+    
+    // Validate request body
+    const validatedData = agentFormSchema.parse(body);
+    
+    // Update agent in database
+    const updatedAgent = await db.update(agents)
+      .set({
+        ...validatedData,
+        updatedAt: new Date(),
+      })
+      .where(and(
+        eq(agents.id, agentId),
+        eq(agents.tenantId, tenantId)
+      ))
+      .returning();
+    
+    return new Response(JSON.stringify(updatedAgent[0]), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error updating agent:", error);
+    if (error instanceof z.ZodError) {
+      return new Response(JSON.stringify({ error: "Validation error", details: error.errors }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ error: "Failed to update agent" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+```
+
+**DELETE**: Delete an agent
+```typescript
+export async function DELETE(
+  request: Request,
+  { params }: { params: { agentId: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const tenantId = getTenantId();
+    const { agentId } = params;
+    
+    // Check if agent exists and belongs to tenant
+    const existingAgent = await db.query.agents.findFirst({
+      where: and(
+        eq(agents.id, agentId),
+        eq(agents.tenantId, tenantId)
+      ),
+    });
+    
+    if (!existingAgent) {
+      return new Response(JSON.stringify({ error: "Agent not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    
+    // Delete agent from database
+    await db.delete(agents)
+      .where(and(
+        eq(agents.id, agentId),
+        eq(agents.tenantId, tenantId)
+      ));
+    
+    return new Response(null, {
+      status: 204,
+    });
+  } catch (error) {
+    console.error("Error deleting agent:", error);
+    return new Response(JSON.stringify({ error: "Failed to delete agent" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+```
+
+#### 2. Implement Agent Edit Form
+
+Create an `AgentEditForm.tsx` component that:
+- Fetches the current agent data
+- Populates the form with existing values
+- Handles form submission to update the agent
+- Provides validation and error handling
+
+```typescript
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { agentFormSchema, AgentFormValues } from "@/lib/schemas/agent";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Agent } from "@/types";
+
+interface AgentEditFormProps {
+  agentId: string;
+  initialData?: Agent;
+}
+
+export default function AgentEditForm({ agentId, initialData }: AgentEditFormProps) {
+  const [isLoading, setIsLoading] = useState(!initialData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  
+  const form = useForm<AgentFormValues>({
+    resolver: zodResolver(agentFormSchema),
+    defaultValues: initialData ? {
+      name: initialData.name,
+      description: initialData.description || "",
+      systemPrompt: initialData.systemPrompt,
+      model: initialData.model || "gpt-3.5-turbo",
+      temperature: initialData.temperature?.toString() || "0.7",
+      maxTokens: initialData.maxTokens || 2000,
+      type: initialData.type || "chat",
+    } : {
+      name: "",
+      description: "",
+      systemPrompt: "",
+      model: "gpt-3.5-turbo",
+      temperature: "0.7",
+      maxTokens: 2000,
+      type: "chat",
+    },
+  });
+  
+  useEffect(() => {
+    if (initialData) return;
+    
+    const fetchAgent = async () => {
+      try {
+        const response = await fetch(`/api/agents/${agentId}`);
+        if (!response.ok) {
+          throw new Error(`Error fetching agent: ${response.statusText}`);
+        }
+        const data = await response.json();
+        
+        // Reset form with fetched data
+        form.reset({
+          name: data.name,
+          description: data.description || "",
+          systemPrompt: data.systemPrompt,
+          model: data.model || "gpt-3.5-turbo",
+          temperature: data.temperature?.toString() || "0.7",
+          maxTokens: data.maxTokens || 2000,
+          type: data.type || "chat",
+        });
+        
+        setIsLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        setIsLoading(false);
+      }
+    };
+    
+    fetchAgent();
+  }, [agentId, form, initialData]);
+  
+  const onSubmit = async (data: AgentFormValues) => {
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/agents/${agentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update agent");
+      }
+      
+      // Show success message
+      toast.success("Agent updated successfully!");
+      
+      // Redirect to agent details page
+      router.push(`/agents/${agentId}`);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (isLoading) {
+    return <div>Loading agent data...</div>;
+  }
+  
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      {/* Form fields */}
+      {error && <div className="text-red-500">{error}</div>}
+      <button 
+        type="submit" 
+        disabled={isSubmitting}
+        className="btn btn-primary"
+      >
+        {isSubmitting ? "Saving..." : "Save Changes"}
+      </button>
+    </form>
+  );
+}
+```
+
+#### 3. Implement Delete Agent Dialog
+
+Create a `DeleteAgentDialog.tsx` component that:
+- Shows a confirmation dialog before deletion
+- Handles the deletion API call
+- Provides feedback on success or failure
+
+```typescript
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
+interface DeleteAgentDialogProps {
+  agentId: string;
+  agentName: string;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function DeleteAgentDialog({
+  agentId,
+  agentName,
+  isOpen,
+  onClose,
+}: DeleteAgentDialogProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/agents/${agentId}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("Agent not found");
+        }
+        throw new Error("Failed to delete agent");
+      }
+      
+      // Show success message
+      toast.success("Agent deleted successfully!");
+      
+      // Close dialog and redirect
+      onClose();
+      router.push("/agents");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Agent</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete the agent "{agentName}"? This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        {error && <div className="text-red-500 mt-2">{error}</div>}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+#### 4. Update Agent Card Component
+
+Enhance the `AgentCard.tsx` component to include edit and delete actions:
+
+```typescript
+import { useState } from "react";
+import { Agent } from "@/types";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import DeleteAgentDialog from "./DeleteAgentDialog";
+
+interface AgentCardProps {
+  agent: Agent;
+}
+
+export default function AgentCard({ agent }: AgentCardProps) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const router = useRouter();
+  
+  const handleEdit = () => {
+    router.push(`/agents/${agent.id}/edit`);
+  };
+  
+  const handleChat = () => {
+    router.push(`/agents/${agent.id}/chat`);
+  };
+  
+  return (
+    <Card>
+      <CardContent>
+        {/* Agent details */}
+        <h3 className="text-lg font-semibold">{agent.name}</h3>
+        <p className="text-sm text-gray-500">{agent.description}</p>
+        {/* Other agent details */}
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button variant="outline" onClick={handleEdit}>
+          Edit
+        </Button>
+        <Button variant="default" onClick={handleChat}>
+          Chat
+        </Button>
+        <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+          Delete
+        </Button>
+      </CardFooter>
+      
+      <DeleteAgentDialog
+        agentId={agent.id}
+        agentName={agent.name}
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+      />
+    </Card>
+  );
+}
+```
+
+#### 5. Create Edit Agent Page
+
+Create a new page at `app/app/(dashboard)/agents/[agentId]/edit/page.tsx`:
+
+```typescript
+import { Metadata } from "next";
+import AgentEditForm from "@/components/agent/AgentEditForm";
+
+export const metadata: Metadata = {
+  title: "Edit Agent",
+  description: "Edit your agent's configuration",
+};
+
+export default function EditAgentPage({ params }: { params: { agentId: string } }) {
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-6">Edit Agent</h1>
+      <AgentEditForm agentId={params.agentId} />
+    </div>
+  );
+}
+```
+
+#### 6. Update Tests
+
+Create comprehensive tests for all CRUD operations:
+
+- **Unit Tests**:
+  - Test API route handlers
+  - Test form components
+  - Test dialog components
+
+- **Integration Tests**:
+  - Test the edit flow
+  - Test the delete flow
+  - Test error handling
+
+### Testing Strategy
+
+1. **Unit Tests**:
+   - Test each API route handler (GET, PUT, DELETE)
+   - Test form components
+   - Test dialog functionality
+   - Test UI components in isolation
+
+2. **Integration Tests**:
+   - Test the complete edit flow from loading data to saving changes
+   - Test the delete flow from confirmation to successful deletion
+   - Test error handling for all operations
+
+3. **E2E Tests**:
+   - Test the complete user flows for editing and deleting agents
+   - Verify UI feedback and navigation
+
+### Acceptance Criteria Verification
+
+1. **Implement agent deletion functionality**:
+   - Create DELETE API route handler
+   - Implement confirmation dialog
+   - Add delete button to agent card
+   - Handle success and error states
+
+2. **Add agent editing capability**:
+   - Create PUT API route handler
+   - Implement edit form component
+   - Add edit button to agent card
+   - Create edit page
+   - Handle form submission and validation
+
+3. **Ensure proper error handling**:
+   - Add error states to all components
+   - Display meaningful error messages
+   - Handle network errors and API failures
+
+4. **Add confirmation dialogs**:
+   - Implement confirmation dialog for deletion
+   - Prevent accidental data loss
+
+5. **Update UI to reflect changes**:
+   - Refresh the UI after successful operations
+   - Provide visual feedback during operations
+   - Use toast notifications for success/error messages
+
+6. **Add comprehensive tests**:
+   - Create unit tests for all components
+   - Add integration tests for all flows
+   - Test error scenarios
+
+### Potential Challenges and Mitigations
+
+1. **Challenge**: Maintaining consistent state across the application
+   **Mitigation**: Use router.refresh() to update the UI after operations
+
+2. **Challenge**: Handling race conditions in concurrent operations
+   **Mitigation**: Implement proper loading states and disable buttons during operations
+
+3. **Challenge**: Ensuring proper error handling across all operations
+   **Mitigation**: Create reusable error handling utilities
+
+### Dependencies
+
+- Existing agent database schema
+- Authentication middleware
+- API routes for agent operations
+- UI components for forms and dialogs
+
+### Timeline
+
+Estimated completion time: 2-3 days
+
+1. API route implementation: 0.5-1 day
+2. Edit form implementation: 0.5-1 day
+3. Delete dialog implementation: 0.5 day
+4. UI integration and testing: 0.5-1 day 

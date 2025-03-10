@@ -6,6 +6,16 @@
 
 ## Fixed Bugs
 
+### [BUG-004] ESLint Warnings in Test Files Causing Build Integration Test Failure
+- **Severity**: Medium
+- **Status**: Fixed
+- **Description**: The build integration test is failing due to ESLint warnings about using `<img>` elements in test mocks for Next.js Image components.
+- **Error Message**: "ESLint checks failed: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image`..."
+- **Root Cause**: The test files for agent-list and agent-creation integration tests use `<img>` elements in their mocks for the Next.js Image component, which triggers ESLint warnings. The build integration test treats these warnings as errors.
+- **Fix**: Created a centralized mock for the Next.js Image component in tests/__helpers__/nextjs-mocks.tsx and updated the setup file to use this mock. Removed local mocks from test files.
+- **Prevention**: Added proper mocking approach for Next.js components in tests to avoid ESLint warnings.
+- **Fixed Date**: June 20, 2024
+
 ### [BUG-003] API Connection Creation Error
 - **Severity**: High
 - **Status**: Fixed

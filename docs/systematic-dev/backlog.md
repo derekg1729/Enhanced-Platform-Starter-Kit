@@ -56,6 +56,17 @@ This backlog is organized by features. Tasks within the currently active feature
     - Accessibility compliance
     - Unit tests for chat components
 
+- **[TASK-HW000D] Refactor AgentsPage Component for Server/Client Separation**
+  - **Priority**: High
+  - **Status**: Done
+  - **Description**: Refactor the AgentsPage component to properly separate server and client components following Next.js best practices.
+  - **Acceptance Criteria**:
+    - Create a server component (page.tsx) that handles metadata and renders the client component
+    - Move all state management and data fetching logic to a client component (AgentsPageClient.tsx)
+    - Update all tests to work with the new component structure
+    - Ensure all tests pass with the new implementation
+    - Document the new component architecture
+
 ### Phase 1: Design and Planning
 
 - **[TASK-HW001] Design Agent Creation Flow**
@@ -233,6 +244,104 @@ This backlog is organized by features. Tasks within the currently active feature
     - User documentation
     - Developer documentation
     - Known issues and limitations
+
+### Phase 6: Hello World Agent MVP Implementation
+
+- **[TASK-HW016] Implement Real-time Agent Chat**
+  - **Priority**: High
+  - **Status**: Todo
+  - **Description**: Implement real-time chat functionality with the hello-world agent.
+  - **Acceptance Criteria**:
+    - Real-time message streaming from OpenAI API
+    - Proper conversation context management
+    - Message persistence in the database
+    - Conversation history retrieval
+    - Error handling for API failures
+    - Unit and integration tests for chat functionality
+
+- **[TASK-HW017] Implement Agent Configuration Management**
+  - **Priority**: Medium
+  - **Status**: Todo
+  - **Description**: Implement the ability to configure agent parameters and settings.
+  - **Acceptance Criteria**:
+    - UI for configuring agent parameters (model, temperature, etc.)
+    - Persistence of configuration in the database
+    - Application of configuration to API calls
+    - Validation of configuration parameters
+    - Tests for configuration management
+
+- **[TASK-HW018] Implement Agent Conversation History**
+  - **Priority**: Medium
+  - **Status**: Todo
+  - **Description**: Implement the ability to view and manage conversation history with agents.
+  - **Acceptance Criteria**:
+    - UI for viewing conversation history
+    - Pagination for long conversation histories
+    - Ability to clear conversation history
+    - Proper tenant isolation for conversation data
+    - Tests for conversation history management
+
+### Phase 7: Real Agents Implementation
+
+- **[TASK-HW019] Replace Mocked Agents with Database Integration**
+  - **Priority**: High
+  - **Status**: Todo
+  - **Description**: Replace the mocked agents on the Agents Page with real agents fetched from the database.
+  - **Acceptance Criteria**:
+    - Update the AgentsPageClient component to fetch real agents from the API
+    - Remove hardcoded mock data
+    - Implement proper error handling for API failures
+    - Add loading states during data fetching
+    - Update tests to use MSW for mocking API responses
+    - Ensure empty state is displayed when no agents exist
+
+- **[TASK-HW020] Implement Agent Creation Form Submission**
+  - **Priority**: High
+  - **Status**: Todo
+  - **Description**: Connect the agent creation form to the API to create real agents in the database.
+  - **Acceptance Criteria**:
+    - Implement form submission to the `/api/agents` endpoint
+    - Add validation for required fields
+    - Display success message on successful creation
+    - Show error messages for failed submissions
+    - Redirect to the agent details page after creation
+    - Update tests to verify form submission
+
+- **[TASK-HW021] Implement Agent CRUD Operations**
+  - **Priority**: High
+  - **Status**: Todo
+  - **Description**: Implement the complete set of CRUD operations for agents.
+  - **Acceptance Criteria**:
+    - Implement agent deletion functionality
+    - Add agent editing capability
+    - Ensure proper error handling for all operations
+    - Add confirmation dialogs for destructive actions
+    - Update UI to reflect changes immediately
+    - Add comprehensive tests for all CRUD operations
+
+- **[TASK-HW022] Add Agent Filtering and Sorting**
+  - **Priority**: Medium
+  - **Status**: Todo
+  - **Description**: Implement filtering and sorting capabilities for the agents list.
+  - **Acceptance Criteria**:
+    - Add search functionality to filter agents by name or description
+    - Implement sorting by creation date, name, and status
+    - Ensure filtering and sorting work together
+    - Maintain state during navigation
+    - Add pagination for large numbers of agents
+    - Update tests to verify filtering and sorting
+
+- **[TASK-HW023] Implement Agent Status Management**
+  - **Priority**: Medium
+  - **Status**: Todo
+  - **Description**: Add the ability to manage agent status (active, inactive, etc.).
+  - **Acceptance Criteria**:
+    - Add UI controls for changing agent status
+    - Implement API endpoints for status updates
+    - Display status indicators on agent cards
+    - Add filtering by status
+    - Ensure proper error handling
+    - Update tests to verify status management
 
 ## Other Tasks
 
