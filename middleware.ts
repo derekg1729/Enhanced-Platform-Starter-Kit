@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { setCurrentUserForRLS } from "./lib/db-middleware";
-import { getUserById } from "./lib/user-db";
-import { ensureUserExists } from "./lib/auth";
 
 export const config = {
   matcher: [
@@ -25,34 +23,10 @@ export default async function middleware(req: NextRequest) {
   // 1. Handle authentication for app subdomains (all environments)
   if (hostname.startsWith('app.') || hostname.startsWith('app-')) {
     const session = await getToken({ req });
-    
-    // Redirect to login if not authenticated
     if (!session && pathname !== "/login") {
       return NextResponse.redirect(new URL("/login", req.url));
     } else if (session && pathname === "/login") {
       return NextResponse.redirect(new URL("/", req.url));
-    }
-    
-    // If authenticated, ensure user exists in our database
-    if (session && pathname !== "/login") {
-      // Check if user exists in our database
-      const userExists = await getUserById(session.sub as string);
-      
-      // If user doesn't exist, ensure they're created
-      if (!userExists && session.sub && session.email) {
-        const userCreated = await ensureUserExists({
-          id: session.sub,
-          name: session.name || null,
-          email: session.email,
-          image: session.picture || null
-        });
-        
-        // If user creation failed, redirect to login
-        if (!userCreated) {
-          console.error("Failed to create user in database");
-          return NextResponse.redirect(new URL("/login", req.url));
-        }
-      }
     }
     
     url.pathname = `/app${pathname === "/" ? "" : pathname}`;
