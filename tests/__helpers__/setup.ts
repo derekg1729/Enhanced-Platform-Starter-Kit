@@ -2,6 +2,7 @@ import '@testing-library/jest-dom'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 import { setupServer } from 'msw/node'
 import { HttpResponse, http } from 'msw'
+import { MockNextImage, MockNextLink } from './nextjs-mocks'
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
@@ -14,6 +15,18 @@ vi.mock('next/navigation', () => ({
     get: vi.fn(),
   }),
   usePathname: () => '/test-path',
+}))
+
+// Mock Next.js Image component
+vi.mock('next/image', () => ({
+  __esModule: true,
+  default: MockNextImage,
+}))
+
+// Mock Next.js Link component
+vi.mock('next/link', () => ({
+  __esModule: true,
+  default: MockNextLink,
 }))
 
 // Mock environment variables

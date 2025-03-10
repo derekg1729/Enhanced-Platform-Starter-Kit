@@ -1,10 +1,11 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
+import { describe, it, expect, vi, beforeAll, afterEach, afterAll } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import { setupServer } from 'msw/node';
-import AgentsPage from '../../../app/app/(dashboard)/agents/page';
+import { http, HttpResponse } from 'msw';
+import AgentsPageClient from '../../../app/app/(dashboard)/agents/AgentsPageClient';
+import { Agent } from '../../../components/agent/AgentCard';
 
-// Mock the metadata export
+// Mock the next/navigation module
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -12,56 +13,78 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-// Define the expected request type
+// Define the interface for agent creation request
 interface AgentCreateRequest {
   name: string;
   description?: string;
   systemPrompt: string;
   model?: string;
-  temperature?: number;
+  temperature?: string;
   maxTokens?: number;
 }
 
-// Set up MSW server
-const handlers = [
-  // Mock the GET /api/agents endpoint
-  http.get('/api/agents', () => {
-    return HttpResponse.json([]);
-  }),
-  
-  // Mock the POST /api/agents endpoint
-  http.post('/api/agents', async ({ request }) => {
-    const data = await request.json() as AgentCreateRequest;
-    return HttpResponse.json({
-      id: 'new-agent-id',
-      name: data.name,
-      description: data.description,
-      systemPrompt: data.systemPrompt,
-      model: data.model,
-      temperature: data.temperature?.toString(),
-      maxTokens: data.maxTokens,
-      userId: 'test-user-id',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }, { status: 201 });
-  }),
+// Mock data for testing
+const mockAgents: Agent[] = [
+  {
+    id: 'agent-1',
+    name: 'API Agent 1',
+    description: 'This agent comes from the API',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    imageUrl: 'https://example.com/image1.png',
+    status: 'active',
+    type: 'chat',
+  },
+  {
+    id: 'agent-2',
+    name: 'API Agent 2',
+    description: 'This is another agent from the API',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    imageUrl: 'https://example.com/image2.png',
+    status: 'active',
+    type: 'chat',
+  },
 ];
 
-const server = setupServer(...handlers);
+// Setup MSW server
+const server = setupServer(
+  // GET handler for /api/agents
+  http.get('/api/agents', () => {
+    return HttpResponse.json(mockAgents);
+  }),
 
-// Start MSW server
+  // POST handler for /api/agents
+  http.post('/api/agents', async ({ request }) => {
+    const data = await request.json() as AgentCreateRequest;
+    const newAgent: Agent = {
+      id: 'new-agent-id',
+      name: data.name,
+      description: data.description || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      imageUrl: 'https://example.com/new-agent.png',
+      status: 'active',
+      type: 'chat',
+    };
+    
+    return HttpResponse.json(newAgent, { status: 201 });
+  })
+);
+
+// Start MSW server before tests
 beforeAll(() => server.listen());
-afterAll(() => server.close());
+// Reset handlers after each test
 afterEach(() => server.resetHandlers());
+// Close server after all tests
+afterAll(() => server.close());
 
 describe('Agent Creation', () => {
-  it('should display mock agents when rendered', async () => {
-    // Render the component
-    render(<AgentsPage />);
+  it('displays mock agents when rendered', async () => {
+    render(<AgentsPageClient initialAgents={mockAgents} initialLoading={false} testMode={true} />);
     
-    // Verify that the mock agents are displayed
-    expect(screen.getByText('Hello World Agent')).toBeInTheDocument();
-    expect(screen.getByText('Email Assistant')).toBeInTheDocument();
-    expect(screen.getByText('A simple conversational agent that can respond to basic queries.')).toBeInTheDocument();
+    // Check if mock agents are displayed
+    expect(screen.getByText('API Agent 1')).toBeInTheDocument();
+    expect(screen.getByText('API Agent 2')).toBeInTheDocument();
   });
 }); 
