@@ -1,6 +1,227 @@
 # Backlog
 
-## Tasks
+## Features and Prioritization
+
+This backlog is organized by features. Tasks within the currently active feature should be prioritized over other tasks, regardless of their individual priority levels. The current active feature is **hello-world-agent**.
+
+## Active Feature: hello-world-agent
+
+### Phase 0: Frontend Foundation
+
+- **[TASK-HW000] Create Agent Platform UI Wireframes**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Create comprehensive wireframes for the agent platform UI, including the agent dashboard, creation flow, and chat interface.
+  - **Acceptance Criteria**:
+    - High-fidelity wireframes for agent dashboard
+    - Wireframes for agent creation workflow
+    - Wireframes for agent chat interface
+    - Mobile and desktop responsive designs
+    - Component hierarchy documentation
+
+- **[TASK-HW000A] Implement Agent Dashboard UI**
+  - **Priority**: High
+  - **Status**: Done
+  - **Description**: Implement the frontend UI for the agent dashboard where users can view and manage their agents.
+  - **Acceptance Criteria**:
+    - Responsive dashboard layout
+    - Agent card components with preview information
+    - Create new agent button
+    - Empty state for new users
+    - Loading states and error handling
+    - Unit tests for all components
+
+- **[TASK-HW000B] Implement Agent Creation UI**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Implement the frontend UI for creating and configuring a new agent.
+  - **Acceptance Criteria**:
+    - Multi-step form with progress indicator
+    - Form validation for all inputs
+    - Preview of agent configuration
+    - Success and error states
+    - Responsive design for mobile and desktop
+    - Unit tests for form components
+
+- **[TASK-HW000C] Implement Agent Chat Interface**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Implement the frontend UI for the chat interface where users interact with agents.
+  - **Acceptance Criteria**:
+    - Message thread display with user and agent messages
+    - Message input with send button
+    - Loading indicators for agent responses
+    - Error handling for failed messages
+    - Responsive design for all devices
+    - Accessibility compliance
+    - Unit tests for chat components
+
+### Phase 1: Design and Planning
+
+- **[TASK-HW001] Design Agent Creation Flow**
+  - **Priority**: High
+  - **Status**: Done
+  - **Description**: Design the user flow for creating a new agent, including wireframes and form fields.
+  - **Acceptance Criteria**:
+    - User flow diagram for agent creation
+    - Wireframes for each step in the creation process
+    - Defined form fields and validation rules
+    - Design principles for a simple, intuitive interface
+
+- **[TASK-HW002] Design Agent Interaction Experience**
+  - **Priority**: High
+  - **Status**: Done
+  - **Description**: Design the user experience for interacting with agents, including chat interface and feedback mechanisms.
+  - **Acceptance Criteria**:
+    - User flow for agent interaction
+    - Wireframes for chat interface
+    - Design for feedback collection
+    - Conversation patterns and best practices
+
+- **[TASK-HW003] Define MVP Feature Set**
+  - **Priority**: High
+  - **Status**: Done
+  - **Description**: Define the minimal viable product (MVP) feature set for the hello-world agent.
+  - **Acceptance Criteria**:
+    - Comprehensive list of MVP features
+    - Prioritization of features
+    - Acceptance criteria for each feature
+    - Out-of-scope features clearly identified
+    - Implementation timeline
+
+- **[TASK-HW004] Define Agent Schema**
+  - **Priority**: High
+  - **Status**: Done
+  - **Description**: Define the database schema for agents, including fields for name, description, configuration, and tenant isolation.
+  - **Acceptance Criteria**:
+    - Database schema design
+    - Entity relationship diagram
+    - Field definitions and types
+    - Multi-tenant isolation strategy
+    - Migration scripts
+
+### Phase 2: Core Infrastructure
+
+- **[TASK-HW005] Set Up Database Schema**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Implement the database schema for agents using Drizzle ORM.
+  - **Acceptance Criteria**:
+    - Schema implementation in Drizzle ORM
+    - Migration scripts
+    - Row-level security policies
+    - Tests for database operations
+
+- **[TASK-HW006] Implement API Key Management**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Implement secure storage and retrieval of API keys for agent services.
+  - **Acceptance Criteria**:
+    - Encryption/decryption utilities
+    - Secure storage in database
+    - API for managing keys
+    - Tests for key management
+
+- **[TASK-HW007] Create Agent API Routes**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Implement API routes for creating, retrieving, updating, and deleting agents.
+  - **Acceptance Criteria**:
+    - CRUD API routes
+    - Input validation
+    - Error handling
+    - Authentication and authorization
+    - Tests for API routes
+
+### Phase 3: User Interface
+
+- **[TASK-HW008] Implement Agent Creation Form**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Implement the form for creating a new agent.
+  - **Acceptance Criteria**:
+    - Form implementation with all required fields
+    - Validation
+    - Error handling
+    - Responsive design
+    - Tests for form submission
+
+- **[TASK-HW009] Implement Agent Dashboard**
+  - **Priority**: Medium
+  - **Status**: To Do
+  - **Description**: Implement the dashboard for viewing and managing agents.
+  - **Acceptance Criteria**:
+    - List view of agents
+    - Actions for edit, delete, and chat
+    - Responsive design
+    - Tests for dashboard functionality
+
+- **[TASK-HW010] Implement Chat Interface**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Implement the chat interface for interacting with agents.
+  - **Acceptance Criteria**:
+    - Chat UI with message history
+    - Real-time message updates
+    - Message input and submission
+    - Loading states
+    - Error handling
+    - Tests for chat functionality
+
+### Phase 4: Integration
+
+- **[TASK-HW011] Integrate with OpenAI API**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Implement integration with OpenAI API for agent responses.
+  - **Acceptance Criteria**:
+    - API client for OpenAI
+    - Error handling and retries
+    - Rate limiting
+    - Tests for API integration
+
+- **[TASK-HW012] Implement Feedback Collection**
+  - **Priority**: Medium
+  - **Status**: To Do
+  - **Description**: Implement the feedback collection mechanism for agent responses.
+  - **Acceptance Criteria**:
+    - UI for thumbs up/down
+    - Optional comment field
+    - API for storing feedback
+    - Tests for feedback collection
+
+- **[TASK-HW013] Implement Basic Analytics**
+  - **Priority**: Low
+  - **Status**: To Do
+  - **Description**: Implement basic analytics for agent usage.
+  - **Acceptance Criteria**:
+    - Data collection for key metrics
+    - Simple dashboard for viewing metrics
+    - Tests for analytics functionality
+
+### Phase 5: Testing and Deployment
+
+- **[TASK-HW014] Comprehensive Testing**
+  - **Priority**: High
+  - **Status**: To Do
+  - **Description**: Implement comprehensive tests for the hello-world agent.
+  - **Acceptance Criteria**:
+    - Unit tests for all components
+    - Integration tests for key flows
+    - End-to-end tests for critical paths
+    - Test coverage report
+
+- **[TASK-HW015] Deployment and Documentation**
+  - **Priority**: Medium
+  - **Status**: To Do
+  - **Description**: Deploy the hello-world agent to production and document usage.
+  - **Acceptance Criteria**:
+    - Successful deployment to production
+    - User documentation
+    - Developer documentation
+    - Known issues and limitations
+
+## Other Tasks
 
 ### [TASK-001]
 - **Title**: Set up basic project structure

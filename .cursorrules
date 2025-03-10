@@ -548,6 +548,18 @@
           ]
         },
         {
+          "name": "Write Tests First",
+          "description": "Following TDD principles, write tests before implementation",
+          "instructions": [
+            "Create test files for the components/features to be implemented",
+            "Write comprehensive tests that cover all expected behaviors",
+            "Include tests for edge cases and error handling",
+            "Run the tests to confirm they fail (since implementation doesn't exist yet)",
+            "Document the test coverage plan in the solution design",
+            "CRITICAL: Do not proceed to implementation until tests are written"
+          ]
+        },
+        {
           "name": "Design Validation",
           "description": "Validate the design against requirements and best practices",
           "instructions": [
@@ -562,9 +574,12 @@
           "name": "Implement Solution",
           "description": "Implement the designed solution",
           "instructions": [
+            "FOLLOW TEST-DRIVEN DEVELOPMENT: Implement only what's needed to make the tests pass",
+            "Run tests frequently during implementation to track progress",
             "Implement the solution according to the design",
             "Follow the coding standards defined in development-rules.md",
             "If new modules are created, update the Module Registry section in solution-design.md",
+            "Confirm all tests are now passing",
             "Confirm the implementation is complete"
           ]
         },
@@ -661,11 +676,25 @@
           ]
         },
         {
+          "name": "Write Regression Tests",
+          "description": "Following TDD principles, write tests that verify the bug fix",
+          "instructions": [
+            "Create or update test files to reproduce the bug",
+            "Write tests that will pass once the bug is fixed",
+            "Ensure tests cover the specific bug scenario and related edge cases",
+            "Run the tests to confirm they fail (verifying they correctly detect the bug)",
+            "CRITICAL: Do not proceed to implementation until regression tests are written"
+          ]
+        },
+        {
           "name": "Implement Fix",
           "description": "Implement the designed fix",
           "instructions": [
+            "FOLLOW TEST-DRIVEN DEVELOPMENT: Implement only what's needed to make the tests pass",
+            "Run tests frequently during implementation to track progress",
             "Implement the fix according to the design",
             "Follow the coding standards defined in development-rules.md",
+            "Confirm all tests are now passing",
             "Confirm the implementation is complete"
           ]
         },
@@ -855,7 +884,7 @@
     }
   ],
   "instructions": {
-    "default": "Follow the 'Systematic Development Workflow' to implement tasks from the backlog. Before starting each new task, run the 'Workflow Transition Decision' to determine if you should address bugs or update documentation first. If you encounter any errors or get stuck, use the 'Error Recovery Workflow' to identify and resolve the issue. Always ensure quality gates are passed before completing any task.",
-    "onStart": "Begin by running the 'Workflow Transition Decision' to determine which workflow to follow first."
+    "default": "Follow the 'Systematic Development Workflow' to implement tasks from the backlog. ALWAYS WRITE TESTS FIRST following Test-Driven Development principles before implementing any code. Before starting each new task, run the 'Workflow Transition Decision' to determine if you should address bugs or update documentation first. If you encounter any errors or get stuck, use the 'Error Recovery Workflow' to identify and resolve the issue. Always ensure quality gates are passed before completing any task.",
+    "onStart": "Begin by running the 'Workflow Transition Decision' to determine which workflow to follow first. Remember that Test-Driven Development is MANDATORY for all code changes."
   }
 } 

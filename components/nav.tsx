@@ -14,6 +14,7 @@ import {
   Settings,
   FileCode,
   Github,
+  Bot,
 } from "lucide-react";
 import {
   useParams,
@@ -136,6 +137,12 @@ export default function Nav({ children }: { children: ReactNode }) {
         href: "/sites",
         isActive: segments[0] === "sites",
         icon: <Globe width={18} />,
+      },
+      {
+        name: "Agents",
+        href: "/agents",
+        isActive: segments[0] === "agents",
+        icon: <Bot width={18} />,
       },
       {
         name: "Settings",
