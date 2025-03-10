@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/Button';
 import ThemeCard from '../ui/ThemeCard';
 import ApiConnectionList from './ApiConnectionList';
@@ -27,20 +27,24 @@ export default function AgentApiConnectionManager({ agentId }: AgentApiConnectio
   const [isConnecting, setIsConnecting] = useState(false);
   
   // Fetch agent's API connections
-  const fetchAgentConnections = async () => {
+  const fetchAgentConnections = useCallback(async () => {
+    if (!agentId) return;
+    
+    setLoading(true);
     try {
       const response = await fetch(`/api/agents/${agentId}/api-connections`);
       if (!response.ok) {
-        throw new Error('Failed to fetch agent API connections');
+        throw new Error(`Failed to fetch agent API connections: ${response.statusText}`);
       }
-      
       const data = await response.json();
       setConnections(data);
-    } catch (err) {
-      console.error('Error fetching agent API connections:', err);
-      setError('Failed to load agent API connections. Please try again.');
+    } catch (error) {
+      console.error('Error fetching agent API connections:', error);
+      setConnections([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [agentId]);
   
   // Fetch all available API connections
   const fetchAvailableConnections = async () => {
@@ -69,7 +73,7 @@ export default function AgentApiConnectionManager({ agentId }: AgentApiConnectio
     };
     
     loadData();
-  }, [agentId]);
+  }, [agentId, fetchAgentConnections]);
   
   // Connect an API connection to the agent
   const connectApiConnection = async () => {
