@@ -104,17 +104,19 @@ This backlog is organized by features. Tasks within the currently active feature
 
 - **[TASK-HW005] Set Up Database Schema**
   - **Priority**: High
-  - **Status**: To Do
+  - **Status**: Done
   - **Description**: Implement the database schema for agents using Drizzle ORM.
   - **Acceptance Criteria**:
-    - Schema implementation in Drizzle ORM
-    - Migration scripts
-    - Row-level security policies
-    - Tests for database operations
+    - Database schema for agents is implemented using Drizzle ORM
+    - Schema includes tables for agents, API connections, agent messages, and agent feedback
+    - Row-level security is implemented for all agent-related tables
+    - Unit tests are created for the database middleware
+    - Integration tests are created for the agent schema
+    - All tests pass
 
 - **[TASK-HW006] Implement API Key Management**
   - **Priority**: High
-  - **Status**: To Do
+  - **Status**: In Progress
   - **Description**: Implement secure storage and retrieval of API keys for agent services.
   - **Acceptance Criteria**:
     - Encryption/decryption utilities

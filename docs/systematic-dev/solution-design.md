@@ -165,7 +165,6 @@ Our tests cover the following scenarios:
 - **Dependencies**: React, Next.js, TailwindCSS
 - **Status**: Planned
 - **Related Tasks**: [TASK-006]
-- **Last Updated**: 2023-07-01
 
 #### DashboardModule
 - **Purpose**: Display the user dashboard
@@ -497,99 +496,125 @@ For the systematic development section, we'll use a teal/cyan color scheme to di
 
 The implementation will involve modifying the `app/home/page.tsx` file to add the new section. We'll follow the existing pattern of sections with a heading, description, and cards.
 
-```tsx
-{/* Systematic Development Workflow Section */}
-<div className="relative z-10 border-t border-white/20 px-4 py-16 text-center bg-black/30 backdrop-blur-md">
-  <div className="mx-auto max-w-5xl">
-    <h2 className="font-cal text-3xl font-bold text-cyan-300 mb-2">
-      Systematic Development Workflow
-    </h2>
-    <p className="text-white/60 mb-8 max-w-2xl mx-auto">
-      A structured approach to AI-driven development with minimal human intervention
-    </p>
-    
-    {/* Workflow Visualization */}
-    <div className="mb-10 overflow-auto">
-      <pre className="text-xs md:text-sm bg-black/50 p-4 rounded-lg border border-cyan-500/30 text-cyan-100 overflow-auto mx-auto max-w-3xl text-left">
-        {`┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Workflow       │     │  Development    │     │  Bug Resolution │
-│  Decision       │────►│  Workflow       │     │  Workflow       │
-└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
-         │                       │                       │
-         │                       ▼                       │
-         │              ┌─────────────────┐              │
-         └─────────────►│  Documentation  │◄─────────────┘
-                        │  Workflow       │
-                        └────────┬────────┘
-                                 │
-                                 ▼
-                        ┌─────────────────┐
-                        │  Error Recovery │
-                        │  Workflow       │
-                        └─────────────────┘`}
-      </pre>
-    </div>
-    
-    {/* Feature Cards */}
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-      <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-6 backdrop-blur-sm transition-all hover:bg-cyan-900/30 hover:shadow-lg">
-        <h3 className="font-cal text-xl text-cyan-300 mb-2">Workflow Automation</h3>
-        <p className="text-stone-300">
-          Self-sustaining development process with clear steps and transitions
-        </p>
-      </div>
-      <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-6 backdrop-blur-sm transition-all hover:bg-cyan-900/30 hover:shadow-lg">
-        <h3 className="font-cal text-xl text-cyan-300 mb-2">Quality Gates</h3>
-        <p className="text-stone-300">
-          Built-in quality checks at each stage of development
-        </p>
-      </div>
-      <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-6 backdrop-blur-sm transition-all hover:bg-cyan-900/30 hover:shadow-lg">
-        <h3 className="font-cal text-xl text-cyan-300 mb-2">Error Recovery</h3>
-        <p className="text-stone-300">
-          Robust error handling and recovery mechanisms
-        </p>
-      </div>
-      <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-6 backdrop-blur-sm transition-all hover:bg-cyan-900/30 hover:shadow-lg">
-        <h3 className="font-cal text-xl text-cyan-300 mb-2">Documentation Integration</h3>
-        <p className="text-stone-300">
-          Seamless integration with project documentation
-        </p>
-      </div>
-    </div>
-    
-    {/* Documentation Links */}
-    <div className="mt-10">
-      <h3 className="font-cal text-2xl text-white mb-4">Learn More</h3>
-      <div className="flex flex-wrap gap-4 justify-center">
-        <a
-          href="https://github.com/derekg1729/agent-platform/blob/main/docs/systematic-dev/README.md"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-lg border border-cyan-500/30 bg-cyan-900/20 px-6 py-3 font-cal text-cyan-300 transition-all hover:bg-cyan-900/30 hover:shadow-lg"
-        >
-          Framework Overview
-        </a>
-        <a
-          href="https://github.com/derekg1729/agent-platform/blob/main/docs/systematic-dev/workflow.md"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-lg border border-cyan-500/30 bg-cyan-900/20 px-6 py-3 font-cal text-cyan-300 transition-all hover:bg-cyan-900/30 hover:shadow-lg"
-        >
-          Workflow Documentation
-        </a>
-        <a
-          href="https://github.com/derekg1729/agent-platform/blob/main/docs/systematic-dev/project-description.md"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-lg border border-cyan-500/30 bg-cyan-900/20 px-6 py-3 font-cal text-cyan-300 transition-all hover:bg-cyan-900/30 hover:shadow-lg"
-        >
-          Project Description
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-```
+## Agent Platform Database Schema
 
-This implementation follows the existing design patterns of the homepage while adding a new section specifically for the systematic development workflow. The section includes a heading, description, workflow visualization, feature cards, and documentation links. 
+### Overview
+The agent platform database schema is implemented using Drizzle ORM with PostgreSQL. The schema includes tables for agents, API connections, agent messages, and agent feedback, with row-level security implemented for all agent-related tables.
+
+### Schema Structure
+
+#### Agent Table
+The agent table stores information about agents created by users:
+- `id`: Unique identifier for the agent (CUID)
+- `userId`: Foreign key to the user who owns the agent
+- `name`: Name of the agent
+- `description`: Description of the agent
+- `model`: The AI model used by the agent
+- `temperature`: Temperature setting for the agent
+- `maxTokens`: Maximum tokens for the agent
+- `createdAt`: Timestamp when the agent was created
+- `updatedAt`: Timestamp when the agent was last updated
+
+#### API Connection Table
+The API connection table stores information about API connections created by users:
+- `id`: Unique identifier for the API connection (CUID)
+- `userId`: Foreign key to the user who owns the API connection
+- `name`: Name of the API connection
+- `provider`: The API provider (e.g., OpenAI, Anthropic)
+- `apiKey`: Encrypted API key
+- `createdAt`: Timestamp when the API connection was created
+- `updatedAt`: Timestamp when the API connection was last updated
+
+#### Agent-API Connection Table
+The agent-API connection table stores the relationship between agents and API connections:
+- `id`: Unique identifier for the agent-API connection (CUID)
+- `agentId`: Foreign key to the agent
+- `apiConnectionId`: Foreign key to the API connection
+- `createdAt`: Timestamp when the relationship was created
+
+#### Agent Message Table
+The agent message table stores messages exchanged with agents:
+- `id`: Unique identifier for the message (CUID)
+- `agentId`: Foreign key to the agent
+- `userId`: Foreign key to the user who sent/received the message
+- `role`: Role of the message sender (user, assistant, system)
+- `content`: Content of the message
+- `createdAt`: Timestamp when the message was created
+
+#### Agent Feedback Table
+The agent feedback table stores feedback on agent messages:
+- `id`: Unique identifier for the feedback (CUID)
+- `messageId`: Foreign key to the agent message
+- `userId`: Foreign key to the user who provided the feedback
+- `rating`: Rating given to the message
+- `comment`: Optional comment on the message
+- `createdAt`: Timestamp when the feedback was created
+
+### Row-Level Security
+Row-level security is implemented for all agent-related tables to ensure that users can only access their own data. This is achieved through the following mechanisms:
+
+1. **Database Policies**: PostgreSQL row-level security policies are defined for each table to restrict access based on the user ID.
+2. **Middleware**: A custom middleware (`withRLS`) is implemented to set the current user ID for database operations.
+3. **Integration with Next.js**: The middleware is integrated with Next.js to automatically set the user ID for all database operations.
+
+### Testing
+The database schema and middleware are thoroughly tested with:
+
+1. **Unit Tests**: Tests for the database middleware to ensure it correctly sets the user ID for database operations.
+2. **Integration Tests**: Tests for the agent schema to verify the structure and relationships between tables.
+3. **RLS Tests**: Tests for row-level security policies to ensure they correctly restrict access to data.
+
+### API Key Management
+API keys are securely stored in the database using encryption. The following utilities are implemented:
+
+1. **Encryption**: API keys are encrypted before being stored in the database.
+2. **Decryption**: API keys are decrypted when needed for API calls.
+3. **Access Control**: Only the owner of an API connection can access the API key.
+
+#### API Key Management Enhancement Plan
+
+To enhance the API Key Management system, we will implement the following components:
+
+1. **API Routes**:
+   - `POST /api/api-connections`: Create a new API connection
+   - `GET /api/api-connections`: List all API connections for the current user
+   - `GET /api/api-connections/:id`: Get details of a specific API connection
+   - `PUT /api/api-connections/:id`: Update an existing API connection
+   - `DELETE /api/api-connections/:id`: Delete an API connection
+   - `GET /api/api-connections/services`: Get a list of supported services
+   - `GET /api/agents/:id/api-connections`: Get all API connections for a specific agent
+
+2. **Frontend Components**:
+   - API Connection Form: For creating and editing API connections
+   - API Connection List: For displaying and managing API connections
+   - API Connection Selector: For associating API connections with agents
+
+3. **Security Enhancements**:
+   - Implement rate limiting for API key management endpoints
+   - Add validation for API key formats based on service
+   - Implement audit logging for API key operations
+   - Add support for OAuth-based API connections where applicable
+
+4. **Testing Strategy**:
+   - Unit tests for API key utilities
+   - Integration tests for API routes
+   - End-to-end tests for API key management workflow
+   - Security tests for encryption and access control
+
+5. **Implementation Phases**:
+   - Phase 1: Implement API routes for CRUD operations
+   - Phase 2: Develop frontend components for API key management
+   - Phase 3: Enhance security features
+   - Phase 4: Implement comprehensive testing
+
+This enhancement will build upon the existing encryption utilities and database functions to create a complete API key management system that is secure, user-friendly, and well-tested.
+
+### Database Operations
+Database operations are performed using Drizzle ORM, which provides a type-safe way to interact with the database. The following operations are supported:
+
+1. **Create**: Insert new records into the database.
+2. **Read**: Query records from the database with filtering and sorting.
+3. **Update**: Update existing records in the database.
+4. **Delete**: Remove records from the database.
+
+All operations are performed with row-level security to ensure data isolation between tenants. 
