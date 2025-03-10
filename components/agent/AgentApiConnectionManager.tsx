@@ -117,14 +117,22 @@ export default function AgentApiConnectionManager({ agentId }: AgentApiConnectio
       });
       
       if (!response.ok) {
-        throw new Error('Failed to disconnect API connection from agent');
+        const errorData = await response.json();
+        
+        // Handle specific error cases
+        if (response.status === 404 && errorData.error === 'Agent not found') {
+          alert('Agent not found. Retry.');
+          return;
+        }
+        
+        throw new Error(errorData.error || 'Failed to disconnect API connection from agent');
       }
       
       // Refresh the connections list
       await fetchAgentConnections();
     } catch (err) {
       console.error('Error disconnecting API connection:', err);
-      setError('Failed to disconnect API connection. Please try again.');
+      alert('Failed to disconnect API connection. Please try again.');
     }
   };
   
