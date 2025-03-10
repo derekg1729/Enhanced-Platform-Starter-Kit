@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { createApiConnection, getApiConnectionsByUserId } from '../../../lib/agent-db';
+import { createApiConnection, getApiConnectionsByUserId } from '@/lib/agent-db';
+import { getUserById, createUser } from '@/lib/user-db';
 import { z } from 'zod';
 
 // Define a custom session type
@@ -59,6 +60,34 @@ export async function POST(req: NextRequest) {
         { error: `Validation failed: ${errorMessage}` },
         { status: 400 }
       );
+    }
+
+    // Ensure user exists in the database
+    let user = await getUserById(session.user.id);
+    if (!user) {
+      // Validate required user fields
+      if (!session.user.email) {
+        return NextResponse.json(
+          { error: 'Failed to create user: email is required' },
+          { status: 500 }
+        );
+      }
+
+      // Create the user if they don't exist
+      try {
+        user = await createUser({
+          id: session.user.id,
+          name: session.user.name || null,
+          email: session.user.email,
+          image: session.user.image || null,
+        });
+      } catch (error) {
+        console.error('Error creating user:', error);
+        return NextResponse.json(
+          { error: 'Failed to create user' },
+          { status: 500 }
+        );
+      }
     }
 
     // Create the API connection

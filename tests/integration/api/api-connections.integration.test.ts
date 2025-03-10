@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import * as agentDb from '../../../lib/agent-db';
+import * as userDb from '../../../lib/user-db';
 import { POST as createApiConnection, GET as getApiConnections } from '../../../app/api/api-connections/route';
 import { GET as getApiConnectionById, PUT as updateApiConnection, DELETE as deleteApiConnection } from '../../../app/api/api-connections/[id]/route';
 import { GET as getApiServices } from '../../../app/api/api-connections/services/route';
@@ -24,11 +25,18 @@ vi.mock('../../../lib/agent-db', () => ({
   getAgentById: vi.fn(),
 }));
 
+// Mock user-db functions
+vi.mock('../../../lib/user-db', () => ({
+  getUserById: vi.fn(),
+  createUser: vi.fn(),
+}));
+
 // Mock data
 const mockUser = {
   id: 'user-123',
   name: 'Test User',
   email: 'test@example.com',
+  image: 'test-image-url',
 };
 
 const mockApiConnection = {
@@ -58,6 +66,8 @@ const mockAgent = {
 describe('API Connections API Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock successful user lookup by default
+    vi.mocked(userDb.getUserById).mockResolvedValue(mockUser);
   });
 
   afterEach(() => {
@@ -255,6 +265,167 @@ describe('API Connections API Routes', () => {
       const data = await response.json();
       expect(data.error).toContain('Validation failed');
       expect(data.error).toContain('API Key is required');
+    });
+
+    it('should create user if not exists before creating API connection', async () => {
+      // Mock user not found initially
+      vi.mocked(userDb.getUserById).mockResolvedValueOnce(null);
+      
+      // Mock successful user creation
+      vi.mocked(userDb.createUser).mockResolvedValueOnce(mockUser);
+      
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock successful API connection creation
+      vi.mocked(agentDb.createApiConnection).mockResolvedValue({
+        id: 'api-conn-123',
+        name: 'Test API Connection',
+        service: 'openai',
+        apiKey: 'encrypted-key',
+        userId: mockUser.id,
+        metadata: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Test API Connection',
+          service: 'openai',
+          apiKey: 'test-api-key',
+        }),
+      });
+
+      // Call the API route
+      const response = await createApiConnection(req);
+      const data = await response.json();
+
+      // Verify the response
+      expect(response.status).toBe(201);
+      expect(data).toHaveProperty('id', 'api-conn-123');
+      
+      // Verify user was checked and created
+      expect(userDb.getUserById).toHaveBeenCalledWith(mockUser.id);
+      expect(userDb.createUser).toHaveBeenCalledWith({
+        id: mockUser.id,
+        name: mockUser.name,
+        email: mockUser.email,
+        image: mockUser.image || null,
+      });
+      
+      // Verify API connection was created
+      expect(agentDb.createApiConnection).toHaveBeenCalledWith(
+        mockUser.id,
+        {
+          name: 'Test API Connection',
+          service: 'openai',
+          apiKey: 'test-api-key',
+          metadata: {},
+        }
+      );
+    });
+
+    it('should use existing user when creating API connection', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock successful API connection creation
+      vi.mocked(agentDb.createApiConnection).mockResolvedValue({
+        id: 'api-conn-123',
+        name: 'Test API Connection',
+        service: 'openai',
+        apiKey: 'encrypted-key',
+        userId: mockUser.id,
+        metadata: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Test API Connection',
+          service: 'openai',
+          apiKey: 'test-api-key',
+        }),
+      });
+
+      // Call the API route
+      const response = await createApiConnection(req);
+      const data = await response.json();
+
+      // Verify the response
+      expect(response.status).toBe(201);
+      expect(data).toHaveProperty('id', 'api-conn-123');
+      
+      // Verify user was checked but not created
+      expect(userDb.getUserById).toHaveBeenCalledWith(mockUser.id);
+      expect(userDb.createUser).not.toHaveBeenCalled();
+      
+      // Verify API connection was created
+      expect(agentDb.createApiConnection).toHaveBeenCalledWith(
+        mockUser.id,
+        {
+          name: 'Test API Connection',
+          service: 'openai',
+          apiKey: 'test-api-key',
+          metadata: {},
+        }
+      );
+    });
+
+    it('should handle missing email during user creation', async () => {
+      // Mock user not found initially
+      vi.mocked(userDb.getUserById).mockResolvedValueOnce(null);
+      
+      // Mock the session with missing email
+      const userWithoutEmail = {
+        id: 'user-123',
+        name: 'Test User',
+        image: 'test-image-url',
+      };
+      
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: userWithoutEmail,
+        expires: new Date().toISOString(),
+      });
+
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Test API Connection',
+          service: 'openai',
+          apiKey: 'test-api-key',
+        }),
+      });
+
+      // Call the API route
+      const response = await createApiConnection(req);
+
+      // Check the response
+      expect(response.status).toBe(500);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Failed to create user: email is required' });
     });
   });
 
