@@ -265,6 +265,11 @@
         "preCommitHook": "npm run pre-commit",
         "ciChecks": ["lint", "test", "build", "typecheck"]
       },
+      "taskCompletionRequirement": {
+        "description": "Code MUST be committed after completing each task or bug fix",
+        "commitMessage": "Include the task ID or bug ID in the commit message along with a brief description",
+        "timing": "Commit immediately after all checks pass and the task is marked as completed in the documentation"
+      },
       "troubleshooting": {
         "testFailures": "Fix the issues before committing. Do not modify tests to make them pass unless the test itself is incorrect.",
         "buildFailures": "Fix the code issues before committing. Common problems include syntax errors, missing dependencies, or configuration issues."
@@ -610,7 +615,8 @@
           "instructions": [
             "Update the task status in backlog.md to 'Done'",
             "Add an entry to change-log.md with the task ID, 'Completed' status, description, and current timestamp",
-            "Confirm the updates have been made"
+            "Commit all code changes with a message that includes the task ID and a brief description",
+            "Confirm the updates have been made and code has been committed"
           ]
         },
         {
@@ -725,7 +731,8 @@
           "instructions": [
             "Update the bug status in bug-tracker.md to 'Fixed'",
             "Add an entry to change-log.md with the bug ID, 'Fixed' status, description, and current timestamp",
-            "Confirm the updates have been made"
+            "Commit all code changes with a message that includes the bug ID and a brief description of the fix",
+            "Confirm the updates have been made and code has been committed"
           ]
         },
         {
@@ -794,7 +801,8 @@
           "description": "Record the documentation update in the change log",
           "instructions": [
             "Add an entry to change-log.md with 'Documentation Update' as the ID, 'Completed' status, description, and current timestamp",
-            "Confirm the update has been recorded"
+            "Commit all documentation changes with a message that describes the updates made",
+            "Confirm the update has been recorded and changes have been committed"
           ]
         },
         {
