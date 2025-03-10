@@ -116,7 +116,7 @@ This backlog is organized by features. Tasks within the currently active feature
 
 - **[TASK-HW006] Implement API Key Management**
   - **Priority**: High
-  - **Status**: In Progress
+  - **Status**: Done
   - **Description**: Implement secure storage and retrieval of API keys for agent services.
   - **Acceptance Criteria**:
     - Encryption/decryption utilities
