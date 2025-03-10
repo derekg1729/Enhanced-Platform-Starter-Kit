@@ -4,18 +4,21 @@
 
 <!-- List of open bugs with Critical or High severity -->
 
+## Fixed Bugs
+
 ### [BUG-003] API Connection Creation Error
 - **Severity**: High
-- **Status**: Open
+- **Status**: Fixed
 - **Description**: Creating an API connection fails with "Unexpected end of JSON input" error.
-- **Impact**: Users cannot add API keys, blocking the core functionality of using the hello world agent.
-- **Reproduction Steps**: 
-  1. Navigate to API connections page
-  2. Fill out the form to add a new API key
-  3. Click "Create Connection"
-- **Discovered**: June 16, 2024
-
-## Fixed Bugs
+- **Root Cause**: Improper error handling in both client and server components when dealing with JSON parsing and validation errors.
+- **Fix**: 
+  1. Added proper JSON parsing error handling in the API route
+  2. Improved client-side error handling in the form submission
+  3. Added Zod schema validation for request body
+  4. Added comprehensive error logging
+  5. Added integration tests for error scenarios
+- **Prevention**: Added tests to verify error handling for malformed JSON, database errors, and validation failures.
+- **Fixed Date**: June 16, 2024
 
 ### [BUG-002] Inconsistent Dynamic Route Parameter Naming
 - **Severity**: High

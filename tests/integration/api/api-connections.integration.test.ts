@@ -164,10 +164,97 @@ describe('API Connections API Routes', () => {
       // Check the response
       expect(response.status).toBe(400);
       const data = await response.json();
-      expect(data).toEqual({ error: 'Missing required fields' });
+      expect(data).toEqual({ error: 'Validation failed: service: Required, apiKey: Required' });
 
       // Check that the function was not called
       expect(agentDb.createApiConnection).not.toHaveBeenCalled();
+    });
+
+    it('should handle malformed JSON in request body', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Create a mock request with malformed JSON
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: '{ invalid json',
+      });
+
+      // Call the API route
+      const response = await createApiConnection(req);
+
+      // Check the response
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Invalid request body - failed to parse JSON' });
+    });
+
+    it('should handle database errors gracefully', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the createApiConnection function to throw an error
+      vi.mocked(agentDb.createApiConnection).mockRejectedValue(new Error('Database error'));
+
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Test API Connection',
+          service: 'openai',
+          apiKey: 'test-api-key',
+        }),
+      });
+
+      // Call the API route
+      const response = await createApiConnection(req);
+
+      // Check the response
+      expect(response.status).toBe(500);
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Failed to create API connection' });
+    });
+
+    it('should validate API key format', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Create a mock request with invalid API key format
+      const req = new NextRequest('http://localhost:3000/api/api-connections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Test API Connection',
+          service: 'openai',
+          apiKey: '', // Empty API key
+        }),
+      });
+
+      // Call the API route
+      const response = await createApiConnection(req);
+
+      // Check the response
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toContain('Validation failed');
+      expect(data.error).toContain('API Key is required');
     });
   });
 

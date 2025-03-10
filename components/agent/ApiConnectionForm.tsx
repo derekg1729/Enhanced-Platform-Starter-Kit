@@ -132,16 +132,26 @@ export default function ApiConnectionForm({ initialData, onSubmit, isEdit = fals
           body: JSON.stringify(data),
         });
         
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to save API connection');
-        }
+        let errorMessage = 'Failed to save API connection';
         
-        router.push('/agents');
-        router.refresh();
+        try {
+          const responseData = await response.json();
+          if (!response.ok) {
+            errorMessage = responseData.error || errorMessage;
+            throw new Error(errorMessage);
+          }
+          
+          // Success - redirect to the API connections page
+          router.push('/api-connections');
+          router.refresh();
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+          throw new Error(errorMessage);
+        }
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to save API connection. Please try again.');
+      const errorMessage = err.message || 'Failed to save API connection. Please try again.';
+      setError(errorMessage);
       console.error('Form submission error:', err);
     } finally {
       setIsSubmitting(false);
