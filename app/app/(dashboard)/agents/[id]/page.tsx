@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '../../../../../components/ui/Button';
 import ThemeCard from '../../../../../components/ui/ThemeCard';
 import AgentChatWrapper from '../../../../../components/agent/AgentChatWrapper';
+import AgentApiConnectionManager from '../../../../../components/agent/AgentApiConnectionManager';
 
 export const metadata: Metadata = {
   title: 'Agent Details',
@@ -54,6 +55,12 @@ export default function AgentDetailsPage({ params }: { params: { id: string } })
                   Active
                 </div>
               </div>
+            </div>
+          </ThemeCard>
+          
+          <ThemeCard>
+            <div className="p-4">
+              <AgentApiConnectionManager agentId={id} />
             </div>
           </ThemeCard>
         </div>
