@@ -77,8 +77,15 @@ export async function POST(
     session.user.id
   );
 
+  // Check if the connection was successful
+  if (!connection) {
+    return NextResponse.json({ 
+      error: 'Failed to connect API connection to agent. The connection may already exist.' 
+    }, { status: 400 });
+  }
+
   // Return the connection
-  return NextResponse.json(connection, { status: 201 });
+  return NextResponse.json({ success: true }, { status: 201 });
 }
 
 /**

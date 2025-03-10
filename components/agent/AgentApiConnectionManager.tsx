@@ -89,7 +89,8 @@ export default function AgentApiConnectionManager({ agentId }: AgentApiConnectio
       });
       
       if (!response.ok) {
-        throw new Error('Failed to connect API connection to agent');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to connect API connection to agent');
       }
       
       // Refresh the connections list
@@ -98,7 +99,7 @@ export default function AgentApiConnectionManager({ agentId }: AgentApiConnectio
       setSelectedConnection(null);
     } catch (err) {
       console.error('Error connecting API connection:', err);
-      setError('Failed to connect API connection. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to connect API connection. Please try again.');
     } finally {
       setIsConnecting(false);
     }

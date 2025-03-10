@@ -91,7 +91,7 @@ describe('Agent API Connections API Routes', () => {
       // Check the response
       expect(response.status).toBe(201);
       const data = await response.json();
-      expect(data).toBe(mockAgentApiConnection);
+      expect(data).toEqual({ success: true });
 
       // Check that the functions were called with the correct parameters
       expect(agentDb.getAgentById).toHaveBeenCalledWith('agent-123', 'user-123');
@@ -231,6 +231,46 @@ describe('Agent API Connections API Routes', () => {
       expect(agentDb.getAgentById).toHaveBeenCalledWith('agent-123', 'user-123');
       expect(agentDb.getApiConnectionById).toHaveBeenCalledWith('api-conn-123', 'user-123');
       expect(agentDb.connectAgentToApi).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 if the connection fails due to database error or constraint violation', async () => {
+      // Mock the session
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: mockUser,
+        expires: new Date().toISOString(),
+      });
+
+      // Mock the agent and API connection retrieval
+      vi.mocked(agentDb.getAgentById).mockResolvedValue(mockAgent);
+      vi.mocked(agentDb.getApiConnectionById).mockResolvedValue(mockApiConnection);
+
+      // Mock the connection to fail
+      vi.mocked(agentDb.connectAgentToApi).mockResolvedValue(false);
+
+      // Create a mock request
+      const req = new NextRequest('http://localhost:3000/api/agents/agent-123/api-connections/api-conn-123', {
+        method: 'POST',
+      });
+
+      // Call the API route
+      const response = await connectAgentToApi(req, {
+        params: {
+          agentId: 'agent-123',
+          apiConnectionId: 'api-conn-123',
+        },
+      });
+
+      // Check the response
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data).toEqual({ 
+        error: 'Failed to connect API connection to agent. The connection may already exist.' 
+      });
+
+      // Check that the functions were called with the correct parameters
+      expect(agentDb.getAgentById).toHaveBeenCalledWith('agent-123', 'user-123');
+      expect(agentDb.getApiConnectionById).toHaveBeenCalledWith('api-conn-123', 'user-123');
+      expect(agentDb.connectAgentToApi).toHaveBeenCalledWith('agent-123', 'api-conn-123', 'user-123');
     });
   });
 
