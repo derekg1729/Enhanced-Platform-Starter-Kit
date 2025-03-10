@@ -881,6 +881,52 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Server/Client Component Boundary Testing",
+      "description": "Guidelines for testing the boundaries between server and client components in Next.js applications",
+      "steps": [
+        {
+          "name": "Identify Component Types",
+          "description": "Clearly identify which components are server components and which are client components",
+          "instructions": [
+            "Mark all client components with 'use client' directive at the top of the file",
+            "Document component types in comments or component documentation",
+            "Create a list of all client components that are used within server components"
+          ]
+        },
+        {
+          "name": "Test Component Boundaries",
+          "description": "Create specific tests for the boundaries between server and client components",
+          "instructions": [
+            "Create integration tests that test the actual rendering of client components within server components",
+            "Test event handler props passed to client components from server components",
+            "Verify that all event handlers are properly defined in client components",
+            "Test that server components don't directly pass functions to client components",
+            "Use Next.js testing utilities to test the actual rendering in a Next.js environment"
+          ]
+        },
+        {
+          "name": "Runtime Error Testing",
+          "description": "Implement tests that can catch runtime errors related to server/client component boundaries",
+          "instructions": [
+            "Create a test environment that simulates the Next.js runtime",
+            "Test the serialization of props passed from server to client components",
+            "Verify that no functions or non-serializable data is passed directly from server to client components",
+            "Implement error boundary testing to catch potential runtime errors"
+          ]
+        },
+        {
+          "name": "Pre-Deployment Verification",
+          "description": "Verify server/client component boundaries before deployment",
+          "instructions": [
+            "Run a full build process before deployment to catch build-time errors",
+            "Implement a local preview of the production build to catch runtime errors",
+            "Create a checklist for reviewing server/client component interactions",
+            "Verify that all client components receiving event handlers are properly marked with 'use client'"
+          ]
+        }
+      ]
     }
   ],
   "instructions": {

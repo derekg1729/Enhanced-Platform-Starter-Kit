@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '../../../../../components/ui/Button';
-import ThemeCard from '../../../../../components/ui/ThemeCard';
+import AgentCreationForm from '../../../../../components/agent/AgentCreationForm';
 
 export const metadata: Metadata = {
   title: 'Create New Agent',
@@ -23,20 +22,7 @@ export default function CreateAgentPage() {
         <h1 className="text-3xl font-cal font-bold text-white">Create New Agent</h1>
       </div>
       
-      <ThemeCard>
-        <p className="text-center text-stone-400 py-12">
-          This page will contain a form for creating a new agent
-          <br />
-          <span className="text-xs mt-2 block">Implementation coming soon (TASK-HW000B)</span>
-        </p>
-        
-        <div className="flex justify-end space-x-3 mt-6">
-          <Link href="/agents">
-            <Button variant="ghost">Cancel</Button>
-          </Link>
-          <Button variant="primary" disabled>Create Agent</Button>
-        </div>
-      </ThemeCard>
+      <AgentCreationForm />
     </div>
   );
 } 

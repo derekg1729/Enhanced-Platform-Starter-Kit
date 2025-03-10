@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import '@testing-library/jest-dom';
-import AgentDetailsPage from '../../../../app/app/(dashboard)/agents/[id]/page';
+import AgentDetailsPage from '../../../app/app/(dashboard)/agents/[id]/page';
 
 // Mock the next/link component
 vi.mock('next/link', () => {
@@ -15,7 +15,7 @@ vi.mock('next/link', () => {
 });
 
 // Mock the AgentChatWrapper component
-vi.mock('../../../../components/agent/AgentChatWrapper', () => {
+vi.mock('../../../components/agent/AgentChatWrapper', () => {
   return {
     __esModule: true,
     default: ({ agentId }: { agentId: string }) => (
@@ -26,30 +26,23 @@ vi.mock('../../../../components/agent/AgentChatWrapper', () => {
   };
 });
 
-describe('AgentDetailsPage', () => {
-  it('displays the agent ID', () => {
+describe('Agent Chat Interface Integration', () => {
+  it('renders the chat interface on the agent details page', () => {
     render(<AgentDetailsPage params={{ id: 'test-agent-123' }} />);
     
-    // Use a more specific selector to avoid multiple matches
-    const agentIdElement = screen.getByText((content, element) => {
-      return element?.tagName.toLowerCase() === 'p' && 
-             element?.className.includes('font-mono') && 
-             content.includes('test-agent-123');
-    });
-    expect(agentIdElement).toBeInTheDocument();
+    expect(screen.getByTestId('agent-chat-interface')).toBeInTheDocument();
+    expect(screen.getByText('Chat interface for agent: test-agent-123')).toBeInTheDocument();
   });
 
-  it('has a link back to the agents list', () => {
+  it('has a back to agents link', () => {
     render(<AgentDetailsPage params={{ id: 'test-agent-123' }} />);
     
-    // Update to match the actual text in the component
     const backLink = screen.getByText('Back to agents');
     expect(backLink).toBeInTheDocument();
-    // Update the expected href to match the actual implementation
-    expect(backLink.closest('a')).toHaveAttribute('href', '/agents');
+    expect(backLink.getAttribute('href')).toBe('/agents');
   });
 
-  it('displays the page title', () => {
+  it('displays the agent details header', () => {
     render(<AgentDetailsPage params={{ id: 'test-agent-123' }} />);
     
     expect(screen.getByText('Agent Details')).toBeInTheDocument();

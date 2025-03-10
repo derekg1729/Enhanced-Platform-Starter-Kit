@@ -33,7 +33,7 @@ This backlog is organized by features. Tasks within the currently active feature
 
 - **[TASK-HW000B] Implement Agent Creation UI**
   - **Priority**: High
-  - **Status**: To Do
+  - **Status**: Done
   - **Description**: Implement the frontend UI for creating and configuring a new agent.
   - **Acceptance Criteria**:
     - Multi-step form with progress indicator
@@ -45,7 +45,7 @@ This backlog is organized by features. Tasks within the currently active feature
 
 - **[TASK-HW000C] Implement Agent Chat Interface**
   - **Priority**: High
-  - **Status**: To Do
+  - **Status**: Done
   - **Description**: Implement the frontend UI for the chat interface where users interact with agents.
   - **Acceptance Criteria**:
     - Message thread display with user and agent messages

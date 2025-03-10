@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../../../../../components/ui/Button';
 import ThemeCard from '../../../../../components/ui/ThemeCard';
+import AgentChatWrapper from '../../../../../components/agent/AgentChatWrapper';
 
 export const metadata: Metadata = {
   title: 'Agent Details',
@@ -10,6 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default function AgentDetailsPage({ params }: { params: { id: string } }) {
+  const { id } = params;
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -27,18 +30,50 @@ export default function AgentDetailsPage({ params }: { params: { id: string } })
         </div>
       </div>
       
-      <ThemeCard className="mb-6">
-        <p className="text-sm text-stone-400 mb-2">Agent ID</p>
-        <p className="font-mono text-sm bg-stone-800 p-2 rounded text-stone-300">{params.id}</p>
-      </ThemeCard>
-      
-      <ThemeCard>
-        <p className="text-center text-stone-400 py-12">
-          This page will contain detailed information about the agent with ID: {params.id}
-          <br />
-          <span className="text-xs mt-2 block">Implementation coming soon (TASK-HW000C)</span>
-        </p>
-      </ThemeCard>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1 space-y-6">
+          <ThemeCard>
+            <p className="text-sm text-stone-400 mb-2">Agent ID</p>
+            <p className="font-mono text-sm bg-stone-800 p-2 rounded text-stone-300">{id}</p>
+          </ThemeCard>
+          
+          <ThemeCard>
+            <h2 className="text-lg font-medium text-white mb-4">Agent Information</h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-stone-400 mb-1">Name</p>
+                <p className="text-white">Demo Agent</p>
+              </div>
+              <div>
+                <p className="text-sm text-stone-400 mb-1">Description</p>
+                <p className="text-white">This is a demo agent for testing purposes.</p>
+              </div>
+              <div>
+                <p className="text-sm text-stone-400 mb-1">Status</p>
+                <div className="inline-block px-2 py-1 text-xs rounded-full border bg-green-900 text-green-400 border-green-800">
+                  Active
+                </div>
+              </div>
+            </div>
+          </ThemeCard>
+        </div>
+        
+        <div className="lg:col-span-2">
+          <div className="h-[600px]">
+            <AgentChatWrapper 
+              agentId={id}
+              initialMessages={[
+                {
+                  id: '1',
+                  content: 'Hello! I am your assistant. How can I help you today?',
+                  role: 'assistant',
+                  timestamp: new Date().toISOString()
+                }
+              ]}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 } 

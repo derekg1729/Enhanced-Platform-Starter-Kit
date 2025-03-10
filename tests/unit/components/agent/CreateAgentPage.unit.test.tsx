@@ -10,6 +10,11 @@ vi.mock('next/link', () => ({
   )
 }));
 
+// Mock the AgentCreationForm component
+vi.mock('../../../../components/agent/AgentCreationForm', () => ({
+  default: () => <div data-testid="agent-creation-form">Agent Creation Form</div>
+}));
+
 describe('CreateAgentPage', () => {
   it('displays the page title', () => {
     render(<CreateAgentPage />);
@@ -25,25 +30,9 @@ describe('CreateAgentPage', () => {
     expect(backLink.closest('a')).toHaveAttribute('href', '/agents');
   });
 
-  it('has a disabled create button', () => {
+  it('renders the AgentCreationForm component', () => {
     render(<CreateAgentPage />);
     
-    const createButton = screen.getByText('Create Agent');
-    expect(createButton.closest('button')).toBeDisabled();
-  });
-
-  it('has a cancel button', () => {
-    render(<CreateAgentPage />);
-    
-    const cancelButton = screen.getByText('Cancel');
-    expect(cancelButton).toBeInTheDocument();
-    expect(cancelButton.closest('a')).toHaveAttribute('href', '/agents');
-  });
-
-  it('displays a placeholder message about the form implementation', () => {
-    render(<CreateAgentPage />);
-    
-    expect(screen.getByText(/This page will contain a form for creating a new agent/)).toBeInTheDocument();
-    expect(screen.getByText(/TASK-HW000B/)).toBeInTheDocument();
+    expect(screen.getByTestId('agent-creation-form')).toBeInTheDocument();
   });
 }); 
