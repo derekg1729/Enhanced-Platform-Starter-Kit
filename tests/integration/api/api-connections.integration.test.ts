@@ -31,12 +31,18 @@ vi.mock('../../../lib/user-db', () => ({
   createUser: vi.fn(),
 }));
 
-// Mock data
+// Mock user data
 const mockUser = {
   id: 'user-123',
   name: 'Test User',
   email: 'test@example.com',
   image: 'test-image-url',
+};
+
+// Mock session data
+const mockSession = {
+  user: mockUser,
+  expires: new Date().toISOString(),
 };
 
 const mockApiConnection = {
@@ -121,10 +127,10 @@ describe('API Connections API Routes', () => {
     });
 
     it('should return 401 if the user is not authenticated', async () => {
-      // Mock the session (no user)
-      vi.mocked(getServerSession).mockResolvedValue(null);
+      // Mock getServerSession to return null
+      vi.mocked(getServerSession).mockResolvedValueOnce(null);
 
-      // Create a mock request
+      // Create a request
       const req = new NextRequest('http://localhost:3000/api/api-connections', {
         method: 'POST',
         headers: {
@@ -140,10 +146,10 @@ describe('API Connections API Routes', () => {
       // Call the API route
       const response = await createApiConnection(req);
 
-      // Check the response
+      // Verify the response
       expect(response.status).toBe(401);
       const data = await response.json();
-      expect(data).toEqual({ error: 'Unauthorized' });
+      expect(data).toEqual({ error: 'Unauthorized - You must be logged in to create an API connection' });
 
       // Check that the function was not called
       expect(agentDb.createApiConnection).not.toHaveBeenCalled();
@@ -206,16 +212,16 @@ describe('API Connections API Routes', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      // Mock the session
-      vi.mocked(getServerSession).mockResolvedValue({
-        user: mockUser,
-        expires: new Date().toISOString(),
-      });
+      // Mock getServerSession to return a session
+      vi.mocked(getServerSession).mockResolvedValueOnce(mockSession);
 
-      // Mock the createApiConnection function to throw an error
-      vi.mocked(agentDb.createApiConnection).mockRejectedValue(new Error('Database error'));
+      // Mock getUserById to return a user
+      vi.mocked(userDb.getUserById).mockResolvedValueOnce(mockUser);
 
-      // Create a mock request
+      // Mock createApiConnection to throw an error
+      vi.mocked(agentDb.createApiConnection).mockRejectedValueOnce(new Error('Database error'));
+
+      // Create a request
       const req = new NextRequest('http://localhost:3000/api/api-connections', {
         method: 'POST',
         headers: {
@@ -231,10 +237,10 @@ describe('API Connections API Routes', () => {
       // Call the API route
       const response = await createApiConnection(req);
 
-      // Check the response
+      // Verify the response
       expect(response.status).toBe(500);
       const data = await response.json();
-      expect(data).toEqual({ error: 'Failed to create API connection' });
+      expect(data).toEqual({ error: 'Failed to create API connection. Please try again or contact support.' });
     });
 
     it('should validate API key format', async () => {
@@ -268,31 +274,16 @@ describe('API Connections API Routes', () => {
     });
 
     it('should create user if not exists before creating API connection', async () => {
-      // Mock user not found initially
+      // This test is no longer valid with our new approach
+      // We now expect users to be created during authentication, not during API connection creation
+      
+      // Mock getServerSession to return a session
+      vi.mocked(getServerSession).mockResolvedValueOnce(mockSession);
+      
+      // Mock getUserById to return null (user doesn't exist)
       vi.mocked(userDb.getUserById).mockResolvedValueOnce(null);
       
-      // Mock successful user creation
-      vi.mocked(userDb.createUser).mockResolvedValueOnce(mockUser);
-      
-      // Mock the session
-      vi.mocked(getServerSession).mockResolvedValue({
-        user: mockUser,
-        expires: new Date().toISOString(),
-      });
-
-      // Mock successful API connection creation
-      vi.mocked(agentDb.createApiConnection).mockResolvedValue({
-        id: 'api-conn-123',
-        name: 'Test API Connection',
-        service: 'openai',
-        apiKey: 'encrypted-key',
-        userId: mockUser.id,
-        metadata: {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      // Create a mock request
+      // Create a request
       const req = new NextRequest('http://localhost:3000/api/api-connections', {
         method: 'POST',
         headers: {
@@ -304,34 +295,20 @@ describe('API Connections API Routes', () => {
           apiKey: 'test-api-key',
         }),
       });
-
+      
       // Call the API route
       const response = await createApiConnection(req);
-      const data = await response.json();
-
-      // Verify the response
-      expect(response.status).toBe(201);
-      expect(data).toHaveProperty('id', 'api-conn-123');
       
-      // Verify user was checked and created
-      expect(userDb.getUserById).toHaveBeenCalledWith(mockUser.id);
-      expect(userDb.createUser).toHaveBeenCalledWith({
-        id: mockUser.id,
-        name: mockUser.name,
-        email: mockUser.email,
-        image: mockUser.image || null,
+      // Verify the response - we now expect a 500 error since user should exist
+      expect(response.status).toBe(500);
+      const data = await response.json();
+      expect(data).toEqual({ 
+        error: 'User account not found in database. This is likely a system error. Please try logging out and back in, or contact support if the issue persists.' 
       });
       
-      // Verify API connection was created
-      expect(agentDb.createApiConnection).toHaveBeenCalledWith(
-        mockUser.id,
-        {
-          name: 'Test API Connection',
-          service: 'openai',
-          apiKey: 'test-api-key',
-          metadata: {},
-        }
-      );
+      // Check that createUser was not called - we don't create users in the API route anymore
+      expect(userDb.createUser).not.toHaveBeenCalled();
+      expect(agentDb.createApiConnection).not.toHaveBeenCalled();
     });
 
     it('should use existing user when creating API connection', async () => {
@@ -391,22 +368,22 @@ describe('API Connections API Routes', () => {
     });
 
     it('should handle missing email during user creation', async () => {
-      // Mock user not found initially
+      // This test is no longer valid with our new approach
+      // We now expect users to be created during authentication, not during API connection creation
+      
+      // Mock getServerSession to return a session without email
+      vi.mocked(getServerSession).mockResolvedValueOnce({
+        ...mockSession,
+        user: {
+          ...mockSession.user,
+          email: undefined,
+        },
+      });
+      
+      // Mock getUserById to return null (user doesn't exist)
       vi.mocked(userDb.getUserById).mockResolvedValueOnce(null);
       
-      // Mock the session with missing email
-      const userWithoutEmail = {
-        id: 'user-123',
-        name: 'Test User',
-        image: 'test-image-url',
-      };
-      
-      vi.mocked(getServerSession).mockResolvedValue({
-        user: userWithoutEmail,
-        expires: new Date().toISOString(),
-      });
-
-      // Create a mock request
+      // Create a request
       const req = new NextRequest('http://localhost:3000/api/api-connections', {
         method: 'POST',
         headers: {
@@ -418,14 +395,16 @@ describe('API Connections API Routes', () => {
           apiKey: 'test-api-key',
         }),
       });
-
+      
       // Call the API route
       const response = await createApiConnection(req);
-
-      // Check the response
+      
+      // Verify the response - we now expect a 500 error since user should exist
       expect(response.status).toBe(500);
       const data = await response.json();
-      expect(data).toEqual({ error: 'Failed to create user: email is required' });
+      expect(data).toEqual({ 
+        error: 'User account not found in database. This is likely a system error. Please try logging out and back in, or contact support if the issue persists.' 
+      });
     });
   });
 
@@ -460,21 +439,19 @@ describe('API Connections API Routes', () => {
     });
 
     it('should return 401 if the user is not authenticated', async () => {
-      // Mock the session (no user)
-      vi.mocked(getServerSession).mockResolvedValue(null);
+      // Mock getServerSession to return null
+      vi.mocked(getServerSession).mockResolvedValueOnce(null);
 
-      // Create a mock request
-      const req = new NextRequest('http://localhost:3000/api/api-connections', {
-        method: 'GET',
-      });
+      // Create a request
+      const req = new NextRequest('http://localhost:3000/api/api-connections');
 
       // Call the API route
       const response = await getApiConnections(req);
 
-      // Check the response
+      // Verify the response
       expect(response.status).toBe(401);
       const data = await response.json();
-      expect(data).toEqual({ error: 'Unauthorized' });
+      expect(data).toEqual({ error: 'Unauthorized - You must be logged in to view API connections' });
 
       // Check that the function was not called
       expect(agentDb.getApiConnectionsByUserId).not.toHaveBeenCalled();

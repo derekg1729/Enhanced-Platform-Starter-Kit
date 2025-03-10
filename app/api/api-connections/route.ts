@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createApiConnection, getApiConnectionsByUserId } from '@/lib/agent-db';
-import { getUserById, createUser } from '@/lib/user-db';
+import { getUserById } from '@/lib/user-db';
 import { z } from 'zod';
 
-// Define a custom session type
+// Define a custom session type with the expected user properties
 interface CustomSession {
   user: {
     id: string;
-    name?: string;
-    email?: string;
-    image?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
   };
   expires: string;
 }
@@ -34,8 +34,10 @@ export async function POST(req: NextRequest) {
   try {
     // Check if the user is authenticated
     const session = await getServerSession(authOptions) as CustomSession | null;
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json({ 
+        error: 'Unauthorized - You must be logged in to create an API connection' 
+      }, { status: 401 });
     }
 
     // Parse and validate the request body
@@ -62,32 +64,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure user exists in the database
-    let user = await getUserById(session.user.id);
+    // Verify user exists in database
+    const user = await getUserById(session.user.id);
     if (!user) {
-      // Validate required user fields
-      if (!session.user.email) {
-        return NextResponse.json(
-          { error: 'Failed to create user: email is required' },
-          { status: 500 }
-        );
-      }
-
-      // Create the user if they don't exist
-      try {
-        user = await createUser({
-          id: session.user.id,
-          name: session.user.name || null,
-          email: session.user.email,
-          image: session.user.image || null,
-        });
-      } catch (error) {
-        console.error('Error creating user:', error);
-        return NextResponse.json(
-          { error: 'Failed to create user' },
-          { status: 500 }
-        );
-      }
+      console.error(`User not found in database: ${session.user.id}`);
+      return NextResponse.json(
+        { 
+          error: 'User account not found in database. This is likely a system error. Please try logging out and back in, or contact support if the issue persists.' 
+        },
+        { status: 500 }
+      );
     }
 
     // Create the API connection
@@ -108,14 +94,14 @@ export async function POST(req: NextRequest) {
     } catch (error) {
       console.error('Error creating API connection:', error);
       return NextResponse.json(
-        { error: 'Failed to create API connection' },
+        { error: 'Failed to create API connection. Please try again or contact support.' },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error('Unexpected error in API connection creation:', error);
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'An unexpected error occurred. Please try again or contact support.' },
       { status: 500 }
     );
   }
@@ -128,16 +114,38 @@ export async function POST(req: NextRequest) {
  * Requires authentication.
  */
 export async function GET(req: NextRequest) {
-  // Check if the user is authenticated
-  const session = await getServerSession(authOptions) as CustomSession | null;
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    // Check if the user is authenticated
+    const session = await getServerSession(authOptions) as CustomSession | null;
+    if (!session?.user?.id) {
+      return NextResponse.json({ 
+        error: 'Unauthorized - You must be logged in to view API connections' 
+      }, { status: 401 });
+    }
+
+    // Verify user exists in database
+    const user = await getUserById(session.user.id);
+    if (!user) {
+      console.error(`User not found in database: ${session.user.id}`);
+      return NextResponse.json(
+        { 
+          error: 'User account not found in database. This is likely a system error. Please try logging out and back in, or contact support if the issue persists.' 
+        },
+        { status: 500 }
+      );
+    }
+
+    // Get all API connections for the user
+    const apiConnections = await getApiConnectionsByUserId(session.user.id);
+
+    // Return the API connections (without the API keys)
+    const apiConnectionsWithoutKeys = apiConnections.map(({ apiKey, ...connection }) => connection);
+    return NextResponse.json(apiConnectionsWithoutKeys);
+  } catch (error) {
+    console.error('Unexpected error in API connections retrieval:', error);
+    return NextResponse.json(
+      { error: 'An unexpected error occurred. Please try again or contact support.' },
+      { status: 500 }
+    );
   }
-
-  // Get all API connections for the user
-  const apiConnections = await getApiConnectionsByUserId(session.user.id);
-
-  // Return the API connections (without the API keys)
-  const apiConnectionsWithoutKeys = apiConnections.map(({ apiKey, ...connection }) => connection);
-  return NextResponse.json(apiConnectionsWithoutKeys);
 } 
