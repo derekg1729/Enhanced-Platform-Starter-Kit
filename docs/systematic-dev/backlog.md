@@ -135,6 +135,17 @@ This backlog is organized by features. Tasks within the currently active feature
     - Authentication and authorization
     - Tests for API routes
 
+- **[TASK-HW007A] Fix MSW Request Handlers for API Connection Tests**
+  - **Priority**: Medium
+  - **Status**: To Do
+  - **Description**: Address the Mock Service Worker (MSW) warnings in tests related to unhandled API connection requests.
+  - **Acceptance Criteria**:
+    - Create MSW handlers for `/api/api-connections` endpoints
+    - Create MSW handlers for `/api/agents/[id]/api-connections` endpoints
+    - Update test setup files to include the new handlers
+    - Ensure all tests pass without MSW warnings
+    - Document the MSW handler patterns for future API endpoints
+
 ### Phase 3: User Interface
 
 - **[TASK-HW008] Implement Agent Creation Form**

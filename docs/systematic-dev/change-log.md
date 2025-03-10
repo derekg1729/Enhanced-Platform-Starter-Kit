@@ -264,6 +264,17 @@
     - Build on the existing API routes to create a complete agent management system
     - Implement comprehensive testing for agent API routes
 
+### [TASK-HW007A] Added to Backlog
+- **Status**: Completed
+- **Description**: Added a new task to address MSW warnings in tests
+- **Timestamp**: 23:55, June 14, 2024
+- **Details**:
+  - Created a new medium-priority task [TASK-HW007A] to fix MSW request handlers for API connection tests
+  - The task will address the warnings seen during test runs related to unhandled API requests
+  - Defined acceptance criteria including creating handlers for API connections endpoints
+  - This task will improve test reliability and reduce noise in test output
+  - Positioned the task between [TASK-HW007] and [TASK-HW008] to ensure it's addressed before moving too far ahead with new features
+
 ## Authentication Tests Fixed
 
 **ID**: 018-fix-auth-tests  
