@@ -5,7 +5,7 @@ import {
   getAgentById, 
   updateAgent, 
   deleteAgent 
-} from '../../../../lib/agent-db';
+} from '@/lib/agent-db';
 
 // Define a custom session type
 interface CustomSession {
@@ -19,14 +19,14 @@ interface CustomSession {
 }
 
 /**
- * GET /api/agents/:id
+ * GET /api/agents/:agentId
  * 
  * Returns a specific agent.
  * Requires authentication and ownership of the agent.
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { agentId: string } }
 ) {
   // Check if the user is authenticated
   const session = await getServerSession(authOptions) as CustomSession | null;
@@ -35,7 +35,7 @@ export async function GET(
   }
 
   // Get the agent
-  const agent = await getAgentById(params.id, session.user.id);
+  const agent = await getAgentById(params.agentId, session.user.id);
   if (!agent) {
     return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
   }
@@ -45,14 +45,14 @@ export async function GET(
 }
 
 /**
- * PUT /api/agents/:id
+ * PUT /api/agents/:agentId
  * 
  * Updates a specific agent.
  * Requires authentication and ownership of the agent.
  */
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { agentId: string } }
 ) {
   // Check if the user is authenticated
   const session = await getServerSession(authOptions) as CustomSession | null;
@@ -65,7 +65,7 @@ export async function PUT(
 
   // Update the agent
   const updatedAgent = await updateAgent(
-    params.id,
+    params.agentId,
     session.user.id,
     {
       name: body.name,
@@ -86,14 +86,14 @@ export async function PUT(
 }
 
 /**
- * DELETE /api/agents/:id
+ * DELETE /api/agents/:agentId
  * 
  * Deletes a specific agent.
  * Requires authentication and ownership of the agent.
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { agentId: string } }
 ) {
   // Check if the user is authenticated
   const session = await getServerSession(authOptions) as CustomSession | null;
@@ -102,7 +102,7 @@ export async function DELETE(
   }
 
   // Delete the agent
-  const success = await deleteAgent(params.id, session.user.id);
+  const success = await deleteAgent(params.agentId, session.user.id);
   if (!success) {
     return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
   }
