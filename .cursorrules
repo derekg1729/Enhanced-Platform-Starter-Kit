@@ -1,5 +1,5 @@
 {
-  "version": "2.6",
+  "version": "2.7",
   "process": {
     "tdd": {
       "enabled": true,
@@ -341,6 +341,81 @@
               ]
             }
           ]
+        }
+      },
+      "bestPractices": {
+        "preCommitWorkflow": {
+          "description": "MANDATORY steps that MUST be followed before committing any changes",
+          "criticalWarning": "NEVER BYPASS THESE STEPS! Committing code that doesn't pass all checks can break the build for everyone.",
+          "enforcementMechanism": "Use 'npm run setup-hooks' to install Git hooks that enforce this workflow",
+          "steps": [
+            {
+              "name": "changelogVerification",
+              "command": "npm run verify-changelog",
+              "description": "Verify changelog updates are committed with their related code changes",
+              "required": true,
+              "rules": [
+                "NEVER commit changelog updates separately from their related code changes",
+                "ALL feature completions must include both code and documentation updates in the same commit",
+                "Verify all modified files with 'git status' before committing",
+                "Use atomic commits that include all related changes: code, tests, and documentation"
+              ]
+            },
+            {
+              "name": "environmentCheck",
+              "command": "npm run check-env",
+              "description": "Verify environment variables are consistent across environments",
+              "required": true
+            },
+            {
+              "name": "linting",
+              "command": "npm run lint",
+              "description": "Run linting to catch syntax and style issues",
+              "required": true
+            },
+            {
+              "name": "typeCheck",
+              "command": "npm run typecheck",
+              "description": "Verify TypeScript types are correct",
+              "required": true
+            },
+            {
+              "name": "testing",
+              "command": "npm run test",
+              "description": "Run all tests to ensure functionality works as expected",
+              "required": true
+            },
+            {
+              "name": "buildCheck",
+              "command": "npm run build",
+              "description": "Verify the application builds successfully",
+              "required": true,
+              "criticalWarning": "NEVER commit code that doesn't build successfully"
+            }
+          ],
+          "automatedEnforcement": {
+            "preCommitHook": "npm run pre-commit",
+            "ciChecks": ["lint", "test", "build", "typecheck"]
+          },
+          "taskCompletionRequirement": {
+            "description": "Code MUST be committed after completing each task or bug fix",
+            "commitMessage": "Include the task ID or bug ID in the commit message along with a brief description",
+            "timing": "Commit immediately after all checks pass and the task is marked as completed in the documentation"
+          },
+          "troubleshooting": {
+            "testFailures": "Fix the issues before committing. Do not modify tests to make them pass unless the test itself is incorrect.",
+            "buildFailures": "Fix the code issues before committing. Common problems include syntax errors, missing dependencies, or configuration issues."
+          },
+          "strictWarnings": {
+            "noVerifyFlag": "NEVER use git commit with the --no-verify flag to bypass pre-commit hooks. This bypasses critical checks and can introduce serious issues into the codebase. This prohibition applies to ALL processes, including the CHIP process.",
+            "alternativeApproaches": [
+              "Fix the failing checks instead of bypassing them",
+              "If the checks are taking too long, consider optimizing them rather than skipping them",
+              "For emergency situations, get explicit team approval and document the reason for any exception",
+              "Use git stash to temporarily save changes that aren't ready for verification",
+              "If timeout issues occur, address the performance of the hooks rather than bypassing them"
+            ]
+          }
         }
       }
     },
@@ -694,6 +769,18 @@
       "criticalWarning": "NEVER BYPASS THESE STEPS! Committing code that doesn't pass all checks can break the build for everyone.",
       "enforcementMechanism": "Use 'npm run setup-hooks' to install Git hooks that enforce this workflow",
       "steps": [
+        {
+          "name": "changelogVerification",
+          "command": "npm run verify-changelog",
+          "description": "Verify changelog updates are committed with their related code changes",
+          "required": true,
+          "rules": [
+            "NEVER commit changelog updates separately from their related code changes",
+            "ALL feature completions must include both code and documentation updates in the same commit",
+            "Verify all modified files with 'git status' before committing",
+            "Use atomic commits that include all related changes: code, tests, and documentation"
+          ]
+        },
         {
           "name": "environmentCheck",
           "command": "npm run check-env",
