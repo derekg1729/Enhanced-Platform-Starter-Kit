@@ -12,6 +12,52 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
+// Import agent schema
+import {
+  agents,
+  apiConnections,
+  agentApiConnections,
+  agentMessages,
+  agentFeedback,
+  agentsRelations,
+  apiConnectionsRelations,
+  agentApiConnectionsRelations,
+  agentMessagesRelations,
+  agentFeedbackRelations,
+} from "./agent-schema";
+
+// Import agent types
+import type {
+  Agent,
+  ApiConnection,
+  AgentApiConnection,
+  AgentMessage,
+  AgentFeedback,
+} from "./agent-schema";
+
+// Re-export agent schema
+export {
+  agents,
+  apiConnections,
+  agentApiConnections,
+  agentMessages,
+  agentFeedback,
+  agentsRelations,
+  apiConnectionsRelations,
+  agentApiConnectionsRelations,
+  agentMessagesRelations,
+  agentFeedbackRelations,
+};
+
+// Re-export agent types
+export type {
+  Agent,
+  ApiConnection,
+  AgentApiConnection,
+  AgentMessage,
+  AgentFeedback,
+};
+
 export const users = pgTable("users", {
   id: text("id")
     .primaryKey()
@@ -202,8 +248,15 @@ export const userRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   sites: many(sites),
   posts: many(posts),
+  agents: many(agents),
+  apiConnections: many(apiConnections),
+  agentMessages: many(agentMessages),
+  agentFeedback: many(agentFeedback),
 }));
 
+// Define select types
+export type SelectUser = typeof users.$inferSelect;
+export type SelectSession = typeof sessions.$inferSelect;
 export type SelectSite = typeof sites.$inferSelect;
 export type SelectPost = typeof posts.$inferSelect;
 export type SelectExample = typeof examples.$inferSelect;

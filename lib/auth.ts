@@ -4,8 +4,44 @@ import db from "./db";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { Adapter } from "next-auth/adapters";
 import { accounts, sessions, users, verificationTokens } from "./schema";
+import { createUser, getUserById } from './user-db';
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
+
+// This function ensures a user exists in our database
+// It's used both in the auth callback and can be called directly
+export async function ensureUserExists(profile: {
+  id: string;
+  name?: string | null;
+  email: string;
+  image?: string | null;
+}): Promise<boolean> {
+  if (!profile?.id || !profile?.email) {
+    console.error('Invalid user profile:', profile);
+    return false;
+  }
+
+  try {
+    // Check if user exists in our database
+    const existingUser = await getUserById(profile.id);
+    
+    // If user doesn't exist, create them
+    if (!existingUser) {
+      console.log('Creating new user in database:', profile.id);
+      await createUser({
+        id: profile.id,
+        name: profile.name || null,
+        email: profile.email,
+        image: profile.image || null,
+      });
+    }
+    return true;
+  } catch (error) {
+    console.error('Error ensuring user exists:', error);
+    return false;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GitHubProvider({
@@ -87,20 +123,36 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    jwt: async ({ token, user }) => {
+    async signIn({ user, account, profile }) {
+      // Ensure the user exists in our database
+      if (!profile?.email) {
+        console.error('User profile missing email:', profile);
+        return false;
+      }
+
+      // Create a profile object with the necessary fields
+      const userProfile = {
+        id: user.id,
+        name: user.name,
+        email: profile.email,
+        image: user.image
+      };
+
+      // Ensure the user exists in our database
+      return await ensureUserExists(userProfile);
+    },
+    async jwt({ token, user, account, profile }) {
       if (user) {
         token.user = user;
+        token.id = user.id;
       }
       return token;
     },
-    session: async ({ session, token }) => {
-      session.user = {
-        ...session.user,
-        // @ts-expect-error
-        id: token.sub,
-        // @ts-expect-error
-        username: token?.user?.username || token?.user?.gh_username,
-      };
+    async session({ session, token }) {
+      // Ensure session.user exists and has the correct type
+      if (session.user && token.id) {
+        (session.user as any).id = token.id as string;
+      }
       return session;
     },
   },
@@ -173,4 +225,23 @@ export function withPostAuth(action: any) {
 
     return action(formData, post, key);
   };
+}
+
+// Exported for testing
+export async function authCallback({ user, account, profile }: any) {
+  if (!profile?.email) {
+    console.error('User profile missing email:', profile);
+    return false;
+  }
+
+  // Create a profile object with the necessary fields
+  const userProfile = {
+    id: user.id,
+    name: user.name,
+    email: profile.email,
+    image: user.image
+  };
+
+  // Ensure the user exists in our database
+  return await ensureUserExists(userProfile);
 }

@@ -1,5 +1,337 @@
 {
-  "version": "1.0",
+  "version": "2.0",
+  "process": {
+    "tdd": {
+      "enabled": true,
+      "description": "Test-Driven Development is the foundation of our development process",
+      "workflow": {
+        "name": "Test-Driven Development Workflow",
+        "description": "The core workflow that MUST be followed above all else for every feature implementation, bug fix, and code change",
+        "overview": "This workflow ensures that tests are written before implementation, code changes are minimal and focused, and all tests pass before completion. All other workflows (Bug Resolution, Documentation Updates) must follow these core TDD principles.",
+        "steps": [
+          {
+            "name": "Workflow Status Check",
+            "description": "Identify the current feature and workflow stage",
+            "instructions": [
+              "Review docs/systematic-dev/backlog.md to identify the current feature we're working on",
+              "Review docs/systematic-dev/change-log.md to identify the current task and its status",
+              "Identify which stage of the TDD workflow we're currently in",
+              "Determine if we're addressing a feature, bug fix, or documentation update",
+              "Report the current feature, task, and workflow stage before proceeding"
+            ]
+          },
+          {
+            "name": "Feature Understanding",
+            "description": "Understand the feature to build and verify all tests are passing",
+            "instructions": [
+              "Review the task description and acceptance criteria in the backlog",
+              "Run all tests to confirm the current state (passing or failing)",
+              "If tests are failing that should be passing, address those issues first",
+              "Document your understanding of the feature requirements",
+              "Identify edge cases and failure modes",
+              "Determine acceptance criteria if not already specified"
+            ]
+          },
+          {
+            "name": "Feature Design",
+            "description": "Design the feature and plan what files will be updated",
+            "instructions": [
+              "Create a detailed design for the feature implementation",
+              "Identify ALL files that will need to be modified",
+              "Identify any new files that need to be created",
+              "Document dependencies between files and the order of changes",
+              "Consider performance, security, and scalability implications",
+              "Check for alignment with architectural principles",
+              "CRITICAL: Document this design before proceeding to the next step"
+            ]
+          },
+          {
+            "name": "Test Writing",
+            "description": "Write failing tests for the feature before implementation",
+            "instructions": [
+              "Create or update test files for all components/functions that will be modified",
+              "Write comprehensive tests that cover all expected behaviors",
+              "Include tests for edge cases and error handling",
+              "Ensure tests are properly structured and follow testing best practices",
+              "For bug fixes, write tests that reproduce the bug",
+              "CRITICAL: Complete ALL test writing before proceeding to the next step",
+              "NEVER skip writing tests first - this is the foundation of TDD"
+            ]
+          },
+          {
+            "name": "Test Verification",
+            "description": "Run the tests to confirm they fail as expected",
+            "instructions": [
+              "Run the newly written tests to confirm they fail",
+              "Verify that tests fail for the expected reasons",
+              "Document the test failures as evidence that the tests are properly checking for the new functionality",
+              "For bug fixes, verify that tests correctly detect the bug",
+              "CRITICAL: This step MUST NOT be skipped - tests should fail before implementation",
+              "Failing tests confirm they actually test something meaningful"
+            ]
+          },
+          {
+            "name": "Implementation",
+            "description": "Implement the feature, touching ONLY the files specified in the design",
+            "instructions": [
+              "Implement the feature according to the design",
+              "ONLY modify files that were identified in the design phase",
+              "If additional files need modification, return to the design phase",
+              "Follow coding standards and best practices",
+              "Implement the minimal code needed to make tests pass",
+              "Focus on making tests pass first, not perfect code",
+              "Run tests frequently during implementation to track progress"
+            ]
+          },
+          {
+            "name": "Test Validation",
+            "description": "Run ALL tests to confirm ALL tests pass",
+            "instructions": [
+              "Run the complete test suite, not just the new tests",
+              "Verify that all tests are now passing",
+              "If any tests are failing, fix the implementation",
+              "If ANY existing tests start failing unexpectedly, stop and investigate immediately",
+              "Failing tests are a signal that something is wrong, not that the tests need to be changed",
+              "CRITICAL: Do not proceed until ALL tests are passing"
+            ]
+          },
+          {
+            "name": "Refactoring",
+            "description": "Clean up and optimize the implementation while maintaining test coverage",
+            "instructions": [
+              "Refactor for readability and maintainability",
+              "Optimize performance if needed",
+              "Run tests after each significant change",
+              "Ensure all tests continue to pass",
+              "This step is optional but recommended for code quality"
+            ]
+          },
+          {
+            "name": "Build and Validate",
+            "description": "Build the application and validate the changes",
+            "instructions": [
+              "Run the build process to ensure it completes successfully",
+              "Fix ANY build errors before proceeding - NEVER commit code that doesn't build",
+              "Manually test the feature to confirm it works as expected",
+              "Verify that the implementation meets all acceptance criteria",
+              "Document any issues or limitations discovered"
+            ]
+          },
+          {
+            "name": "Task Completion",
+            "description": "Record task status and commit changes",
+            "instructions": [
+              "Update the task status in backlog.md",
+              "Add an entry to change-log.md with the task ID, status, description, and timestamp",
+              "Commit all changes with a message that includes the task ID and a brief description",
+              "Ensure the commit message follows the conventional commit format",
+              "Push to GitHub to trigger preview deployment if appropriate"
+            ]
+          }
+        ],
+        "warnings": [
+          "Never skip writing tests first - this is the foundation of TDD",
+          "If ANY tests start failing unexpectedly, stop and investigate immediately",
+          "Failing tests are a signal that something is wrong, not that the tests need to be changed",
+          "Always run the full test suite before committing changes",
+          "Tests should be treated as first-class citizens in the codebase",
+          "Bypassing these steps can lead to broken builds and failed deployments"
+        ],
+        "benefits": [
+          "Ensures code meets requirements before implementation begins",
+          "Prevents regressions when making changes",
+          "Provides documentation of expected behavior",
+          "Enables confident refactoring and optimization"
+        ]
+      },
+      "taskTypes": [
+        {
+          "name": "Task Type Determination",
+          "description": "Determine the type of task to be addressed",
+          "steps": [
+            {
+              "name": "Assess Current Task",
+              "description": "Evaluate the current task to determine its type",
+              "instructions": [
+                "Check if there are any open bugs with 'Critical' or 'High' severity in docs/systematic-dev/bug-tracker.md",
+                "If critical bugs exist, classify this as a Bug Fix task",
+                "Check if documentation is out of date based on recent changes in docs/systematic-dev/change-log.md",
+                "If documentation needs updating, classify this as a Documentation Update task",
+                "Otherwise, classify this as a Feature Implementation task",
+                "Regardless of task type, the core TDD workflow MUST be followed"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bug Fix Specifics",
+          "description": "Additional considerations when fixing bugs",
+          "steps": [
+            {
+              "name": "Bug Analysis",
+              "description": "Analyze the bug to understand its cause",
+              "instructions": [
+                "Review the bug description and related code",
+                "Identify the root cause of the bug",
+                "Document the analysis in bug-tracker.md",
+                "Update the bug status in bug-tracker.md to 'In Progress'",
+                "Add an entry to change-log.md with the bug ID, 'Started' status, description, and current timestamp"
+              ]
+            },
+            {
+              "name": "Bug Fix Completion",
+              "description": "Additional steps for completing bug fixes",
+              "instructions": [
+                "Update the bug status in bug-tracker.md to 'Fixed'",
+                "Add an entry to change-log.md with the bug ID, 'Fixed' status, description, and current timestamp",
+                "Summarize the bug, its root cause, and how it was fixed",
+                "Identify any lessons learned or process improvements to prevent similar bugs"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Documentation Update Specifics",
+          "description": "Additional considerations when updating documentation",
+          "steps": [
+            {
+              "name": "Documentation Needs",
+              "description": "Identify documentation that needs to be updated",
+              "instructions": [
+                "Review recent changes in the change-log.md",
+                "Identify documentation that needs to be updated based on these changes",
+                "Report the documentation that needs updating"
+              ]
+            },
+            {
+              "name": "Documentation Update Completion",
+              "description": "Additional steps for completing documentation updates",
+              "instructions": [
+                "Add an entry to change-log.md with 'Documentation Update' as the ID, 'Completed' status, description, and current timestamp",
+                "Summarize the documentation updates that were made",
+                "Identify any areas that may need future documentation improvements"
+              ]
+            }
+          ]
+        }
+      ],
+      "errorHandling": {
+        "name": "Error Recovery",
+        "description": "A workflow for recovering from errors or blockers",
+        "steps": [
+          {
+            "name": "Identify Error",
+            "description": "Clearly identify the error or blocker",
+            "instructions": [
+              "Document the specific error or blocker encountered",
+              "Capture any error messages or symptoms",
+              "Identify the context in which the error occurred",
+              "Determine the severity and impact of the error"
+            ]
+          },
+          {
+            "name": "Analyze Error",
+            "description": "Analyze the error to understand its cause",
+            "instructions": [
+              "Investigate the potential causes of the error",
+              "Review related code or documentation",
+              "Identify any dependencies or external factors that may be involved",
+              "Document the analysis findings"
+            ]
+          },
+          {
+            "name": "Determine Recovery Path",
+            "description": "Determine the best path for recovery",
+            "instructions": [
+              "Consider possible solutions or workarounds",
+              "Evaluate the pros and cons of each approach",
+              "Select the most appropriate recovery path",
+              "Document the selected recovery approach"
+            ]
+          },
+          {
+            "name": "Implement Recovery",
+            "description": "Implement the recovery solution",
+            "instructions": [
+              "Execute the selected recovery approach",
+              "Document any changes made during recovery",
+              "Verify that the error has been resolved",
+              "Update relevant documentation if needed"
+            ]
+          },
+          {
+            "name": "Document Lessons Learned",
+            "description": "Document lessons learned from the error",
+            "instructions": [
+              "Summarize the error, its cause, and the recovery process",
+              "Identify any process improvements to prevent similar errors",
+              "Update documentation or add notes to help others avoid the same issue",
+              "Consider adding a new task to the backlog if systemic improvements are needed"
+            ]
+          },
+          {
+            "name": "Return to TDD Workflow",
+            "description": "Return to the TDD workflow",
+            "instructions": [
+              "Determine which step of the TDD workflow was active when the error occurred",
+              "Return to the appropriate step in the TDD workflow",
+              "Continue with the development process"
+            ]
+          }
+        ]
+      },
+      "specialCases": {
+        "name": "Server/Client Component Boundary Testing",
+        "description": "Guidelines for testing the boundaries between server and client components in Next.js applications",
+        "steps": [
+          {
+            "name": "Identify Component Types",
+            "description": "Clearly identify which components are server components and which are client components",
+            "instructions": [
+              "Mark all client components with 'use client' directive at the top of the file",
+              "Document component types in comments or component documentation",
+              "Create a list of all client components that are used within server components"
+            ]
+          },
+          {
+            "name": "Test Component Boundaries",
+            "description": "Create specific tests for the boundaries between server and client components",
+            "instructions": [
+              "Create integration tests that test the actual rendering of client components within server components",
+              "Test event handler props passed to client components from server components",
+              "Verify that all event handlers are properly defined in client components",
+              "Test that server components don't directly pass functions to client components",
+              "Use Next.js testing utilities to test the actual rendering in a Next.js environment"
+            ]
+          },
+          {
+            "name": "Runtime Error Testing",
+            "description": "Implement tests that can catch runtime errors related to server/client component boundaries",
+            "instructions": [
+              "Create a test environment that simulates the Next.js runtime",
+              "Test the serialization of props passed from server to client components",
+              "Verify that no functions or non-serializable data is passed directly from server to client components",
+              "Implement error boundary testing to catch potential runtime errors"
+            ]
+          },
+          {
+            "name": "Pre-Deployment Verification",
+            "description": "Verify server/client component boundaries before deployment",
+            "instructions": [
+              "Run a full build process before deployment to catch build-time errors",
+              "Implement a local preview of the production build to catch runtime errors",
+              "Create a checklist for reviewing server/client component interactions",
+              "Verify that all client components receiving event handlers are properly marked with 'use client'"
+            ]
+          }
+        ]
+      }
+    },
+    "instructions": {
+      "default": "ALWAYS follow the Test-Driven Development Workflow above all else. This workflow MUST be followed for every feature implementation, bug fix, and code change without exception. Before starting any task, run the 'Workflow Status Check' to determine where you are in the process. If you're not sure, start from the beginning of the workflow. Remember that tests MUST be written before implementation and MUST fail before you write code to make them pass. Only modify files identified in the design phase.",
+      "onStart": "Begin by running the 'Workflow Status Check' to determine which feature you're working on and which stage of the TDD workflow you're in. Remember that Test-Driven Development is MANDATORY for all code changes, regardless of whether you're implementing a feature, fixing a bug, or updating documentation."
+    }
+  },
   "project": {
     "name": "agent-platform",
     "type": "fullstack",
@@ -265,84 +597,15 @@
         "preCommitHook": "npm run pre-commit",
         "ciChecks": ["lint", "test", "build", "typecheck"]
       },
+      "taskCompletionRequirement": {
+        "description": "Code MUST be committed after completing each task or bug fix",
+        "commitMessage": "Include the task ID or bug ID in the commit message along with a brief description",
+        "timing": "Commit immediately after all checks pass and the task is marked as completed in the documentation"
+      },
       "troubleshooting": {
         "testFailures": "Fix the issues before committing. Do not modify tests to make them pass unless the test itself is incorrect.",
         "buildFailures": "Fix the code issues before committing. Common problems include syntax errors, missing dependencies, or configuration issues."
       }
-    },
-    "testDrivenDevelopment": {
-      "workflow": {
-        "step1_planning": {
-          "description": "Clearly define the desired feature or change",
-          "actions": [
-            "Document the expected behavior",
-            "Identify edge cases and failure modes",
-            "Determine acceptance criteria"
-          ]
-        },
-        "step2_testing": {
-          "description": "Write failing tests that validate the desired functionality",
-          "actions": [
-            "Create new test file if needed",
-            "Write tests that cover all expected behaviors",
-            "Include edge cases and error handling",
-            "Run tests to confirm they fail as expected"
-          ],
-          "validation": "Tests should fail at this stage, confirming they actually test something"
-        },
-        "step3_implementation": {
-          "description": "Implement the minimal code needed to pass tests",
-          "actions": [
-            "Focus on making tests pass, not perfect code",
-            "Implement core functionality first",
-            "Run tests frequently to track progress"
-          ],
-          "validation": "All new tests should now pass"
-        },
-        "step4_verification": {
-          "description": "Verify all tests pass and no regressions were introduced",
-          "actions": [
-            "Run the full test suite",
-            "Verify no existing tests are failing",
-            "If any existing tests fail, STOP and analyze"
-          ],
-          "criticalWarning": "If ANY existing tests start failing, this is a RED ALERT. Take a hard look at recent changes and strongly consider reverting them completely."
-        },
-        "step5_refactoring": {
-          "description": "Clean up and optimize the implementation while maintaining test coverage",
-          "actions": [
-            "Refactor for readability and maintainability",
-            "Optimize performance if needed",
-            "Run tests after each significant change"
-          ],
-          "validation": "All tests should continue to pass"
-        },
-        "step6_deployment": {
-          "description": "Validate locally and in a real environment before committing",
-          "actions": [
-            "FOLLOW THE COMPLETE PRE-COMMIT WORKFLOW - Run 'npm run pre-commit'",
-            "Fix ANY build errors before proceeding - NEVER commit code that doesn't build",
-            "ONLY AFTER all checks pass: Commit changes to feature branch",
-            "Push to GitHub to trigger preview deployment",
-            "Verify functionality in the preview deployment"
-          ],
-          "rule": "Never commit code until all validation checks pass",
-          "criticalWarning": "Bypassing these steps can lead to broken builds and failed deployments"
-        }
-      },
-      "warnings": [
-        "Never skip writing tests first - this is the foundation of TDD",
-        "If ANY tests start failing unexpectedly, stop and investigate immediately",
-        "Failing tests are a signal that something is wrong, not that the tests need to be changed",
-        "Always run the full test suite before committing changes",
-        "Tests should be treated as first-class citizens in the codebase"
-      ],
-      "benefits": [
-        "Ensures code meets requirements before implementation begins",
-        "Prevents regressions when making changes",
-        "Provides documentation of expected behavior",
-        "Enables confident refactoring and optimization"
-      ]
     },
     "middleware": {
       "principles": [
@@ -424,374 +687,68 @@
       }
     }
   },
-  "rules": [
-    {
-      "name": "Workflow Transition Decision",
-      "description": "Determine which workflow to follow based on current state",
-      "steps": [
-        {
-          "name": "Assess Current State",
-          "description": "Evaluate the current state of the project",
-          "instructions": [
-            "Check if there are any open bugs with 'Critical' or 'High' severity in docs/systematic-dev/bug-tracker.md",
-            "If critical bugs exist, transition to the Bug Resolution Workflow",
-            "Check if documentation is out of date based on recent changes in docs/systematic-dev/change-log.md",
-            "If documentation needs updating, transition to the Documentation Update Workflow",
-            "Otherwise, continue with the Systematic Development Workflow"
-          ]
-        }
-      ]
+  "agentPlatform": {
+    "description": "Guidelines for building and extending the Agent Platform",
+    "architecture": {
+      "agentDefinition": {
+        "components": [
+          "Metadata (name, description, version)",
+          "Configuration (parameters, settings)",
+          "Tools (API connections, capabilities)",
+          "Prompts (instructions, templates)",
+          "Execution (runtime settings, memory)"
+        ],
+        "schema": "See lib/schema.ts for the agent schema definition"
+      },
+      "containerization": {
+        "strategy": "Each agent runs in its own isolated container",
+        "scaling": "Containers scale independently based on usage",
+        "security": "Containers have limited access to resources and are isolated from each other"
+      },
+      "apiConnections": {
+        "storage": "API keys are encrypted and stored securely",
+        "access": "Keys are only decrypted at runtime in the agent container",
+        "management": "Users can add, update, and revoke API connections"
+      },
+      "multiTenancy": {
+        "isolation": "Agents are isolated by tenant",
+        "sharing": "Agents can be shared with specific permissions",
+        "marketplace": "Agents can be published to the marketplace for others to use"
+      }
     },
-    {
-      "name": "Systematic Development Workflow",
-      "description": "A structured workflow for systematic development with minimal human intervention",
-      "steps": [
-        {
-          "name": "Initialize",
-          "description": "Read project documentation and understand the context",
-          "instructions": [
-            "Read the project description in docs/systematic-dev/project-description.md",
-            "Review the development rules in docs/systematic-dev/development-rules.md",
-            "Acknowledge understanding of the project and rules"
-          ]
-        },
-        {
-          "name": "Select Task",
-          "description": "Select the highest priority task from the backlog",
-          "instructions": [
-            "Open docs/systematic-dev/backlog.md",
-            "Identify the highest priority task with status 'To Do'",
-            "Report the selected task ID and title"
-          ]
-        },
-        {
-          "name": "Start Task",
-          "description": "Update documentation to reflect task has started",
-          "instructions": [
-            "Update the task status in backlog.md to 'In Progress'",
-            "Add an entry to change-log.md with the task ID, 'Started' status, description, and current timestamp",
-            "Confirm the updates have been made"
-          ]
-        },
-        {
-          "name": "Design Solution",
-          "description": "Design a solution for the selected task",
-          "instructions": [
-            "Review the current solution design in docs/systematic-dev/solution-design.md",
-            "Design a solution for the selected task that aligns with the existing architecture",
-            "Update solution-design.md with the new design",
-            "Confirm the design has been documented"
-          ]
-        },
-        {
-          "name": "Design Validation",
-          "description": "Validate the design against requirements and best practices",
-          "instructions": [
-            "Review the design against the task's acceptance criteria",
-            "Check for alignment with architectural principles in development-rules.md",
-            "Identify potential edge cases or failure modes",
-            "Consider performance, security, and scalability implications",
-            "Refine the design if necessary based on this validation"
-          ]
-        },
-        {
-          "name": "Implement Solution",
-          "description": "Implement the designed solution",
-          "instructions": [
-            "Implement the solution according to the design",
-            "Follow the coding standards defined in development-rules.md",
-            "If new modules are created, update the Module Registry section in solution-design.md",
-            "Confirm the implementation is complete"
-          ]
-        },
-        {
-          "name": "Verify Implementation",
-          "description": "Verify the implementation meets the acceptance criteria",
-          "instructions": [
-            "Review the implementation against the acceptance criteria in backlog.md",
-            "Check for potential bugs or issues",
-            "If issues are found, add them to bug-tracker.md",
-            "Confirm the verification is complete"
-          ]
-        },
-        {
-          "name": "Quality Gate",
-          "description": "Ensure the implementation meets quality standards",
-          "instructions": [
-            "Verify that the implementation follows all coding standards in development-rules.md",
-            "Confirm that all acceptance criteria are met with specific evidence",
-            "Check that appropriate tests have been created or updated",
-            "Document any technical debt or future improvements needed",
-            "Only proceed if all quality criteria are met"
-          ]
-        },
-        {
-          "name": "Complete Task",
-          "description": "Update documentation to reflect task completion",
-          "instructions": [
-            "Update the task status in backlog.md to 'Done'",
-            "Add an entry to change-log.md with the task ID, 'Completed' status, description, and current timestamp",
-            "Confirm the updates have been made"
-          ]
-        },
-        {
-          "name": "Progress Report",
-          "description": "Summarize progress and plan next steps",
-          "instructions": [
-            "Summarize what was accomplished in this task",
-            "Identify any lessons learned or challenges encountered",
-            "Recommend any follow-up tasks that should be added to the backlog",
-            "Provide a brief plan for the next steps"
-          ]
-        },
-        {
-          "name": "Repeat Process",
-          "description": "Return to task selection and continue the workflow",
-          "instructions": [
-            "Run the 'Workflow Transition Decision' to determine the next workflow to follow",
-            "If no tasks remain with 'To Do' status, report completion of all tasks",
-            "Otherwise, continue with the next task"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Bug Resolution Workflow",
-      "description": "A workflow for resolving bugs identified during development",
-      "steps": [
-        {
-          "name": "Select Bug",
-          "description": "Select the highest priority bug from the bug tracker",
-          "instructions": [
-            "Open docs/systematic-dev/bug-tracker.md",
-            "Identify the highest priority bug with status 'Open'",
-            "Report the selected bug ID and title"
-          ]
-        },
-        {
-          "name": "Start Bug Resolution",
-          "description": "Update documentation to reflect bug resolution has started",
-          "instructions": [
-            "Update the bug status in bug-tracker.md to 'In Progress'",
-            "Add an entry to change-log.md with the bug ID, 'Started' status, description, and current timestamp",
-            "Confirm the updates have been made"
-          ]
-        },
-        {
-          "name": "Analyze Bug",
-          "description": "Analyze the bug to understand its cause",
-          "instructions": [
-            "Review the bug description and related code",
-            "Identify the root cause of the bug",
-            "Document the analysis in bug-tracker.md",
-            "Confirm the analysis is complete"
-          ]
-        },
-        {
-          "name": "Design Fix",
-          "description": "Design a fix for the bug",
-          "instructions": [
-            "Design a fix that addresses the root cause",
-            "Update solution-design.md if the fix requires design changes",
-            "Confirm the fix design is documented"
-          ]
-        },
-        {
-          "name": "Implement Fix",
-          "description": "Implement the designed fix",
-          "instructions": [
-            "Implement the fix according to the design",
-            "Follow the coding standards defined in development-rules.md",
-            "Confirm the implementation is complete"
-          ]
-        },
-        {
-          "name": "Verify Fix",
-          "description": "Verify the fix resolves the bug",
-          "instructions": [
-            "Test the fix to ensure it resolves the bug",
-            "Check for any regressions or new issues",
-            "If new issues are found, add them to bug-tracker.md",
-            "Confirm the verification is complete"
-          ]
-        },
-        {
-          "name": "Quality Gate",
-          "description": "Ensure the fix meets quality standards",
-          "instructions": [
-            "Verify that the fix follows all coding standards in development-rules.md",
-            "Confirm that the bug is fully resolved with specific evidence",
-            "Check that appropriate tests have been created or updated to prevent regression",
-            "Document any technical debt or future improvements needed",
-            "Only proceed if all quality criteria are met"
-          ]
-        },
-        {
-          "name": "Complete Bug Resolution",
-          "description": "Update documentation to reflect bug resolution completion",
-          "instructions": [
-            "Update the bug status in bug-tracker.md to 'Fixed'",
-            "Add an entry to change-log.md with the bug ID, 'Fixed' status, description, and current timestamp",
-            "Confirm the updates have been made"
-          ]
-        },
-        {
-          "name": "Progress Report",
-          "description": "Summarize bug resolution and lessons learned",
-          "instructions": [
-            "Summarize the bug, its root cause, and how it was fixed",
-            "Identify any lessons learned or process improvements to prevent similar bugs",
-            "Recommend any follow-up tasks that should be added to the backlog",
-            "Provide a brief plan for the next steps"
-          ]
-        },
-        {
-          "name": "Return to Development",
-          "description": "Return to the main development workflow",
-          "instructions": [
-            "Run the 'Workflow Transition Decision' to determine the next workflow to follow",
-            "Continue with the appropriate workflow based on the decision"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Documentation Update Workflow",
-      "description": "A workflow for updating documentation",
-      "steps": [
-        {
-          "name": "Identify Documentation Needs",
-          "description": "Identify documentation that needs to be updated",
-          "instructions": [
-            "Review recent changes in the change-log.md",
-            "Identify documentation that needs to be updated based on these changes",
-            "Report the documentation that needs updating"
-          ]
-        },
-        {
-          "name": "Update Documentation",
-          "description": "Update the identified documentation",
-          "instructions": [
-            "Update the identified documentation with the latest information",
-            "Ensure consistency across all documentation",
-            "Confirm the documentation updates are complete"
-          ]
-        },
-        {
-          "name": "Verify Documentation",
-          "description": "Verify the documentation is accurate and complete",
-          "instructions": [
-            "Review the updated documentation for accuracy and completeness",
-            "Check for any inconsistencies or gaps",
-            "Confirm the verification is complete"
-          ]
-        },
-        {
-          "name": "Quality Gate",
-          "description": "Ensure the documentation meets quality standards",
-          "instructions": [
-            "Verify that the documentation follows the project's documentation standards",
-            "Check for clarity, completeness, and correctness",
-            "Ensure all links and references are valid",
-            "Only proceed if all quality criteria are met"
-          ]
-        },
-        {
-          "name": "Record Documentation Update",
-          "description": "Record the documentation update in the change log",
-          "instructions": [
-            "Add an entry to change-log.md with 'Documentation Update' as the ID, 'Completed' status, description, and current timestamp",
-            "Confirm the update has been recorded"
-          ]
-        },
-        {
-          "name": "Progress Report",
-          "description": "Summarize documentation updates and next steps",
-          "instructions": [
-            "Summarize the documentation updates that were made",
-            "Identify any areas that may need future documentation improvements",
-            "Recommend any follow-up tasks that should be added to the backlog",
-            "Provide a brief plan for the next steps"
-          ]
-        },
-        {
-          "name": "Return to Development",
-          "description": "Return to the main development workflow",
-          "instructions": [
-            "Run the 'Workflow Transition Decision' to determine the next workflow to follow",
-            "Continue with the appropriate workflow based on the decision"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Error Recovery Workflow",
-      "description": "A workflow for recovering from errors or blockers",
-      "steps": [
-        {
-          "name": "Identify Error",
-          "description": "Clearly identify the error or blocker",
-          "instructions": [
-            "Document the specific error or blocker encountered",
-            "Capture any error messages or symptoms",
-            "Identify the context in which the error occurred",
-            "Determine the severity and impact of the error"
-          ]
-        },
-        {
-          "name": "Analyze Error",
-          "description": "Analyze the error to understand its cause",
-          "instructions": [
-            "Investigate the potential causes of the error",
-            "Review related code or documentation",
-            "Identify any dependencies or external factors that may be involved",
-            "Document the analysis findings"
-          ]
-        },
-        {
-          "name": "Determine Recovery Path",
-          "description": "Determine the best path for recovery",
-          "instructions": [
-            "Consider possible solutions or workarounds",
-            "Evaluate the pros and cons of each approach",
-            "Select the most appropriate recovery path",
-            "Document the selected recovery approach"
-          ]
-        },
-        {
-          "name": "Implement Recovery",
-          "description": "Implement the recovery solution",
-          "instructions": [
-            "Execute the selected recovery approach",
-            "Document any changes made during recovery",
-            "Verify that the error has been resolved",
-            "Update relevant documentation if needed"
-          ]
-        },
-        {
-          "name": "Document Lessons Learned",
-          "description": "Document lessons learned from the error",
-          "instructions": [
-            "Summarize the error, its cause, and the recovery process",
-            "Identify any process improvements to prevent similar errors",
-            "Update documentation or add notes to help others avoid the same issue",
-            "Consider adding a new task to the backlog if systemic improvements are needed"
-          ]
-        },
-        {
-          "name": "Return to Previous Workflow",
-          "description": "Return to the workflow that was interrupted",
-          "instructions": [
-            "Determine which workflow was active when the error occurred",
-            "Return to the appropriate step in that workflow",
-            "Continue with the development process"
-          ]
-        }
-      ]
+    "bestPractices": {
+      "agentDevelopment": {
+        "principles": [
+          "Focus on a single task or capability",
+          "Use clear, concise prompts",
+          "Implement proper error handling",
+          "Include comprehensive testing",
+          "Document usage and limitations"
+        ],
+        "testing": [
+          "Test with various inputs",
+          "Verify error handling",
+          "Check performance under load",
+          "Validate security measures",
+          "Test integration with other systems"
+        ],
+        "security": [
+          "Never expose API keys in client-side code",
+          "Validate all inputs",
+          "Limit agent permissions",
+          "Monitor for unusual behavior",
+          "Implement rate limiting"
+        ]
+      },
+      "userExperience": {
+        "principles": [
+          "Make agent capabilities clear",
+          "Provide helpful error messages",
+          "Design intuitive configuration interfaces",
+          "Include examples and templates",
+          "Offer progressive disclosure of advanced features"
+        ]
+      }
     }
-  ],
-  "instructions": {
-    "default": "Follow the 'Systematic Development Workflow' to implement tasks from the backlog. Before starting each new task, run the 'Workflow Transition Decision' to determine if you should address bugs or update documentation first. If you encounter any errors or get stuck, use the 'Error Recovery Workflow' to identify and resolve the issue. Always ensure quality gates are passed before completing any task.",
-    "onStart": "Begin by running the 'Workflow Transition Decision' to determine which workflow to follow first."
   }
 } 

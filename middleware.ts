@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { setCurrentUserForRLS } from "./lib/db-middleware";
 
 export const config = {
   matcher: [
@@ -29,7 +30,10 @@ export default async function middleware(req: NextRequest) {
     }
     
     url.pathname = `/app${pathname === "/" ? "" : pathname}`;
-    return NextResponse.rewrite(url);
+    const response = NextResponse.rewrite(url);
+    
+    // Set the current user ID for row-level security
+    return await setCurrentUserForRLS(req, response);
   }
 
   // 2. Handle preview deployments and localhost
