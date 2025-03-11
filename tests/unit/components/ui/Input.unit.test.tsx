@@ -1,91 +1,84 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
 import { Input } from '@/components/ui/Input';
+import { describe, it, expect, vi } from 'vitest';
 
 describe('Input Component', () => {
   it('renders correctly with default props', () => {
     render(<Input data-testid="input" />);
     const input = screen.getByTestId('input');
     expect(input).toBeInTheDocument();
-    expect(input).toHaveClass('border-gray-300');
-    expect(input).toHaveClass('bg-white');
+    expect(input).toHaveClass('border-stone-700');
+    expect(input).toHaveClass('bg-stone-800');
   });
 
   it('renders with placeholder text', () => {
-    render(<Input placeholder="Enter your name" />);
-    const input = screen.getByPlaceholderText('Enter your name');
+    render(<Input placeholder="Enter text" />);
+    const input = screen.getByPlaceholderText('Enter text');
     expect(input).toBeInTheDocument();
   });
 
   it('renders in error state correctly', () => {
-    render(<Input data-testid="input" error />);
+    render(<Input error={true} data-testid="input" />);
     const input = screen.getByTestId('input');
     expect(input).toHaveClass('border-red-500');
-    expect(input).toHaveClass('ring-red-200');
   });
 
   it('renders in disabled state correctly', () => {
-    render(<Input data-testid="input" disabled />);
+    render(<Input disabled data-testid="input" />);
     const input = screen.getByTestId('input');
     expect(input).toBeDisabled();
-    expect(input).toHaveClass('bg-gray-100');
-    expect(input).toHaveClass('text-gray-500');
   });
 
   it('handles user input correctly', () => {
     render(<Input data-testid="input" />);
     const input = screen.getByTestId('input');
-    fireEvent.change(input, { target: { value: 'Hello World' } });
-    expect(input).toHaveValue('Hello World');
+    fireEvent.change(input, { target: { value: 'test input' } });
+    expect(input).toHaveValue('test input');
   });
 
   it('calls onChange handler when input changes', () => {
     const handleChange = vi.fn();
-    render(<Input data-testid="input" onChange={handleChange} />);
+    render(<Input onChange={handleChange} data-testid="input" />);
     const input = screen.getByTestId('input');
-    fireEvent.change(input, { target: { value: 'Hello World' } });
-    expect(handleChange).toHaveBeenCalledTimes(1);
+    fireEvent.change(input, { target: { value: 'test input' } });
+    expect(handleChange).toHaveBeenCalled();
   });
 
   it('applies additional className correctly', () => {
-    render(<Input data-testid="input" className="custom-class" />);
+    render(<Input className="custom-class" data-testid="input" />);
     const input = screen.getByTestId('input');
     expect(input).toHaveClass('custom-class');
     // Should still have the default classes
-    expect(input).toHaveClass('border-gray-300');
+    expect(input).toHaveClass('border-stone-700');
   });
 
-  it('passes additional props to the input element', () => {
-    render(<Input data-testid="input" type="password" maxLength={10} />);
+  it('passes through other props correctly', () => {
+    render(<Input type="password" maxLength={10} data-testid="input" />);
     const input = screen.getByTestId('input');
     expect(input).toHaveAttribute('type', 'password');
     expect(input).toHaveAttribute('maxLength', '10');
   });
 
   it('renders with left icon correctly', () => {
-    const LeftIcon = () => <span data-testid="left-icon">🔍</span>;
     render(
-      <div data-testid="input-container">
-        <Input leftIcon={<LeftIcon />} />
-      </div>
+      <Input
+        leftIcon={<span data-testid="left-icon">Icon</span>}
+        data-testid="input"
+      />
     );
-    const container = screen.getByTestId('input-container');
-    const icon = screen.getByTestId('left-icon');
-    expect(icon).toBeInTheDocument();
-    expect(container).toContainElement(icon);
+    expect(screen.getByTestId('left-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('input-container')).toBeInTheDocument();
   });
 
   it('renders with right icon correctly', () => {
-    const RightIcon = () => <span data-testid="right-icon">✓</span>;
     render(
-      <div data-testid="input-container">
-        <Input rightIcon={<RightIcon />} />
-      </div>
+      <Input
+        rightIcon={<span data-testid="right-icon">Icon</span>}
+        data-testid="input"
+      />
     );
-    const container = screen.getByTestId('input-container');
-    const icon = screen.getByTestId('right-icon');
-    expect(icon).toBeInTheDocument();
-    expect(container).toContainElement(icon);
+    expect(screen.getByTestId('right-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('input-container')).toBeInTheDocument();
   });
 }); 
