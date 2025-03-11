@@ -1,5 +1,27 @@
 # Change Log
 
+## 2024-06-22
+
+### [FEATURE-HW] Completed
+- **Description**: Completed the "hello-world-agent" feature implementation
+- **Details**: Successfully implemented all core functionality for the hello-world agent feature, including:
+  1. Agent dashboard with real database integration
+  2. Agent creation form with API submission
+  3. Complete CRUD operations for agents
+  4. Comprehensive test coverage for all components and API endpoints
+  5. Fixed all related bugs and issues
+- **Timestamp**: 2024-06-22T10:00:00Z
+
+## 2024-06-21
+
+### [BUG-FIX-001] Completed
+- **Description**: Fixed failing tests in agent forms and API integration
+- **Details**: Resolved issues with agent form tests and API integration tests by:
+  1. Adding `apiConnectionId` to the PUT request in agent-by-id integration test
+  2. Updating the database mock in agent-db unit tests to include a transaction method
+  3. Fixing the redirect path in AgentCreationForm from '/agents' to '/app/agents'
+- **Timestamp**: 2024-06-21T01:00:00Z
+
 ## 2024-06-20
 
 ### [TASK-HW021] Completed
