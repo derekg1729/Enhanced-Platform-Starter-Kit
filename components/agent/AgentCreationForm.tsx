@@ -132,7 +132,7 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
         }
 
         const agent = await response.json();
-        router.push('/app/agents');
+        router.push('/agents');
       }
     } catch (err) {
       setError('Failed to create agent. Please try again.');
@@ -143,7 +143,7 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
   };
   
   const handleCancel = () => {
-    router.push('/app/agents');
+    router.push('/agents');
   };
   
   return (

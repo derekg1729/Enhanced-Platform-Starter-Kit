@@ -105,7 +105,7 @@ describe('AgentCreationForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
     
     // Check if router.push was called with the correct path
-    expect(mockRouter.push).toHaveBeenCalledWith('/app/agents');
+    expect(mockRouter.push).toHaveBeenCalledWith('/agents');
   });
 
   it('shows loading state during form submission', async () => {
