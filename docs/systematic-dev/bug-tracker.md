@@ -6,6 +6,19 @@
 
 ## Fixed Bugs
 
+### [BUG-005] Excessive Database Query Logging
+- **Severity**: Medium
+- **Status**: Fixed
+- **Description**: The application was generating excessive and repetitive database query logs, particularly for agent queries, which cluttered the logs and made debugging difficult.
+- **Error Pattern**: Multiple identical queries like `select "id", "name", "description", "system_prompt", "model", "temperature", "max_tokens", "created_at", "updated_at", "user_id" from "agents" where "agents"."user_id" = $1 order by "agents"."updated_at" desc` were being logged repeatedly in quick succession.
+- **Root Cause**: The Drizzle ORM was configured with `logger: true` in `lib/db.ts`, which caused all SQL queries to be logged without any filtering or throttling.
+- **Fix**: 
+  1. Modified the database configuration to only enable logging in development mode
+  2. Implemented a query cache and debounce mechanism to prevent logging identical queries repeatedly
+  3. Added a 2-second timeout to clear the cache and allow the same query to be logged again after a reasonable interval
+- **Prevention**: Added conditional logging based on environment and implemented a mechanism to prevent duplicate log entries.
+- **Fixed Date**: June 20, 2024
+
 ### [BUG-004] ESLint Warnings in Test Files Causing Build Integration Test Failure
 - **Severity**: Medium
 - **Status**: Fixed

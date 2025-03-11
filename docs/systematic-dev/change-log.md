@@ -2,10 +2,25 @@
 
 ## 2024-06-20
 
+### [BUG-005] Fixed
+- **Description**: Fixed excessive database query logging
+- **Details**: Modified the database configuration to only enable logging in development mode and implemented a query cache and debounce mechanism to prevent logging identical queries repeatedly
+- **Timestamp**: 2024-06-20T18:30:00Z
+
+### [TASK-HW019] In Progress
+- **Description**: Made progress on replacing mocked agents with real database integration
+- **Details**: Fixed TypeScript errors and MSW issues in agent list integration tests to prepare for real data fetching
+- **Timestamp**: 2024-06-20T17:15:00Z
+
 ### [BUG-004] Fixed
 - **Description**: Fixed ESLint warnings in test files causing build integration test failure
 - **Details**: Added proper mocking for Next.js Image component in tests by creating a centralized mock in tests/__helpers__/nextjs-mocks.tsx
 - **Timestamp**: 2024-06-20T16:45:00Z
+
+### [TASK-HW015] Completed
+- **Description**: Completed refactoring of AgentsPage component for server/client separation
+- **Details**: Successfully separated the AgentsPage into server and client components, updated tests, and fixed all issues
+- **Timestamp**: 2024-06-20T16:50:00Z
 
 ### [TASK-HW019] Started
 - **Description**: Started work on replacing mocked agents with real database integration
