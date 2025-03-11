@@ -1,5 +1,5 @@
 {
-  "version": "2.8",
+  "version": "2.9",
   "process": {
     "tdd": {
       "enabled": true,
@@ -460,29 +460,29 @@
           "name": "Pause Development",
           "description": "Pause the current development process and save state",
           "instructions": [
-            "When the CHIP acronym is triggered, immediately pause the current development process",
-            "Save the current state of development, including any in-progress work",
-            "Acknowledge the trigger and prepare to evaluate feedback"
+            "⏸️ When the CHIP acronym is triggered, immediately pause the current development process",
+            "💾 Save the current state of development, including any in-progress work",
+            "✅ Acknowledge the trigger and prepare to evaluate feedback"
           ]
         },
         {
           "name": "Post-Mortem Analysis",
           "description": "Analyze past actions and processes that led to the feedback",
           "instructions": [
-            "Review the development history and identify actions that led to the feedback",
-            "Analyze the effectiveness of the current rules in guiding those actions",
-            "Identify gaps or weaknesses in the current rules",
-            "Document the findings of the analysis"
+            "🔍 Review the development history and identify actions that led to the feedback",
+            "📊 Analyze the effectiveness of the current rules in guiding those actions",
+            "⚠️ Identify gaps or weaknesses in the current rules",
+            "📝 Document the findings of the analysis"
           ]
         },
         {
           "name": "Rule Design",
           "description": "Design improved rules to address the feedback",
           "instructions": [
-            "Based on the post-mortem analysis, design new or improved rules",
-            "Ensure the new rules are clear, specific, and actionable",
-            "Consider edge cases and potential unintended consequences",
-            "Document the rationale behind each new or modified rule"
+            "✅ Based on the post-mortem analysis, design new or improved rules",
+            "✅ Ensure the new rules are clear, specific, and actionable",
+            "⚠️ Consider edge cases and potential unintended consequences",
+            "📝 Document the rationale behind each new or modified rule"
           ]
         },
         {
@@ -538,28 +538,31 @@
       ],
       "communicationGuidelines": {
         "name": "Communication Guidelines",
-        "description": "Rules for effective and efficient communication",
+        "description": "Concise, action-oriented communication rules",
         "principles": [
           {
             "name": "Conciseness",
-            "description": "Prioritize brevity and clarity in all communications",
+            "description": "Brief and clear communication",
             "rules": [
-              "Use bullet points instead of paragraphs when possible",
-              "Organize information under clear headings",
-              "Eliminate unnecessary explanations",
-              "Focus on key information only"
+              "✅ Use emojis to clearly categorize points",
+              "✅ Limit bullet points to ~80 characters",
+              "❌ Avoid unnecessary details",
+              "⚠️ Prioritize critical information"
             ]
           },
           {
             "name": "Action-Oriented",
-            "description": "Take action rather than explaining potential actions",
+            "description": "Bias towards immediate action",
             "rules": [
-              "When no approval is needed, perform the action directly",
-              "Show results instead of explaining processes",
-              "Use examples rather than theoretical explanations",
-              "Demonstrate functionality through implementation"
+              "✅ Act directly when approval isn't required",
+              "✅ Show results, not explanations",
+              "✅ Use concrete examples",
+              "✅ Demonstrate through implementation"
             ]
           }
+        ],
+        "onboarding": [
+          "✅ Immediate onboarding for new agents to internalize these guidelines"
         ]
       },
       "strictWarnings": {
