@@ -1,5 +1,5 @@
 {
-  "version": "2.9",
+  "version": "2.10",
   "process": {
     "tdd": {
       "enabled": true,
@@ -42,6 +42,7 @@
               "Document dependencies between files and the order of changes",
               "Consider performance, security, and scalability implications",
               "Check for alignment with architectural principles",
+              "CRITICAL: Identify ALL test files that will be affected by the changes",
               "CRITICAL: Document this design before proceeding to the next step"
             ]
           },
@@ -54,6 +55,7 @@
               "Include tests for edge cases and error handling",
               "Ensure tests are properly structured and follow testing best practices",
               "For bug fixes, write tests that reproduce the bug",
+              "CRITICAL: Update ALL existing tests that will be affected by the changes",
               "CRITICAL: Complete ALL test writing before proceeding to the next step",
               "NEVER skip writing tests first - this is the foundation of TDD"
             ]
@@ -92,7 +94,8 @@
               "If any tests are failing, fix the implementation",
               "If ANY existing tests start failing unexpectedly, stop and investigate immediately",
               "Failing tests are a signal that something is wrong, not that the tests need to be changed",
-              "CRITICAL: Do not proceed until ALL tests are passing"
+              "CRITICAL: Do not proceed until ALL tests are passing",
+              "CRITICAL: A feature is NOT complete until ALL tests pass, not just the ones you wrote"
             ]
           },
           {
@@ -135,7 +138,8 @@
           "Failing tests are a signal that something is wrong, not that the tests need to be changed",
           "Always run the full test suite before committing changes",
           "Tests should be treated as first-class citizens in the codebase",
-          "Bypassing these steps can lead to broken builds and failed deployments"
+          "Bypassing these steps can lead to broken builds and failed deployments",
+          "A feature is NOT complete until ALL tests pass, not just the ones you wrote"
         ],
         "benefits": [
           "Ensures code meets requirements before implementation begins",
@@ -447,6 +451,13 @@
             "severity": "High",
             "action": "Immediate CHIP Review",
             "rationale": "Test timeouts may indicate systemic issues in test infrastructure or performance"
+          },
+          {
+            "pattern": "Failing tests in the full test suite",
+            "category": "Test Coverage",
+            "severity": "High",
+            "action": "Immediate CHIP Review",
+            "rationale": "Failing tests in the full suite indicate incomplete feature implementation or regression"
           }
         ],
         "rules": [
@@ -462,6 +473,7 @@
           "instructions": [
             "⏸️ When the CHIP acronym is triggered, immediately pause the current development process",
             "💾 Save the current state of development, including any in-progress work",
+            "💾 Use 'git stash --include-untracked' to properly save ALL changes",
             "✅ Acknowledge the trigger and prepare to evaluate feedback"
           ]
         },
@@ -519,7 +531,7 @@
           "name": "Commit Rules",
           "description": "Commit the updated CursorRules file",
           "instructions": [
-            "Commit the updated CursorRules file with a descriptive message",
+            "Commit ONLY the updated CursorRules file with a descriptive message",
             "Update both the main and any relevant feature branches",
             "Ensure the commit message includes the version number and a summary of changes",
             "NEVER use the --no-verify flag when committing, even during the CHIP process itself",
@@ -532,6 +544,7 @@
           "instructions": [
             "Return to the development process that was paused",
             "Apply any relevant new rules to the current development task",
+            "Use 'git stash pop' to restore the saved state",
             "Continue development from where it was paused"
           ]
         }
