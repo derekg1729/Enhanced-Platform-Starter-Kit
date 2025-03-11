@@ -1,5 +1,5 @@
 {
-  "version": "2.3",
+  "version": "2.5",
   "process": {
     "tdd": {
       "enabled": true,
@@ -345,15 +345,15 @@
       }
     },
     "ruleImprovement": {
-      "name": "CursorRules Improvement Protocol",
+      "name": "Computer Heuristics Improvement Protocol",
       "description": "Process for updating and improving the CursorRules file",
-      "acronym": "CRIP",
+      "acronym": "CHIP",
       "steps": [
         {
           "name": "Pause Development",
           "description": "Pause the current development process and save state",
           "instructions": [
-            "When the CRIP acronym is triggered, immediately pause the current development process",
+            "When the CHIP acronym is triggered, immediately pause the current development process",
             "Save the current state of development, including any in-progress work",
             "Acknowledge the trigger and prepare to evaluate feedback"
           ]
@@ -415,7 +415,7 @@
             "Commit the updated CursorRules file with a descriptive message",
             "Update both the main and any relevant feature branches",
             "Ensure the commit message includes the version number and a summary of changes",
-            "NEVER use the --no-verify flag when committing, even during the CRIP process",
+            "NEVER use the --no-verify flag when committing, even during the CHIP process itself",
             "If pre-commit hooks are timing out, fix the underlying issue rather than bypassing checks"
           ]
         },
@@ -456,7 +456,7 @@
         ]
       },
       "strictWarnings": {
-        "noVerifyFlag": "The --no-verify flag is STRICTLY PROHIBITED in ALL circumstances, including during the CRIP process itself. This flag bypasses critical checks and can introduce serious issues into the codebase.",
+        "noVerifyFlag": "The --no-verify flag is STRICTLY PROHIBITED in ALL circumstances, including during the CHIP process itself. This flag bypasses critical checks and can introduce serious issues into the codebase.",
         "timeoutHandling": "If pre-commit hooks are timing out, the correct approach is to fix the underlying performance issue or temporarily modify the hook configuration, NOT to bypass the hooks entirely."
       }
     },
@@ -740,7 +740,7 @@
         "buildFailures": "Fix the code issues before committing. Common problems include syntax errors, missing dependencies, or configuration issues."
       },
       "strictWarnings": {
-        "noVerifyFlag": "NEVER use git commit with the --no-verify flag to bypass pre-commit hooks. This bypasses critical checks and can introduce serious issues into the codebase. This prohibition applies to ALL processes, including the CRIP process.",
+        "noVerifyFlag": "NEVER use git commit with the --no-verify flag to bypass pre-commit hooks. This bypasses critical checks and can introduce serious issues into the codebase. This prohibition applies to ALL processes, including the CHIP process.",
         "alternativeApproaches": [
           "Fix the failing checks instead of bypassing them",
           "If the checks are taking too long, consider optimizing them rather than skipping them",
