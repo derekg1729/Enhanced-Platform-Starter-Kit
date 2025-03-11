@@ -7,9 +7,9 @@ The Agent Platform is built on a multi-tenant architecture with a Next.js fronte
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Client Browser                           │
-└───────────────────────────────┬─────────────────────────────────┘
-                                │
-                                ▼
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                           Vercel Edge                           │
 │                                                                 │
@@ -17,11 +17,16 @@ The Agent Platform is built on a multi-tenant architecture with a Next.js fronte
 │  │   Middleware    │───►│  Next.js Pages  │───►│  API Routes │  │
 │  └─────────────────┘    └─────────────────┘    └─────────────┘  │
 │                                                                 │
-└────────────────────────────────┬────────────────────────────────┘
-                                 │
-                                 ▼
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                        PostgreSQL Database                      │
+│                        Vercel Postgres                          │
+│                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐  │
+│  │   User Data     │    │   Agent Data    │    │  Chat Data  │  │
+│  └─────────────────┘    └─────────────────┘    └─────────────┘  │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1076,583 +1081,72 @@ Estimated completion time: 1-2 days
 
 ### Overview
 
-Currently, the agent dashboard allows viewing agents but lacks complete CRUD (Create, Read, Update, Delete) functionality. This implementation plan outlines the steps needed to implement the full set of CRUD operations for agents.
+Currently, the agent dashboard allows users to view agents and create new ones, but it doesn't provide functionality to edit or delete existing agents. This implementation plan outlines the steps needed to add these CRUD operations.
 
-### Architecture
+### Components to Modify
 
-The implementation will follow the Next.js App Router architecture:
-
-1. **Client Components**:
-   - `AgentCard.tsx`: Will include edit and delete actions
-   - `AgentEditForm.tsx`: Will handle agent editing
-   - `DeleteAgentDialog.tsx`: Will handle agent deletion confirmation
-
-2. **API Routes**:
-   - `/api/agents/[agentId]`: Will handle GET, PUT, and DELETE operations
+1. **AgentCard**: Add edit and delete buttons/actions to each agent card
+2. **API Routes**: Ensure the API routes for updating and deleting agents are properly implemented
+3. **Confirmation Dialog**: Create a reusable confirmation dialog component for destructive actions
+4. **Agent Edit Form**: Create a form for editing agent details
+5. **Tests**: Add comprehensive tests for all CRUD operations
 
 ### Implementation Steps
 
-#### 1. Update API Routes
+#### 1. Create Confirmation Dialog Component
 
-Implement or enhance the `/api/agents/[agentId]` API route to handle:
+Create a reusable confirmation dialog component that can be used for destructive actions like deletion.
 
-**GET**: Fetch a single agent by ID
-```typescript
-export async function GET(
-  request: Request,
-  { params }: { params: { agentId: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+#### 2. Update AgentCard Component
 
-    const tenantId = getTenantId();
-    const { agentId } = params;
-    
-    const agent = await db.query.agents.findFirst({
-      where: and(
-        eq(agents.id, agentId),
-        eq(agents.tenantId, tenantId)
-      ),
-    });
-    
-    if (!agent) {
-      return new Response(JSON.stringify({ error: "Agent not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    
-    return new Response(JSON.stringify(agent), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Error fetching agent:", error);
-    return new Response(JSON.stringify({ error: "Failed to fetch agent" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-}
-```
+Modify the AgentCard component to include edit and delete buttons with appropriate handlers.
 
-**PUT**: Update an existing agent
-```typescript
-export async function PUT(
-  request: Request,
-  { params }: { params: { agentId: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+#### 3. Update AgentDashboard Component
 
-    const tenantId = getTenantId();
-    const { agentId } = params;
-    
-    // Check if agent exists and belongs to tenant
-    const existingAgent = await db.query.agents.findFirst({
-      where: and(
-        eq(agents.id, agentId),
-        eq(agents.tenantId, tenantId)
-      ),
-    });
-    
-    if (!existingAgent) {
-      return new Response(JSON.stringify({ error: "Agent not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    
-    const body = await request.json();
-    
-    // Validate request body
-    const validatedData = agentFormSchema.parse(body);
-    
-    // Update agent in database
-    const updatedAgent = await db.update(agents)
-      .set({
-        ...validatedData,
-        updatedAt: new Date(),
-      })
-      .where(and(
-        eq(agents.id, agentId),
-        eq(agents.tenantId, tenantId)
-      ))
-      .returning();
-    
-    return new Response(JSON.stringify(updatedAgent[0]), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Error updating agent:", error);
-    if (error instanceof z.ZodError) {
-      return new Response(JSON.stringify({ error: "Validation error", details: error.errors }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    return new Response(JSON.stringify({ error: "Failed to update agent" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-}
-```
+Modify the AgentDashboard component to handle agent deletion and refresh the UI after deletion.
 
-**DELETE**: Delete an agent
-```typescript
-export async function DELETE(
-  request: Request,
-  { params }: { params: { agentId: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+#### 4. Create Agent Edit Form
 
-    const tenantId = getTenantId();
-    const { agentId } = params;
-    
-    // Check if agent exists and belongs to tenant
-    const existingAgent = await db.query.agents.findFirst({
-      where: and(
-        eq(agents.id, agentId),
-        eq(agents.tenantId, tenantId)
-      ),
-    });
-    
-    if (!existingAgent) {
-      return new Response(JSON.stringify({ error: "Agent not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    
-    // Delete agent from database
-    await db.delete(agents)
-      .where(and(
-        eq(agents.id, agentId),
-        eq(agents.tenantId, tenantId)
-      ));
-    
-    return new Response(null, {
-      status: 204,
-    });
-  } catch (error) {
-    console.error("Error deleting agent:", error);
-    return new Response(JSON.stringify({ error: "Failed to delete agent" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-}
-```
+Create a form for editing agent details, similar to the creation form but pre-populated with existing data.
 
-#### 2. Implement Agent Edit Form
+#### 5. Create Edit Page
 
-Create an `AgentEditForm.tsx` component that:
-- Fetches the current agent data
-- Populates the form with existing values
-- Handles form submission to update the agent
-- Provides validation and error handling
+Create a page for editing agents that fetches the agent data and renders the edit form.
 
-```typescript
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { agentFormSchema, AgentFormValues } from "@/lib/schemas/agent";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Agent } from "@/types";
+#### 6. Update API Routes
 
-interface AgentEditFormProps {
-  agentId: string;
-  initialData?: Agent;
-}
+Ensure the API routes for updating and deleting agents are properly implemented with validation and error handling.
 
-export default function AgentEditForm({ agentId, initialData }: AgentEditFormProps) {
-  const [isLoading, setIsLoading] = useState(!initialData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-  
-  const form = useForm<AgentFormValues>({
-    resolver: zodResolver(agentFormSchema),
-    defaultValues: initialData ? {
-      name: initialData.name,
-      description: initialData.description || "",
-      systemPrompt: initialData.systemPrompt,
-      model: initialData.model || "gpt-3.5-turbo",
-      temperature: initialData.temperature?.toString() || "0.7",
-      maxTokens: initialData.maxTokens || 2000,
-      type: initialData.type || "chat",
-    } : {
-      name: "",
-      description: "",
-      systemPrompt: "",
-      model: "gpt-3.5-turbo",
-      temperature: "0.7",
-      maxTokens: 2000,
-      type: "chat",
-    },
-  });
-  
-  useEffect(() => {
-    if (initialData) return;
-    
-    const fetchAgent = async () => {
-      try {
-        const response = await fetch(`/api/agents/${agentId}`);
-        if (!response.ok) {
-          throw new Error(`Error fetching agent: ${response.statusText}`);
-        }
-        const data = await response.json();
-        
-        // Reset form with fetched data
-        form.reset({
-          name: data.name,
-          description: data.description || "",
-          systemPrompt: data.systemPrompt,
-          model: data.model || "gpt-3.5-turbo",
-          temperature: data.temperature?.toString() || "0.7",
-          maxTokens: data.maxTokens || 2000,
-          type: data.type || "chat",
-        });
-        
-        setIsLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
-        setIsLoading(false);
-      }
-    };
-    
-    fetchAgent();
-  }, [agentId, form, initialData]);
-  
-  const onSubmit = async (data: AgentFormValues) => {
-    setIsSubmitting(true);
-    setError(null);
-    
-    try {
-      const response = await fetch(`/api/agents/${agentId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update agent");
-      }
-      
-      // Show success message
-      toast.success("Agent updated successfully!");
-      
-      // Redirect to agent details page
-      router.push(`/agents/${agentId}`);
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  if (isLoading) {
-    return <div>Loading agent data...</div>;
-  }
-  
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      {/* Form fields */}
-      {error && <div className="text-red-500">{error}</div>}
-      <button 
-        type="submit" 
-        disabled={isSubmitting}
-        className="btn btn-primary"
-      >
-        {isSubmitting ? "Saving..." : "Save Changes"}
-      </button>
-    </form>
-  );
-}
-```
+#### 7. Update Database Functions
 
-#### 3. Implement Delete Agent Dialog
+Ensure the database functions for updating and deleting agents are properly implemented.
 
-Create a `DeleteAgentDialog.tsx` component that:
-- Shows a confirmation dialog before deletion
-- Handles the deletion API call
-- Provides feedback on success or failure
+#### 8. Add Tests
 
-```typescript
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-
-interface DeleteAgentDialogProps {
-  agentId: string;
-  agentName: string;
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export default function DeleteAgentDialog({
-  agentId,
-  agentName,
-  isOpen,
-  onClose,
-}: DeleteAgentDialogProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-  
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    setError(null);
-    
-    try {
-      const response = await fetch(`/api/agents/${agentId}`, {
-        method: "DELETE",
-      });
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Agent not found");
-        }
-        throw new Error("Failed to delete agent");
-      }
-      
-      // Show success message
-      toast.success("Agent deleted successfully!");
-      
-      // Close dialog and redirect
-      onClose();
-      router.push("/agents");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-  
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Delete Agent</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete the agent "{agentName}"? This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        {error && <div className="text-red-500 mt-2">{error}</div>}
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isDeleting}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-            {isDeleting ? "Deleting..." : "Delete"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-```
-
-#### 4. Update Agent Card Component
-
-Enhance the `AgentCard.tsx` component to include edit and delete actions:
-
-```typescript
-import { useState } from "react";
-import { Agent } from "@/types";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import DeleteAgentDialog from "./DeleteAgentDialog";
-
-interface AgentCardProps {
-  agent: Agent;
-}
-
-export default function AgentCard({ agent }: AgentCardProps) {
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const router = useRouter();
-  
-  const handleEdit = () => {
-    router.push(`/agents/${agent.id}/edit`);
-  };
-  
-  const handleChat = () => {
-    router.push(`/agents/${agent.id}/chat`);
-  };
-  
-  return (
-    <Card>
-      <CardContent>
-        {/* Agent details */}
-        <h3 className="text-lg font-semibold">{agent.name}</h3>
-        <p className="text-sm text-gray-500">{agent.description}</p>
-        {/* Other agent details */}
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={handleEdit}>
-          Edit
-        </Button>
-        <Button variant="default" onClick={handleChat}>
-          Chat
-        </Button>
-        <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
-          Delete
-        </Button>
-      </CardFooter>
-      
-      <DeleteAgentDialog
-        agentId={agent.id}
-        agentName={agent.name}
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-      />
-    </Card>
-  );
-}
-```
-
-#### 5. Create Edit Agent Page
-
-Create a new page at `app/app/(dashboard)/agents/[agentId]/edit/page.tsx`:
-
-```typescript
-import { Metadata } from "next";
-import AgentEditForm from "@/components/agent/AgentEditForm";
-
-export const metadata: Metadata = {
-  title: "Edit Agent",
-  description: "Edit your agent's configuration",
-};
-
-export default function EditAgentPage({ params }: { params: { agentId: string } }) {
-  return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Edit Agent</h1>
-      <AgentEditForm agentId={params.agentId} />
-    </div>
-  );
-}
-```
-
-#### 6. Update Tests
-
-Create comprehensive tests for all CRUD operations:
-
-- **Unit Tests**:
-  - Test API route handlers
-  - Test form components
-  - Test dialog components
-
-- **Integration Tests**:
-  - Test the edit flow
-  - Test the delete flow
-  - Test error handling
+Create tests for the CRUD operations:
+- Unit tests for the AgentCard component
+- Unit tests for the AgentEditForm component
+- Integration tests for the API routes
+- Integration tests for the edit and delete functionality
 
 ### Testing Strategy
 
 1. **Unit Tests**:
-   - Test each API route handler (GET, PUT, DELETE)
-   - Test form components
-   - Test dialog functionality
-   - Test UI components in isolation
+   - Test the AgentCard component with various props
+   - Test the AgentEditForm component with various form inputs
+   - Test the ConfirmationDialog component
 
 2. **Integration Tests**:
-   - Test the complete edit flow from loading data to saving changes
-   - Test the delete flow from confirmation to successful deletion
+   - Test the API routes for updating and deleting agents
+   - Test the edit and delete functionality in the UI
    - Test error handling for all operations
 
-3. **E2E Tests**:
-   - Test the complete user flows for editing and deleting agents
-   - Verify UI feedback and navigation
+3. **End-to-End Tests**:
+   - Test the complete flow of editing and deleting agents
 
-### Acceptance Criteria Verification
+### Conclusion
 
-1. **Implement agent deletion functionality**:
-   - Create DELETE API route handler
-   - Implement confirmation dialog
-   - Add delete button to agent card
-   - Handle success and error states
-
-2. **Add agent editing capability**:
-   - Create PUT API route handler
-   - Implement edit form component
-   - Add edit button to agent card
-   - Create edit page
-   - Handle form submission and validation
-
-3. **Ensure proper error handling**:
-   - Add error states to all components
-   - Display meaningful error messages
-   - Handle network errors and API failures
-
-4. **Add confirmation dialogs**:
-   - Implement confirmation dialog for deletion
-   - Prevent accidental data loss
-
-5. **Update UI to reflect changes**:
-   - Refresh the UI after successful operations
-   - Provide visual feedback during operations
-   - Use toast notifications for success/error messages
-
-6. **Add comprehensive tests**:
-   - Create unit tests for all components
-   - Add integration tests for all flows
-   - Test error scenarios
-
-### Potential Challenges and Mitigations
-
-1. **Challenge**: Maintaining consistent state across the application
-   **Mitigation**: Use router.refresh() to update the UI after operations
-
-2. **Challenge**: Handling race conditions in concurrent operations
-   **Mitigation**: Implement proper loading states and disable buttons during operations
-
-3. **Challenge**: Ensuring proper error handling across all operations
-   **Mitigation**: Create reusable error handling utilities
-
-### Dependencies
-
-- Existing agent database schema
-- Authentication middleware
-- API routes for agent operations
-- UI components for forms and dialogs
-
-### Timeline
-
-Estimated completion time: 2-3 days
-
-1. API route implementation: 0.5-1 day
-2. Edit form implementation: 0.5-1 day
-3. Delete dialog implementation: 0.5 day
-4. UI integration and testing: 0.5-1 day 
+This implementation plan outlines the steps needed to add CRUD operations for agents. By following this plan, we will be able to provide users with the ability to edit and delete agents, with proper error handling and confirmation dialogs.
 
 ## Agent Dashboard UI
 
@@ -1804,3 +1298,127 @@ The application uses a PostgreSQL database with Drizzle ORM for data access.
 - `/api/agents`: CRUD operations for agents
 - `/api/agents/[agentId]`: Operations for a specific agent
 - `/api/agents/[agentId]/chat`: Chat with a specific agent
+
+## Agent Creation Implementation
+
+The agent creation form allows users to create new agents with customized parameters. The form collects essential information such as the agent's name, description, system prompt, model, temperature, and maximum tokens.
+
+### Form Implementation
+
+- **State Management**: The form uses React Hook Form for state management and validation.
+- **Validation**: Zod schema is used to define validation rules for the form fields.
+- **Client-side Validation**: Form inputs are validated on the client side before submission.
+- **Server-side Validation**: Additional validation is performed on the server side to ensure data integrity.
+
+### API Integration
+
+- **Endpoint**: Form data is submitted to the `/api/agents` endpoint.
+- **Response Handling**: The form handles API responses appropriately:
+  - Success: Redirects to the agent details page.
+  - Error: Displays error messages to the user.
+
+### User Experience
+
+- **Responsive Design**: The form is responsive and works well on both desktop and mobile devices.
+- **Validation Feedback**: Users receive immediate feedback on validation errors.
+- **Loading States**: Loading indicators are shown during form submission.
+- **Error Messages**: Clear error messages are displayed if the submission fails.
+
+### Testing
+
+- **Unit Tests**: Unit tests verify the form validation logic.
+- **Integration Tests**: Integration tests ensure the form submits data correctly to the API.
+- **Error Handling Tests**: Tests verify that error messages are displayed appropriately.
+- **Success Tests**: Tests confirm that successful submissions redirect to the correct page.
+
+## Agent CRUD Operations Implementation
+
+The agent platform provides a complete set of CRUD (Create, Read, Update, Delete) operations for managing agents. These operations allow users to create, view, edit, and delete their agents.
+
+### Create Operation
+
+- **Implementation**: The agent creation form submits data to the `/api/agents` endpoint.
+- **Validation**: Both client-side and server-side validation ensure data integrity.
+- **Response**: On successful creation, the user is redirected to the agent details page.
+
+### Read Operation
+
+- **Implementation**: The agent dashboard displays a list of all agents belonging to the current user.
+- **Data Fetching**: Agents are fetched from the `/api/agents` endpoint.
+- **Loading States**: Loading indicators are shown while data is being fetched.
+- **Empty State**: A message is displayed when the user has no agents.
+
+### Update Operation
+
+- **Implementation**: The agent edit form allows users to modify existing agents.
+- **Form Pre-filling**: The form is pre-filled with the agent's current data.
+- **Validation**: Both client-side and server-side validation ensure data integrity.
+- **API Integration**: Form data is submitted to the `/api/agents/[agentId]` endpoint using the PUT method.
+- **Response Handling**: Success redirects to the agent details page, while errors display appropriate messages.
+
+### Delete Operation
+
+- **Implementation**: The agent dashboard allows users to delete agents.
+- **Confirmation Dialog**: A confirmation dialog prevents accidental deletions.
+- **API Integration**: Delete requests are sent to the `/api/agents/[agentId]` endpoint using the DELETE method.
+- **UI Updates**: The UI is updated immediately after successful deletion.
+- **Error Handling**: Error messages are displayed if deletion fails.
+
+### User Experience
+
+- **Responsive Design**: All CRUD interfaces are responsive and work well on both desktop and mobile devices.
+- **Feedback**: Users receive immediate feedback on all operations.
+- **Loading States**: Loading indicators are shown during API operations.
+- **Error Messages**: Clear error messages are displayed if operations fail.
+- **Confirmation**: Destructive actions (like deletion) require confirmation.
+
+### Testing
+
+- **Unit Tests**: Unit tests verify the form validation logic and component behavior.
+- **Integration Tests**: Integration tests ensure the CRUD operations work correctly with the API.
+- **Error Handling Tests**: Tests verify that error messages are displayed appropriately.
+- **Success Tests**: Tests confirm that successful operations produce the expected results.
+- **UI Tests**: Tests verify that the UI updates correctly after operations.
+
+## Database Integration
+
+The agent platform uses PostgreSQL with Drizzle ORM for data access. This provides a type-safe and efficient way to interact with the database.
+
+### Data Access Patterns
+
+- **Create**: New agents are created with the `createAgent` function in `lib/agent-db.ts`.
+- **Read**: Agents are retrieved with the `getAgentsByUserId` and `getAgentById` functions.
+- **Update**: Agents are updated with the `updateAgent` function.
+- **Delete**: Agents are deleted with the `deleteAgent` function.
+
+### Multi-tenant Isolation
+
+- **Row-level Security**: Each agent is associated with a user ID, ensuring that users can only access their own agents.
+- **Query Filtering**: All queries include a user ID filter to enforce data isolation.
+- **API Authorization**: API routes verify that the requesting user owns the agent before allowing operations.
+
+## Module Registry
+
+### Components
+
+- **AgentCard**: Displays an agent's information in a card format.
+- **AgentDashboard**: Displays a list of agents and provides CRUD operations.
+- **AgentCreationForm**: Form for creating new agents.
+- **AgentEditForm**: Form for editing existing agents.
+- **ConfirmationDialog**: Reusable dialog for confirming destructive actions.
+
+### Database Utilities
+
+- **createAgent**: Creates a new agent in the database.
+- **getAgentsByUserId**: Retrieves all agents for a specific user.
+- **getAgentById**: Retrieves a specific agent by ID.
+- **updateAgent**: Updates an existing agent.
+- **deleteAgent**: Deletes an agent.
+
+### API Routes
+
+- **GET /api/agents**: Retrieves all agents for the current user.
+- **POST /api/agents**: Creates a new agent.
+- **GET /api/agents/[agentId]**: Retrieves a specific agent.
+- **PUT /api/agents/[agentId]**: Updates a specific agent.
+- **DELETE /api/agents/[agentId]**: Deletes a specific agent.

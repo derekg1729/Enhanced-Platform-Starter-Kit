@@ -1,9 +1,10 @@
 "use client";
 
-import { format, parseISO } from 'date-fns';
-import Image from 'next/image';
+import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import ThemeCard from '../ui/ThemeCard';
+import { Button } from '@/components/ui/button';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 
 export interface Agent {
   id: string;
@@ -15,77 +16,114 @@ export interface Agent {
   image?: string;
   status: 'active' | 'inactive';
   type?: string;
+  systemPrompt?: string;
+  model?: string;
+  temperature?: string;
+  maxTokens?: number;
 }
 
 interface AgentCardProps {
   agent: Agent;
+  onDelete?: (agentId: string) => Promise<void>;
+  isDeleting?: boolean;
 }
 
-export default function AgentCard({ agent }: AgentCardProps) {
+export default function AgentCard({ agent, onDelete, isDeleting = false }: AgentCardProps) {
   const router = useRouter();
-  
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const handleClick = () => {
-    router.push(`/agents/${agent.id}`);
+    router.push(`/app/agents/${agent.id}`);
   };
-  
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/app/agents/${agent.id}/edit`);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (onDelete) {
+      await onDelete(agent.id);
+    }
+    setIsDeleteDialogOpen(false);
+  };
+
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   const statusColors = {
     active: 'bg-green-900 text-green-400 border-green-800',
     inactive: 'bg-stone-800 text-stone-400 border-stone-700',
-  };
-  
-  const formatDate = (date: Date | string) => {
-    if (typeof date === 'string') {
-      try {
-        return format(parseISO(date), 'MMM d, yyyy');
-      } catch (error) {
-        return 'Invalid date';
-      }
-    }
-    return format(date, 'MMM d, yyyy');
   };
   
   const formattedDate = formatDate(agent.createdAt);
   const imageUrl = agent.imageUrl || agent.image || '/placeholder.png';
   
   return (
-    <a 
-      className="block"
-      href={`/agents/${agent.id}`}
-      onClick={(e) => {
-        e.preventDefault();
-        handleClick();
-      }}
-    >
-      <ThemeCard className="cursor-pointer">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="relative h-10 w-10 rounded-full overflow-hidden border border-stone-700">
-              <Image
-                src={imageUrl}
-                alt={agent.name}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div>
-              <h3 className="font-medium text-white">{agent.name}</h3>
-            </div>
+    <>
+      <div 
+        className="border rounded-lg p-6 space-y-4 hover:shadow-md transition-shadow cursor-pointer"
+        onClick={handleClick}
+      >
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold">{agent.name}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{agent.description}</p>
           </div>
-          <span 
-            className={`inline-block px-2 py-1 text-xs rounded-full border ${statusColors[agent.status]}`}
-          >
-            {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
-          </span>
+          <div className="flex items-center space-x-2">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              agent.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+            }`}>
+              {agent.status}
+            </span>
+          </div>
         </div>
         
-        <div className="mt-4">
-          <p className="text-sm text-stone-400 line-clamp-2">{agent.description}</p>
-        </div>
-        
-        <div className="mt-4 pt-4 border-t border-stone-700 text-xs text-stone-500">
+        <div className="text-sm text-muted-foreground">
           Created: {formattedDate}
         </div>
-      </ThemeCard>
-    </a>
+        
+        <div className="flex justify-between pt-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleEdit}
+          >
+            Edit
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleDeleteClick}
+            disabled={isDeleting}
+          >
+            Delete
+          </Button>
+        </div>
+      </div>
+      
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Agent"
+        description="Are you sure you want to delete this agent? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+        isLoading={isDeleting}
+      />
+    </>
   );
 } 

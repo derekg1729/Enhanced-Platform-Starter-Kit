@@ -1,10 +1,30 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import AgentCard, { Agent } from './AgentCard';
-import CreateAgentButton from './CreateAgentButton';
-import { Input } from '../ui/Input';
-import ThemeCard from '../ui/ThemeCard';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
+
+// Simple Plus icon component instead of importing from radix-ui
+const PlusIcon = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 15 15"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="mr-2 h-4 w-4"
+  >
+    <path
+      d="M8 2.75C8 2.33579 7.66421 2 7.25 2C6.83579 2 6.5 2.33579 6.5 2.75V6.5H2.75C2.33579 6.5 2 6.83579 2 7.25C2 7.66421 2.33579 8 2.75 8H6.5V11.75C6.5 12.1642 6.83579 12.5 7.25 12.5C7.66421 12.5 8 12.1642 8 11.75V8H11.75C12.1642 8 12.5 7.66421 12.5 7.25C12.5 6.83579 12.1642 6.5 11.75 6.5H8V2.75Z"
+      fill="currentColor"
+      fillRule="evenodd"
+      clipRule="evenodd"
+    ></path>
+  </svg>
+);
 
 interface AgentDashboardProps {
   agents: Agent[];
@@ -12,102 +32,93 @@ interface AgentDashboardProps {
 }
 
 export default function AgentDashboard({ agents, isLoading }: AgentDashboardProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  
-  const filteredAgents = agents.filter(agent => {
-    const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         agent.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAgent = async (agentId: string) => {
+    setIsDeleting(true);
+    setError(null);
     
-    const matchesStatus = statusFilter === 'all' || agent.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-  
-  return (
-    <div className="w-full" data-testid="agent-dashboard">
-      <div className="flex justify-end mb-6">
-        <CreateAgentButton />
-      </div>
+    try {
+      const response = await fetch(`/api/agents/${agentId}`, {
+        method: 'DELETE',
+      });
       
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-          <Input
-            placeholder="Search agents..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-md dark:bg-stone-800 dark:border-stone-700 dark:text-white"
-            leftIcon={
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            }
-          />
-          
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`px-3 py-2 rounded-md text-sm ${
-                statusFilter === 'all' 
-                  ? 'bg-stone-800 text-white' 
-                  : 'bg-stone-900 text-stone-400 hover:bg-stone-800 border border-stone-700'
-              }`}
-              data-selected={statusFilter === 'all'}
-              data-testid="filter-all"
-              aria-label="All"
-            >
-              All
-            </button>
-            <button
-              onClick={() => setStatusFilter('active')}
-              className={`px-3 py-2 rounded-md text-sm ${
-                statusFilter === 'active' 
-                  ? 'bg-green-900 text-green-400' 
-                  : 'bg-stone-900 text-stone-400 hover:bg-stone-800 border border-stone-700'
-              }`}
-              data-selected={statusFilter === 'active'}
-              data-testid="filter-active"
-              aria-label="Active"
-            >
-              Active
-            </button>
-            <button
-              onClick={() => setStatusFilter('inactive')}
-              className={`px-3 py-2 rounded-md text-sm ${
-                statusFilter === 'inactive' 
-                  ? 'bg-stone-800 text-stone-400' 
-                  : 'bg-stone-900 text-stone-400 hover:bg-stone-800 border border-stone-700'
-              }`}
-              data-selected={statusFilter === 'inactive'}
-              data-testid="filter-inactive"
-              aria-label="Inactive"
-            >
-              Inactive
-            </button>
-          </div>
-        </div>
-      </div>
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete agent');
+      }
       
-      {isLoading ? (
-        <div data-testid="loading-state" className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin text-4xl mb-4 text-stone-400">⟳</div>
-          <p className="text-stone-400">Loading agents...</p>
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Your Agents</h2>
+          <Button disabled>
+            <PlusIcon /> Create Agent
+          </Button>
         </div>
-      ) : filteredAgents.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAgents.map(agent => (
-            <AgentCard key={agent.id} agent={agent} data-testid={`agent-card-${agent.id}`} />
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="border rounded-lg p-6 space-y-4">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <div className="flex justify-between">
+                <Skeleton className="h-10 w-20" />
+                <Skeleton className="h-10 w-20" />
+              </div>
+            </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Your Agents</h2>
+        <Button asChild>
+          <Link href="/app/agents/create">
+            <PlusIcon /> Create Agent
+          </Link>
+        </Button>
+      </div>
+      
+      {error && (
+        <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded" data-testid="error-message">
+          {error}
+        </div>
+      )}
+      
+      {agents.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg">
+          <p className="text-muted-foreground">You don&apos;t have any agents yet.</p>
+          <Button asChild className="mt-4">
+            <Link href="/app/agents/create">Create your first agent</Link>
+          </Button>
+        </div>
       ) : (
-        <ThemeCard data-testid="empty-state" className="flex flex-col items-center justify-center py-12">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-stone-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h3 className="text-xl font-medium mb-2 text-white">No agents found</h3>
-          <p className="text-stone-400 mb-6">Create your first agent to get started</p>
-          <CreateAgentButton />
-        </ThemeCard>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {agents.map((agent) => (
+            <AgentCard
+              key={agent.id}
+              agent={agent}
+              onDelete={handleDeleteAgent}
+              isDeleting={isDeleting}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

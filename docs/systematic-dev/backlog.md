@@ -309,7 +309,7 @@ This backlog is organized by features. Tasks within the currently active feature
 
 - **[TASK-HW021] Implement Agent CRUD Operations**
   - **Priority**: High
-  - **Status**: Todo
+  - **Status**: Done
   - **Description**: Implement the complete set of CRUD operations for agents.
   - **Acceptance Criteria**:
     - Implement agent deletion functionality
