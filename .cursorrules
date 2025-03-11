@@ -1,5 +1,5 @@
 {
-  "version": "2.0",
+  "version": "2.1",
   "process": {
     "tdd": {
       "enabled": true,
@@ -324,8 +324,109 @@
               "Verify that all client components receiving event handlers are properly marked with 'use client'"
             ]
           }
-        ]
+        ],
+        "developmentCheckpoints": {
+          "name": "Development Checkpoints",
+          "description": "Guidelines for when to pause development and check with the user",
+          "steps": [
+            {
+              "name": "UI Checkpoint",
+              "description": "Determine if new UI functionality should be manually reviewed",
+              "instructions": [
+                "After implementing a feature that affects the UI, determine if it should be manually reviewed",
+                "If new UI elements or interactions are available, pause development and explain how to access them",
+                "Provide clear instructions on how to navigate to and interact with the new UI elements",
+                "Wait for user confirmation before continuing development",
+                "If no new UI elements are available, commit changes and continue with the development process"
+              ]
+            }
+          ]
+        }
       }
+    },
+    "ruleImprovement": {
+      "name": "CursorRules Improvement Protocol",
+      "description": "Process for updating and improving the CursorRules file",
+      "acronym": "CRIP",
+      "steps": [
+        {
+          "name": "Pause Development",
+          "description": "Pause the current development process and save state",
+          "instructions": [
+            "When the CRIP acronym is triggered, immediately pause the current development process",
+            "Save the current state of development, including any in-progress work",
+            "Acknowledge the trigger and prepare to evaluate feedback"
+          ]
+        },
+        {
+          "name": "Post-Mortem Analysis",
+          "description": "Analyze past actions and processes that led to the feedback",
+          "instructions": [
+            "Review the development history and identify actions that led to the feedback",
+            "Analyze the effectiveness of the current rules in guiding those actions",
+            "Identify gaps or weaknesses in the current rules",
+            "Document the findings of the analysis"
+          ]
+        },
+        {
+          "name": "Rule Design",
+          "description": "Design improved rules to address the feedback",
+          "instructions": [
+            "Based on the post-mortem analysis, design new or improved rules",
+            "Ensure the new rules are clear, specific, and actionable",
+            "Consider edge cases and potential unintended consequences",
+            "Document the rationale behind each new or modified rule"
+          ]
+        },
+        {
+          "name": "Rule Update",
+          "description": "Update the CursorRules file with the new rules",
+          "instructions": [
+            "Increment the version number in the CursorRules file",
+            "Add or modify rules according to the design",
+            "Ensure the updated rules are consistent with existing rules",
+            "Format the rules according to the established structure"
+          ]
+        },
+        {
+          "name": "Update Summary",
+          "description": "Summarize the updates and explain their purpose",
+          "instructions": [
+            "Provide a clear summary of all changes made to the rules",
+            "Explain the rationale behind each change",
+            "Highlight how the changes address the original feedback",
+            "Identify any potential impacts on the development process"
+          ]
+        },
+        {
+          "name": "Rule Evaluation",
+          "description": "Evaluate the new rules for effectiveness",
+          "instructions": [
+            "Review the updated rules to ensure they address the original feedback",
+            "Consider whether the rules might create new issues or conflicts",
+            "Determine if additional changes are needed",
+            "If changes are needed, iterate on the rules; otherwise, proceed to commit"
+          ]
+        },
+        {
+          "name": "Commit Rules",
+          "description": "Commit the updated CursorRules file",
+          "instructions": [
+            "Commit the updated CursorRules file with a descriptive message",
+            "Update both the main and any relevant feature branches",
+            "Ensure the commit message includes the version number and a summary of changes"
+          ]
+        },
+        {
+          "name": "Resume Development",
+          "description": "Resume the development process from the saved state",
+          "instructions": [
+            "Return to the development process that was paused",
+            "Apply any relevant new rules to the current development task",
+            "Continue development from where it was paused"
+          ]
+        }
+      ]
     },
     "instructions": {
       "default": "ALWAYS follow the Test-Driven Development Workflow above all else. This workflow MUST be followed for every feature implementation, bug fix, and code change without exception. Before starting any task, run the 'Workflow Status Check' to determine where you are in the process. If you're not sure, start from the beginning of the workflow. Remember that tests MUST be written before implementation and MUST fail before you write code to make them pass. Only modify files identified in the design phase.",
@@ -605,6 +706,15 @@
       "troubleshooting": {
         "testFailures": "Fix the issues before committing. Do not modify tests to make them pass unless the test itself is incorrect.",
         "buildFailures": "Fix the code issues before committing. Common problems include syntax errors, missing dependencies, or configuration issues."
+      },
+      "strictWarnings": {
+        "noVerifyFlag": "NEVER use git commit with the --no-verify flag to bypass pre-commit hooks. This bypasses critical checks and can introduce serious issues into the codebase.",
+        "alternativeApproaches": [
+          "Fix the failing checks instead of bypassing them",
+          "If the checks are taking too long, consider optimizing them rather than skipping them",
+          "For emergency situations, get explicit team approval and document the reason for any exception",
+          "Use git stash to temporarily save changes that aren't ready for verification"
+        ]
       }
     },
     "middleware": {
