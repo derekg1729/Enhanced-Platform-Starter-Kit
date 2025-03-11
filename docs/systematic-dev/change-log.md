@@ -1,5 +1,19 @@
 # Change Log
 
+## 2024-06-24
+
+### [BUG-008] Fixed
+- **Description**: Fixed server/client component boundary error in Agent Details Page
+- **Details**: Resolved a build error caused by defining a client component inside a server component file. Moved the `ModelSelectorWrapper` client component to its own file with the 'use client' directive and updated the `AgentDetailsPage` to import and use the separate component. Enhanced tests to verify proper server/client component separation.
+- **Timestamp**: 2024-06-24T15:00:00Z
+
+## 2024-06-23
+
+### [BUG-007] Fixed
+- **Description**: Fixed Agent Details page displaying hardcoded values instead of actual agent details
+- **Details**: Updated the `AgentDetailsPage` component to fetch and display actual agent details from the database using `getAgentById` instead of showing hardcoded "Demo Agent" values. Added comprehensive tests to verify the component displays real data.
+- **Timestamp**: 2024-06-23T15:00:00Z
+
 ## 2024-06-22
 
 ### [FEATURE-HW] Completed

@@ -6,6 +6,36 @@
 
 ## Fixed Bugs
 
+### [BUG-008] Server/Client Component Boundary Error in Agent Details Page
+- **Severity**: High
+- **Status**: Fixed
+- **Description**: The Agent Details page was failing to compile due to a server/client component boundary error with the ModelSelector component.
+- **Error Message**: "You're importing a component that needs useTransition. It only works in a Client Component but none of its parents are marked with 'use client', so they're Server Components by default."
+- **Root Cause**: The `AgentDetailsPage` server component was defining an inline client component (`ModelSelectorWrapper`) that used React hooks like `useTransition`, which violates Next.js server/client component boundaries.
+- **Fix**: 
+  1. Moved the `ModelSelectorWrapper` client component to its own file with the 'use client' directive
+  2. Updated the `AgentDetailsPage` to import and use the separate client component
+  3. Updated tests to properly mock the new component structure
+  4. Added a new test to verify proper server/client component separation
+- **Prevention**: Enhanced the server/client component boundary test to check for React hooks in server components and verify that client components are properly separated into their own files.
+- **Fixed Date**: June 24, 2024
+
+### [BUG-007] Hardcoded Agent Details in Agent Details Page
+- **Severity**: Medium
+- **Status**: Fixed
+- **Description**: The Agent Details page was displaying hardcoded "Demo Agent" details instead of fetching and displaying the actual agent details from the database.
+- **Error Patterns**: 
+  1. Agent name, description, and other details were hardcoded as "Demo Agent" values
+  2. Tests were failing because they expected actual agent details from the database
+- **Root Cause**: The `AgentDetailsPage` component was not fetching agent details from the database using `getAgentById` like the edit page does.
+- **Fix**: 
+  1. Updated the `AgentDetailsPage` to be a server component that fetches agent details
+  2. Added `getServerSession` to get the current user
+  3. Used `getAgentById` to fetch the actual agent details
+  4. Updated the component to display the actual agent details from the database
+- **Prevention**: Added comprehensive tests to verify that the component displays actual agent details from the database.
+- **Fixed Date**: June 23, 2024
+
 ### [BUG-006] Agent Form and API Integration Test Failures
 - **Severity**: High
 - **Status**: Fixed

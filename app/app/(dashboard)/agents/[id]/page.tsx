@@ -4,11 +4,12 @@ import { ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../../../lib/auth';
-import { getAgentById } from '../../../../../lib/agent-db';
+import { getAgentById, updateAgent } from '../../../../../lib/agent-db';
 import { Button } from '../../../../../components/ui/Button';
 import ThemeCard from '../../../../../components/ui/ThemeCard';
 import AgentChatWrapper from '../../../../../components/agent/AgentChatWrapper';
 import AgentApiConnectionManager from '../../../../../components/agent/AgentApiConnectionManager';
+import ModelSelectorWrapper from '../../../../../components/agent/ModelSelectorWrapper';
 
 export const metadata: Metadata = {
   title: 'Agent Details',
@@ -38,6 +39,18 @@ export default async function AgentDetailsPage({ params }: { params: { id: strin
   // Determine the status display
   const statusDisplay = 'active';
   const statusColor = 'green';
+  
+  // Handle model update
+  async function updateAgentModel(formData: FormData) {
+    'use server';
+    
+    const model = formData.get('model') as string;
+    if (!model) return;
+    
+    await updateAgent(id, userId, {
+      model: model,
+    });
+  }
 
   return (
     <div className="p-6">
@@ -83,10 +96,6 @@ export default async function AgentDetailsPage({ params }: { params: { id: strin
                 </div>
               </div>
               <div>
-                <p className="text-sm text-stone-400 mb-1">Model</p>
-                <p className="text-white">{agent.model}</p>
-              </div>
-              <div>
                 <p className="text-sm text-stone-400 mb-1">Temperature</p>
                 <p className="text-white">{agent.temperature}</p>
               </div>
@@ -96,6 +105,12 @@ export default async function AgentDetailsPage({ params }: { params: { id: strin
               </div>
             </div>
           </ThemeCard>
+          
+          <ModelSelectorWrapper 
+            agentId={id} 
+            currentModel={agent.model || 'gpt-3.5-turbo'} 
+            userId={userId}
+          />
           
           <ThemeCard>
             <div className="p-4">

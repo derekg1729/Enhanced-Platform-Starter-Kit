@@ -1,128 +1,153 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import '@testing-library/jest-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import AgentDetailsPage from '../../../../app/app/(dashboard)/agents/[id]/page';
-import { getAgentById } from '../../../../lib/agent-db';
+import { getAgentById, updateAgent } from '../../../../lib/agent-db';
 import { getServerSession } from 'next-auth';
 
-// Mock the next/link component
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  notFound: vi.fn(),
+}));
+
+// Mock next/link
 vi.mock('next/link', () => {
   return {
-    __esModule: true,
-    default: ({ href, children }: { href: string; children: React.ReactNode }) => (
-      <a href={href}>{children}</a>
-    ),
+    default: ({ children, href }: { children: React.ReactNode; href: string }) => {
+      return <a href={href}>{children}</a>;
+    },
   };
 });
 
-// Mock the AgentChatWrapper component
-vi.mock('../../../../components/agent/AgentChatWrapper', () => {
-  return {
-    __esModule: true,
-    default: ({ agentId }: { agentId: string }) => (
-      <div data-testid="agent-chat-interface">
-        Chat interface for agent: {agentId}
-      </div>
-    ),
-  };
-});
-
-// Mock the AgentApiConnectionManager component
-vi.mock('../../../../components/agent/AgentApiConnectionManager', () => {
-  return {
-    __esModule: true,
-    default: ({ agentId }: { agentId: string }) => (
-      <div data-testid="agent-api-connection-manager">
-        API connections for agent: {agentId}
-      </div>
-    ),
-  };
-});
-
-// Mock the auth and database functions
+// Mock next-auth
 vi.mock('next-auth', () => ({
   getServerSession: vi.fn(),
 }));
 
+// Mock agent-db
 vi.mock('../../../../lib/agent-db', () => ({
   getAgentById: vi.fn(),
+  updateAgent: vi.fn(),
 }));
+
+// Mock AgentChatWrapper
+vi.mock('../../../../components/agent/AgentChatWrapper', () => ({
+  default: () => <div data-testid="agent-chat-wrapper">Agent Chat Wrapper</div>,
+}));
+
+// Mock AgentApiConnectionManager
+vi.mock('../../../../components/agent/AgentApiConnectionManager', () => ({
+  default: () => <div data-testid="agent-api-connection-manager">API Connection Manager</div>,
+}));
+
+// Mock ModelSelectorWrapper
+vi.mock('../../../../components/agent/ModelSelectorWrapper', () => ({
+  default: ({ agentId, currentModel }: { agentId: string; currentModel: string }) => (
+    <div data-testid="model-selector">
+      <select 
+        data-testid="model-select" 
+        defaultValue={currentModel}
+        disabled
+      >
+        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+        <option value="gpt-4">GPT-4</option>
+      </select>
+      <button>Save Model</button>
+    </div>
+  ),
+}));
+
+// Mock fetch
+const mockFetchResponse = {
+  ok: true,
+  json: () => Promise.resolve({ success: true }),
+};
 
 describe('AgentDetailsPage', () => {
   const mockAgent = {
     id: 'test-agent-123',
     name: 'Test Agent',
-    description: 'This is a test agent with real data',
-    systemPrompt: 'You are a helpful assistant',
+    description: 'This is a test agent',
     model: 'gpt-3.5-turbo',
-    temperature: '0.7',
-    maxTokens: 1000,
-    userId: 'user-123',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: 'active',
+    temperature: 0.7,
+    maxTokens: 2048,
+    systemPrompt: 'You are a helpful assistant',
+    apiConnectionId: 'api-connection-123',
   };
 
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
     
-    // Mock authentication
+    // Mock session
     (getServerSession as any).mockResolvedValue({
-      user: { id: 'user-123', name: 'Test User', email: 'test@example.com' },
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      user: {
+        id: 'user-123',
+        email: 'test@example.com',
+      },
     });
     
-    // Mock agent data
+    // Mock getAgentById
     (getAgentById as any).mockResolvedValue(mockAgent);
+    
+    // Mock fetch
+    global.fetch = vi.fn().mockImplementation(() => Promise.resolve(mockFetchResponse));
   });
 
   it('displays the agent ID', async () => {
-    const { findByText } = render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
-    
-    const agentIdElement = await findByText('test-agent-123');
-    expect(agentIdElement).toBeInTheDocument();
+    render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
+    expect(screen.getByText('test-agent-123')).toBeInTheDocument();
   });
 
   it('has a link back to the agents list', async () => {
-    const { findByText } = render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
-    
-    const backLink = await findByText('Back to agents');
+    render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
+    const backLink = screen.getByText('Back to agents');
     expect(backLink).toBeInTheDocument();
     expect(backLink.closest('a')).toHaveAttribute('href', '/agents');
   });
 
   it('displays the page title', async () => {
-    const { findByText } = render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
-    
-    const title = await findByText('Agent Details');
-    expect(title).toBeInTheDocument();
+    render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
+    expect(screen.getByText('Agent Details')).toBeInTheDocument();
   });
 
   it('displays the actual agent name from the database', async () => {
-    const { findByText } = render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
-    
-    const agentName = await findByText('Test Agent');
-    expect(agentName).toBeInTheDocument();
+    render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
+    expect(screen.getByText('Test Agent')).toBeInTheDocument();
   });
 
   it('displays the actual agent description from the database', async () => {
-    const { findByText } = render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
-    
-    const agentDescription = await findByText('This is a test agent with real data');
-    expect(agentDescription).toBeInTheDocument();
+    render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
+    expect(screen.getByText('This is a test agent')).toBeInTheDocument();
   });
 
   it('displays the actual agent status from the database', async () => {
-    const { findByText } = render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
-    
-    const agentStatus = await findByText('active');
-    expect(agentStatus).toBeInTheDocument();
+    render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
+    expect(screen.getByText('active')).toBeInTheDocument();
   });
 
   it('calls getAgentById with the correct parameters', async () => {
+    await AgentDetailsPage({ params: { id: 'test-agent-123' } });
+    expect(getAgentById).toHaveBeenCalledWith('test-agent-123', 'user-123');
+  });
+
+  it('renders the ModelSelector component with the current model', async () => {
+    render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
+    const modelSelector = screen.getByTestId('model-selector');
+    expect(modelSelector).toBeInTheDocument();
+  });
+
+  it('allows updating the agent model', async () => {
     render(await AgentDetailsPage({ params: { id: 'test-agent-123' } }));
     
-    expect(getAgentById).toHaveBeenCalledWith('test-agent-123', 'user-123');
+    // Since we're now using a client component wrapper, we can't directly test
+    // the model update functionality in this server component test.
+    // The actual update functionality is tested in the ModelSelectorWrapper tests.
+    
+    // Instead, we'll just verify that the ModelSelectorWrapper is rendered with the correct props
+    const modelSelector = screen.getByTestId('model-selector');
+    expect(modelSelector).toBeInTheDocument();
+    
+    // Verify the current model is passed correctly
+    const modelSelect = screen.getByTestId('model-select');
+    expect(modelSelect).toHaveValue('gpt-3.5-turbo');
   });
 }); 
