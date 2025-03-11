@@ -1,5 +1,5 @@
 {
-  "version": "2.5",
+  "version": "2.6",
   "process": {
     "tdd": {
       "enabled": true,
@@ -457,7 +457,7 @@
       },
       "strictWarnings": {
         "noVerifyFlag": "The --no-verify flag is STRICTLY PROHIBITED in ALL circumstances, including during the CHIP process itself. This flag bypasses critical checks and can introduce serious issues into the codebase.",
-        "timeoutHandling": "If pre-commit hooks are timing out, the correct approach is to fix the underlying performance issue or temporarily modify the hook configuration, NOT to bypass the hooks entirely."
+        "timeoutHandling": "If pre-commit hooks are timing out, the correct approach is to fix the underlying performance issue or temporarily modify the hook configuration, NOT to bypass the hooks entirely. Consider optimizing test suites, implementing more efficient linting rules, or increasing the timeout threshold in the hook configuration. Document any temporary modifications to hook configurations with a clear timeline for proper resolution."
       }
     },
     "instructions": {
