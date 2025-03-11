@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
 
   // Validate required fields
-  if (!body.name || !body.systemPrompt) {
+  if (!body.name || !body.systemPrompt || !body.apiConnectionId) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       model: body.model,
       temperature: body.temperature,
       maxTokens: body.maxTokens,
+      apiConnectionId: body.apiConnectionId,
     }
   );
 

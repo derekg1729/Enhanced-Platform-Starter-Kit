@@ -30,13 +30,16 @@ vi.mock('../../lib/db', () => {
     return queryBuilder;
   };
   
+  const dbMock = {
+    insert: vi.fn(() => createQueryBuilder()),
+    select: vi.fn(() => createQueryBuilder()),
+    update: vi.fn(() => createQueryBuilder()),
+    delete: vi.fn(() => createQueryBuilder()),
+    transaction: vi.fn((callback) => callback(dbMock))
+  };
+  
   return {
-    default: {
-      insert: vi.fn(() => createQueryBuilder()),
-      select: vi.fn(() => createQueryBuilder()),
-      update: vi.fn(() => createQueryBuilder()),
-      delete: vi.fn(() => createQueryBuilder()),
-    }
+    default: dbMock
   };
 });
 

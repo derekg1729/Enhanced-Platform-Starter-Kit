@@ -20,6 +20,7 @@ export interface Agent {
   model?: string;
   temperature?: string;
   maxTokens?: number | null;
+  apiConnectionId?: string;
 }
 
 interface AgentCardProps {

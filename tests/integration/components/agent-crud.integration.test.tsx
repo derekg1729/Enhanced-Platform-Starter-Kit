@@ -30,6 +30,12 @@ vi.mock('@/components/ui/ConfirmationDialog', () => {
   };
 });
 
+// Mock API connections
+const mockApiConnections = [
+  { id: 'conn-1', name: 'OpenAI Connection', service: 'openai' },
+  { id: 'conn-2', name: 'Claude Connection', service: 'anthropic' }
+];
+
 // Mock agents data
 const mockAgents: Agent[] = [
   {
@@ -42,6 +48,7 @@ const mockAgents: Agent[] = [
     maxTokens: 2000,
     createdAt: new Date().toISOString(),
     status: 'active',
+    apiConnectionId: 'conn-1'
   },
   {
     id: 'agent-2',
@@ -53,6 +60,7 @@ const mockAgents: Agent[] = [
     maxTokens: 4000,
     createdAt: new Date().toISOString(),
     status: 'inactive',
+    apiConnectionId: 'conn-2'
   },
 ];
 
@@ -63,6 +71,14 @@ describe('Agent CRUD Operations', () => {
   beforeEach(() => {
     // Set up a default mock implementation for fetch
     global.fetch = vi.fn().mockImplementation((url, options) => {
+      // Handle API connections fetch
+      if (url.toString() === '/api/api-connections') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockApiConnections),
+        });
+      }
+      
       // Handle DELETE requests
       if (options?.method === 'DELETE') {
         if (url.toString().includes('agent-1')) {
@@ -134,6 +150,13 @@ describe('Agent CRUD Operations', () => {
     it('handles deletion errors', async () => {
       // Override the fetch mock for this test to return an error
       global.fetch = vi.fn().mockImplementation((url) => {
+        if (url.toString() === '/api/api-connections') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockApiConnections),
+          });
+        }
+        
         if (url.toString().includes('agent-1')) {
           return Promise.resolve({
             ok: false,
@@ -169,6 +192,11 @@ describe('Agent CRUD Operations', () => {
     it('updates an agent successfully', async () => {
       render(<AgentEditForm agent={mockAgents[0]} />);
       
+      // Wait for API connections to load
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith('/api/api-connections');
+      });
+      
       // Update the name field
       fireEvent.change(screen.getByTestId('agent-name-input'), {
         target: { value: 'Updated Agent Name' },
@@ -197,7 +225,14 @@ describe('Agent CRUD Operations', () => {
     
     it('handles update errors', async () => {
       // Override the fetch mock for this test to return an error
-      global.fetch = vi.fn().mockImplementation(() => {
+      global.fetch = vi.fn().mockImplementation((url) => {
+        if (url.toString() === '/api/api-connections') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockApiConnections),
+          });
+        }
+        
         return Promise.resolve({
           ok: false,
           json: () => Promise.resolve({ error: 'Server error' }),
@@ -205,6 +240,11 @@ describe('Agent CRUD Operations', () => {
       });
       
       render(<AgentEditForm agent={mockAgents[0]} />);
+      
+      // Wait for API connections to load
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith('/api/api-connections');
+      });
       
       // Submit the form without changes
       fireEvent.click(screen.getByTestId('submit-button'));

@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import db from "./db";
 import {
   agents,
@@ -36,48 +36,103 @@ export async function createAgent(
     model?: string;
     temperature?: number;
     maxTokens?: number;
+    apiConnectionId?: string;
   }
 ): Promise<Agent> {
-  const [agent] = await db
-    .insert(agents)
-    .values({
-      id: createId(),
-      userId,
-      name: data.name,
-      description: data.description,
-      systemPrompt: data.systemPrompt,
-      model: data.model,
-      temperature: data.temperature?.toString(),
-      maxTokens: data.maxTokens,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning();
+  // Start a transaction
+  return await db.transaction(async (tx) => {
+    // Create the agent
+    const [agent] = await tx
+      .insert(agents)
+      .values({
+        id: createId(),
+        userId,
+        name: data.name,
+        description: data.description,
+        systemPrompt: data.systemPrompt,
+        model: data.model,
+        temperature: data.temperature?.toString(),
+        maxTokens: data.maxTokens,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
 
-  return agent;
+    // If an API connection ID is provided, connect the agent to it
+    if (data.apiConnectionId) {
+      await tx
+        .insert(agentApiConnections)
+        .values({
+          id: createId(),
+          agentId: agent.id,
+          apiConnectionId: data.apiConnectionId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+    }
+
+    return agent;
+  });
 }
 
 /**
  * Gets an agent by ID
  */
-export async function getAgentById(id: string, userId: string): Promise<Agent | null> {
+export async function getAgentById(id: string, userId: string): Promise<(Agent & { apiConnectionId?: string }) | null> {
   const [agent] = await db
     .select()
     .from(agents)
     .where(and(eq(agents.id, id), eq(agents.userId, userId)));
 
-  return agent || null;
+  if (!agent) {
+    return null;
+  }
+
+  // Get the API connection for this agent
+  const [agentApiConnection] = await db
+    .select()
+    .from(agentApiConnections)
+    .where(eq(agentApiConnections.agentId, id))
+    .limit(1);
+
+  return {
+    ...agent,
+    apiConnectionId: agentApiConnection?.apiConnectionId,
+  };
 }
 
 /**
  * Gets all agents for a user
  */
-export async function getAgentsByUserId(userId: string): Promise<Agent[]> {
-  return db
+export async function getAgentsByUserId(userId: string): Promise<(Agent & { apiConnectionId?: string })[]> {
+  const userAgents = await db
     .select()
     .from(agents)
     .where(eq(agents.userId, userId))
     .orderBy(desc(agents.updatedAt));
+
+  if (userAgents.length === 0) {
+    return [];
+  }
+
+  // Get all API connections for these agents
+  const agentIds = userAgents.map(agent => agent.id);
+  const apiConnections = await db
+    .select()
+    .from(agentApiConnections)
+    .where(inArray(agentApiConnections.agentId, agentIds));
+
+  // Create a map of agent ID to API connection ID
+  const agentConnectionMap = new Map<string, string>();
+  for (const connection of apiConnections) {
+    agentConnectionMap.set(connection.agentId, connection.apiConnectionId);
+  }
+
+  // Add API connection IDs to agents
+  return userAgents.map(agent => ({
+    ...agent,
+    apiConnectionId: agentConnectionMap.get(agent.id),
+  }));
 }
 
 /**
@@ -93,19 +148,50 @@ export async function updateAgent(
     model: string;
     temperature: number;
     maxTokens: number;
+    apiConnectionId: string;
   }>
 ): Promise<Agent | null> {
-  const [agent] = await db
-    .update(agents)
-    .set({
-      ...data,
-      temperature: data.temperature?.toString(),
-      updatedAt: new Date(),
-    })
-    .where(and(eq(agents.id, id), eq(agents.userId, userId)))
-    .returning();
+  return await db.transaction(async (tx) => {
+    // Update the agent
+    const [agent] = await tx
+      .update(agents)
+      .set({
+        name: data.name,
+        description: data.description,
+        systemPrompt: data.systemPrompt,
+        model: data.model,
+        temperature: data.temperature?.toString(),
+        maxTokens: data.maxTokens,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(agents.id, id), eq(agents.userId, userId)))
+      .returning();
 
-  return agent || null;
+    if (!agent) {
+      return null;
+    }
+
+    // If API connection ID is provided, update the agent's API connection
+    if (data.apiConnectionId) {
+      // First, delete any existing connections for this agent
+      await tx
+        .delete(agentApiConnections)
+        .where(eq(agentApiConnections.agentId, id));
+
+      // Then, create a new connection
+      await tx
+        .insert(agentApiConnections)
+        .values({
+          id: createId(),
+          agentId: id,
+          apiConnectionId: data.apiConnectionId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+    }
+
+    return agent;
+  });
 }
 
 /**

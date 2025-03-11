@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -19,6 +19,7 @@ const agentFormSchema = z.object({
   prompt: z.string().min(1, { message: 'Prompt is required' }),
   model: z.string().default('gpt-3.5-turbo'),
   temperature: z.number().min(0).max(1).default(0.7),
+  apiConnectionId: z.string().min(1, { message: 'API Connection is required' }),
 });
 
 // Infer the form data type from the schema
@@ -28,7 +29,15 @@ type AgentFormData = {
   prompt: string;
   model: string;
   temperature: number;
+  apiConnectionId: string;
 };
+
+// Add API connection type
+interface ApiConnection {
+  id: string;
+  name: string;
+  service: string;
+}
 
 interface AgentCreationFormProps {
   onSubmit?: (data: AgentFormData) => Promise<void>;
@@ -38,6 +47,9 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiConnections, setApiConnections] = useState<ApiConnection[]>([]);
+  const [isLoadingConnections, setIsLoadingConnections] = useState(true);
+  const [apiConnectionError, setApiConnectionError] = useState<string | null>(null);
   
   const {
     register,
@@ -52,8 +64,34 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
       prompt: '',
       model: 'gpt-3.5-turbo',
       temperature: 0.7,
+      apiConnectionId: '',
     },
   });
+  
+  // Fetch available API connections
+  useEffect(() => {
+    const fetchApiConnections = async () => {
+      setIsLoadingConnections(true);
+      setApiConnectionError(null);
+      
+      try {
+        const response = await fetch('/api/api-connections');
+        if (!response.ok) {
+          throw new Error('Failed to load API connections');
+        }
+        
+        const data = await response.json();
+        setApiConnections(data);
+      } catch (err) {
+        console.error('Error fetching API connections:', err);
+        setApiConnectionError('Failed to load API connections. Please refresh the page and try again.');
+      } finally {
+        setIsLoadingConnections(false);
+      }
+    };
+    
+    fetchApiConnections();
+  }, []);
   
   const temperature = watch('temperature');
   
@@ -84,6 +122,7 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
             model: data.model,
             temperature: data.temperature,
             maxTokens: 2048, // Default max tokens
+            apiConnectionId: data.apiConnectionId,
           }),
         });
 
@@ -93,7 +132,7 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
         }
 
         const agent = await response.json();
-        router.push('/agents');
+        router.push('/app/agents');
       }
     } catch (err) {
       setError('Failed to create agent. Please try again.');
@@ -104,7 +143,7 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
   };
   
   const handleCancel = () => {
-    router.push('/agents');
+    router.push('/app/agents');
   };
   
   return (
@@ -113,6 +152,12 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
         {error && (
           <div className="p-3 bg-red-900/50 border border-red-700 rounded-md text-red-400 text-sm mb-4" data-testid="error-message">
             {error}
+          </div>
+        )}
+        
+        {apiConnectionError && (
+          <div className="p-3 bg-red-900/50 border border-red-700 rounded-md text-red-400 text-sm mb-4">
+            {apiConnectionError}
           </div>
         )}
         
@@ -212,6 +257,37 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
             <span>More Deterministic</span>
             <span>More Creative</span>
           </div>
+        </div>
+        
+        <div>
+          <label htmlFor="apiConnectionId" className="block text-sm font-medium text-stone-300 mb-1">
+            API Connection
+          </label>
+          <Select
+            id="apiConnectionId"
+            {...register('apiConnectionId', { required: 'API Connection is required' })}
+            className="w-full"
+            error={!!errors.apiConnectionId}
+            disabled={isSubmitting || isLoadingConnections}
+          >
+            <option value="">Select an API Connection</option>
+            {apiConnections.map((connection) => (
+              <option key={connection.id} value={connection.id}>
+                {connection.name} ({connection.service})
+              </option>
+            ))}
+          </Select>
+          {errors.apiConnectionId && (
+            <p className="mt-1 text-sm text-red-400">{errors.apiConnectionId.message}</p>
+          )}
+          {isLoadingConnections && (
+            <p className="mt-1 text-xs text-stone-500">Loading API connections...</p>
+          )}
+          {!isLoadingConnections && apiConnections.length === 0 && !apiConnectionError && (
+            <p className="mt-1 text-xs text-stone-500">
+              No API connections available. <a href="/api-connections/new" className="text-blue-400 hover:underline">Create one</a>
+            </p>
+          )}
         </div>
         
         <div className="flex justify-end space-x-3 pt-4 border-t border-stone-700">

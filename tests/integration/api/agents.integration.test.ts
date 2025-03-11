@@ -175,6 +175,7 @@ describe('Agents API Routes', () => {
           model: 'gpt-4',
           temperature: 0.7,
           maxTokens: 1000,
+          apiConnectionId: 'test-api-connection-123',
         }),
       });
 
@@ -202,6 +203,7 @@ describe('Agents API Routes', () => {
         model: 'gpt-4',
         temperature: 0.7,
         maxTokens: 1000,
+        apiConnectionId: 'test-api-connection-123',
       });
     });
   });

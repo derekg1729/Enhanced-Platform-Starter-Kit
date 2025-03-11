@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -25,7 +25,15 @@ type AgentFormData = {
   model: string;
   temperature: string;
   maxTokens: number;
+  apiConnectionId: string;
 };
+
+// Add API connection type
+interface ApiConnection {
+  id: string;
+  name: string;
+  service: string;
+}
 
 interface AgentEditFormProps {
   agent: Agent;
@@ -35,6 +43,34 @@ export default function AgentEditForm({ agent }: AgentEditFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiConnections, setApiConnections] = useState<ApiConnection[]>([]);
+  const [isLoadingConnections, setIsLoadingConnections] = useState(true);
+  const [apiConnectionError, setApiConnectionError] = useState<string | null>(null);
+
+  // Fetch available API connections
+  useEffect(() => {
+    const fetchApiConnections = async () => {
+      setIsLoadingConnections(true);
+      setApiConnectionError(null);
+      
+      try {
+        const response = await fetch('/api/api-connections');
+        if (!response.ok) {
+          throw new Error('Failed to load API connections');
+        }
+        
+        const data = await response.json();
+        setApiConnections(data);
+      } catch (err) {
+        console.error('Error fetching API connections:', err);
+        setApiConnectionError('Failed to load API connections. Please refresh the page and try again.');
+      } finally {
+        setIsLoadingConnections(false);
+      }
+    };
+    
+    fetchApiConnections();
+  }, []);
 
   // Initialize form with explicit default values
   const form = useForm<AgentFormData>({
@@ -45,6 +81,7 @@ export default function AgentEditForm({ agent }: AgentEditFormProps) {
       model: agent.model || "gpt-3.5-turbo",
       temperature: agent.temperature || "0.7",
       maxTokens: agent.maxTokens || 2048,
+      apiConnectionId: agent.apiConnectionId || "",
     },
   });
 
@@ -78,6 +115,12 @@ export default function AgentEditForm({ agent }: AgentEditFormProps) {
         return;
       }
 
+      if (!data.apiConnectionId) {
+        setError("API Connection is required");
+        setIsSubmitting(false);
+        return;
+      }
+
       const response = await fetch(`/api/agents/${agent.id}`, {
         method: "PUT",
         headers: {
@@ -103,6 +146,12 @@ export default function AgentEditForm({ agent }: AgentEditFormProps) {
 
   return (
     <div className="space-y-6">
+      {apiConnectionError && (
+        <div className="p-3 bg-red-900/50 border border-red-700 rounded-md text-red-400 text-sm mb-4">
+          {apiConnectionError}
+        </div>
+      )}
+      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -218,6 +267,40 @@ export default function AgentEditForm({ agent }: AgentEditFormProps) {
                     data-testid="agent-max-tokens-input"
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="apiConnectionId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>API Connection</FormLabel>
+                <FormControl>
+                  <Select
+                    onChange={field.onChange}
+                    value={field.value}
+                    disabled={isSubmitting || isLoadingConnections}
+                    data-testid="agent-api-connection-select"
+                  >
+                    <option value="">Select an API Connection</option>
+                    {apiConnections.map((connection) => (
+                      <option key={connection.id} value={connection.id}>
+                        {connection.name} ({connection.service})
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                {isLoadingConnections && (
+                  <p className="text-xs text-stone-500">Loading API connections...</p>
+                )}
+                {!isLoadingConnections && apiConnections.length === 0 && !apiConnectionError && (
+                  <p className="text-xs text-stone-500">
+                    No API connections available. <a href="/api-connections/new" className="text-blue-400 hover:underline">Create one</a>
+                  </p>
+                )}
                 <FormMessage />
               </FormItem>
             )}

@@ -81,7 +81,8 @@ describe('Agent API Routes', () => {
           systemPrompt: 'Updated prompt',
           model: 'gpt-4',
           temperature: 0.7,
-          maxTokens: 2000
+          maxTokens: 2000,
+          apiConnectionId: 'test-api-connection-id'
         })
       }),
       { params: { agentId: 'test-agent-id' } }

@@ -23,6 +23,11 @@ describe('AgentEditForm', () => {
     global.fetch = vi.fn();
   });
 
+  const mockApiConnections = [
+    { id: 'conn-1', name: 'OpenAI Connection', service: 'openai' },
+    { id: 'conn-2', name: 'Claude Connection', service: 'anthropic' }
+  ];
+
   const mockAgent: Agent = {
     id: 'test-agent-id',
     name: 'Test Agent',
@@ -33,9 +38,16 @@ describe('AgentEditForm', () => {
     maxTokens: 2000,
     createdAt: new Date().toISOString(),
     status: 'active',
+    apiConnectionId: 'conn-1'
   };
 
-  it('renders the form with agent data', () => {
+  it('renders the form with agent data', async () => {
+    // Mock API connections fetch
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockApiConnections,
+    });
+    
     render(<AgentEditForm agent={mockAgent} />);
     
     expect(screen.getByLabelText(/name/i)).toHaveValue('Test Agent');
@@ -43,9 +55,20 @@ describe('AgentEditForm', () => {
     expect(screen.getByLabelText(/system prompt/i)).toHaveValue('You are a helpful assistant');
     // Model is a select, so we can't check its value directly
     expect(screen.getByLabelText(/temperature/i)).toBeInTheDocument();
+    
+    // Wait for API connections to load
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith('/api/api-connections');
+    });
   });
 
   it('validates required fields', async () => {
+    // Mock API connections fetch
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockApiConnections,
+    });
+    
     render(<AgentEditForm agent={mockAgent} />);
     
     // Clear required fields
@@ -59,13 +82,21 @@ describe('AgentEditForm', () => {
   });
 
   it('submits the form with valid data', async () => {
-    // Mock successful fetch response
+    // Mock API connections fetch
     global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockApiConnections,
+    }).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true }),
     });
     
     render(<AgentEditForm agent={mockAgent} />);
+    
+    // Wait for API connections to load
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith('/api/api-connections');
+    });
     
     // Update form fields
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Updated Agent' } });
@@ -92,16 +123,35 @@ describe('AgentEditForm', () => {
   });
 
   it('handles API errors', async () => {
-    // Mock fetch to return an error
-    global.fetch = vi.fn().mockRejectedValueOnce(new Error('API Error'));
+    // Mock API connections fetch success but form submission error
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockApiConnections,
+    }).mockRejectedValueOnce(new Error('API Error'));
     
     render(<AgentEditForm agent={mockAgent} />);
+    
+    // Wait for API connections to load
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith('/api/api-connections');
+    });
     
     // Submit the form
     fireEvent.click(screen.getByRole('button', { name: /update agent/i }));
     
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toHaveTextContent('API Error');
+    });
+  });
+  
+  it('shows error when API connections cannot be loaded', async () => {
+    // Mock API connections fetch failure
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error('Failed to load API connections'));
+    
+    render(<AgentEditForm agent={mockAgent} />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Failed to load API connections. Please refresh the page and try again.')).toBeInTheDocument();
     });
   });
 }); 

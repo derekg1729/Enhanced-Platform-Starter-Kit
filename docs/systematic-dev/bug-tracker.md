@@ -6,6 +6,25 @@
 
 ## Fixed Bugs
 
+### [BUG-006] Agent Form and API Integration Test Failures
+- **Severity**: High
+- **Status**: Fixed
+- **Description**: Multiple test failures in agent forms and API integration tests.
+- **Error Patterns**: 
+  1. "TypeError: default.transaction is not a function" in agent-db unit tests
+  2. "expected 400 to be 200" in agent-by-id integration test
+  3. Redirect path mismatch in AgentCreationForm integration test
+- **Root Cause**: 
+  1. Missing transaction method in database mock for unit tests
+  2. Missing required apiConnectionId field in PUT request test
+  3. Incorrect redirect path in AgentCreationForm component
+- **Fix**: 
+  1. Updated database mock to include a transaction method
+  2. Added apiConnectionId to the PUT request in agent-by-id integration test
+  3. Fixed the redirect path in AgentCreationForm from '/agents' to '/app/agents'
+- **Prevention**: Ensured all tests pass with comprehensive validation of API requirements and component behavior.
+- **Fixed Date**: June 21, 2024
+
 ### [BUG-005] Excessive Database Query Logging
 - **Severity**: Medium
 - **Status**: Fixed

@@ -63,6 +63,11 @@ export async function PUT(
   // Parse the request body
   const body = await req.json();
 
+  // Validate required fields
+  if (!body.name || !body.systemPrompt || !body.apiConnectionId) {
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
   // Update the agent
   const updatedAgent = await updateAgent(
     params.agentId,
@@ -74,6 +79,7 @@ export async function PUT(
       model: body.model,
       temperature: body.temperature,
       maxTokens: body.maxTokens,
+      apiConnectionId: body.apiConnectionId,
     }
   );
 
