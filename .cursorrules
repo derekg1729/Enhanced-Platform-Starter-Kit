@@ -450,10 +450,9 @@
           }
         ],
         "rules": [
-          "CHIP MUST be triggered when encountering any High severity error patterns",
-          "CHIP MUST be triggered when encountering Medium severity patterns repeatedly",
+          "When CHIP is initiated (by the overseer), protocol must be started immediately",
           "CHIP review MUST include analysis of why existing rules did not prevent the error",
-          "New error patterns MUST be added to this list when identified through CHIP analysis"
+          "New version of Cursorrules MUST be created based on CHIP analysis"
         ]
       },
       "steps": [
