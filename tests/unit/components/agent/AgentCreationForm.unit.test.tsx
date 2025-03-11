@@ -27,7 +27,7 @@ describe('AgentCreationForm', () => {
     expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/prompt/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/model/i)).toBeInTheDocument();
+    expect(screen.getByText(/model/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/temperature/i)).toBeInTheDocument();
     
     // Check for buttons

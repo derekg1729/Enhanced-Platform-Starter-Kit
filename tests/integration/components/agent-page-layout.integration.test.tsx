@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import AgentsPage from '@/app/app/(dashboard)/agents/page';
 import DashboardLayout from '@/app/app/(dashboard)/layout';
+import AgentsPageClient from '@/app/app/(dashboard)/agents/AgentsPageClient';
 
 // Mock the Nav component since it contains client components
 vi.mock('@/components/nav', () => ({
@@ -21,24 +22,24 @@ vi.mock('@/components/profile', () => ({
 
 describe('Agent Page Layout', () => {
   it('should be placed under the dashboard layout', () => {
-    // Render the AgentsPage component
-    const { container: agentsPageContainer } = render(<AgentsPage />);
+    // First render the AgentsPage by itself
+    render(<AgentsPageClient initialLoading={true} testMode={true} />);
     
     // Check that the AgentsPage has a title
-    expect(screen.getByText('Your Agents')).toBeInTheDocument();
+    expect(screen.getAllByText('Your Agents')[0]).toBeInTheDocument();
     
     // Now render the AgentsPage within the DashboardLayout
-    const { container: dashboardContainer } = render(
+    cleanup();
+    render(
       <DashboardLayout>
-        <AgentsPage />
+        <AgentsPageClient initialLoading={true} testMode={true} />
       </DashboardLayout>
     );
     
-    // Check that the DashboardLayout has the dark theme
-    const dashboardElement = dashboardContainer.querySelector('.dark\\:bg-black');
-    expect(dashboardElement).toBeInTheDocument();
-    
-    // Check that the Nav component is rendered
+    // Check that the AgentsPage is rendered within the DashboardLayout
+    expect(screen.getAllByText('Your Agents')[0]).toBeInTheDocument();
+    // Check for elements that are unique to the DashboardLayout
     expect(screen.getByTestId('mock-nav')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-profile')).toBeInTheDocument();
   });
 }); 

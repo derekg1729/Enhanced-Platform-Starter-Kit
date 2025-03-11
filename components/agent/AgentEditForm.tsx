@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -16,25 +14,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/Select";
 import { Agent } from "./AgentCard";
 
-const agentFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().min(1, "Description is required"),
-  systemPrompt: z.string().min(1, "System prompt is required"),
-  model: z.string().min(1, "Model is required"),
-  temperature: z.string(),
-  maxTokens: z.number().int().positive(),
-});
-
-type AgentFormData = z.infer<typeof agentFormSchema>;
+// Define a simpler type for the form data directly
+type AgentFormData = {
+  name: string;
+  description: string;
+  systemPrompt: string;
+  model: string;
+  temperature: string;
+  maxTokens: number;
+};
 
 interface AgentEditFormProps {
   agent: Agent;
@@ -45,23 +36,48 @@ export default function AgentEditForm({ agent }: AgentEditFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Initialize form with explicit default values
   const form = useForm<AgentFormData>({
-    resolver: zodResolver(agentFormSchema),
     defaultValues: {
-      name: agent.name,
-      description: agent.description,
-      systemPrompt: agent.systemPrompt,
-      model: agent.model,
-      temperature: agent.temperature,
-      maxTokens: agent.maxTokens,
+      name: agent.name || "",
+      description: agent.description || "",
+      systemPrompt: agent.systemPrompt || "",
+      model: agent.model || "gpt-3.5-turbo",
+      temperature: agent.temperature || "0.7",
+      maxTokens: agent.maxTokens || 2048,
     },
   });
 
   const onSubmit = async (data: AgentFormData) => {
-    setIsSubmitting(true);
-    setError(null);
-
     try {
+      setIsSubmitting(true);
+      setError(null);
+
+      // Validate required fields manually
+      if (!data.name) {
+        setError("Name is required");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!data.systemPrompt) {
+        setError("System prompt is required");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!data.model) {
+        setError("Model is required");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!data.temperature) {
+        setError("Temperature is required");
+        setIsSubmitting(false);
+        return;
+      }
+
       const response = await fetch(`/api/agents/${agent.id}`, {
         method: "PUT",
         headers: {
@@ -149,23 +165,19 @@ export default function AgentEditForm({ agent }: AgentEditFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Model</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  data-testid="agent-model-select"
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a model" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                    <SelectItem value="gpt-4">GPT-4</SelectItem>
-                    <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                    <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Select
+                    onChange={field.onChange}
+                    value={field.value}
+                    data-testid="agent-model-select"
+                  >
+                    <option value="">Select a model</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="claude-3-opus">Claude 3 Opus</option>
+                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                  </Select>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -202,7 +214,7 @@ export default function AgentEditForm({ agent }: AgentEditFormProps) {
                   <Input 
                     type="number" 
                     {...field} 
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 2048)}
                     data-testid="agent-max-tokens-input"
                   />
                 </FormControl>

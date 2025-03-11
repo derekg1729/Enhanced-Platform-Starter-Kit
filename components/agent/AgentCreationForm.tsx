@@ -10,6 +10,7 @@ import { Textarea } from '../ui/Textarea';
 import { Select } from '../ui/Select';
 import { Slider } from '../ui/Slider';
 import ThemeCard from '../ui/ThemeCard';
+import React from 'react';
 
 // Define the form schema with Zod
 const agentFormSchema = z.object({

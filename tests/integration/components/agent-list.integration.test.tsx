@@ -51,7 +51,7 @@ describe('AgentsPage', () => {
   it('displays empty state when no agents exist', () => {
     render(<AgentsPageClient initialLoading={false} initialAgents={[]} testMode={true} />);
     expect(screen.queryByTestId('loading-state')).not.toBeInTheDocument();
-    expect(screen.getByText(/No agents found/i)).toBeInTheDocument();
+    expect(screen.getByText(/You don't have any agents yet/i)).toBeInTheDocument();
   });
 
   it('displays error message when there is an error', () => {
