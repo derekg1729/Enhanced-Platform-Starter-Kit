@@ -285,7 +285,7 @@ This backlog is organized by features. Tasks within the currently active feature
 
 - **[TASK-HW019] Replace Mocked Agents with Database Integration**
   - **Priority**: High
-  - **Status**: Todo
+  - **Status**: Done
   - **Description**: Replace the mocked agents on the Agents Page with real agents fetched from the database.
   - **Acceptance Criteria**:
     - Update the AgentsPageClient component to fetch real agents from the API

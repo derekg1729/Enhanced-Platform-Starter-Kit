@@ -13,6 +13,20 @@ interface AgentsPageClientProps {
   testMode?: boolean;
 }
 
+// Database agent type from the API
+interface DbAgent {
+  id: string;
+  name: string;
+  description?: string;
+  systemPrompt: string;
+  model: string;
+  temperature: string;
+  maxTokens?: number;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+}
+
 export default function AgentsPageClient({
   initialAgents = [],
   initialLoading = true,
@@ -40,16 +54,16 @@ export default function AgentsPageClient({
         
         const data = await response.json();
         
-        // Map the API response to the Agent interface
-        const mappedAgents: Agent[] = data.map((agent: any) => ({
-          id: agent.id,
-          name: agent.name,
-          description: agent.description || '',
-          createdAt: agent.createdAt,
-          updatedAt: agent.updatedAt,
-          imageUrl: agent.imageUrl || '/placeholder.png',
-          status: agent.status || 'active',
-          type: agent.type || 'hello-world',
+        // Map the database agents to the Agent interface
+        const mappedAgents: Agent[] = data.map((dbAgent: DbAgent) => ({
+          id: dbAgent.id,
+          name: dbAgent.name,
+          description: dbAgent.description || '',
+          createdAt: dbAgent.createdAt,
+          updatedAt: dbAgent.updatedAt,
+          imageUrl: '/placeholder.png', // Default image since DB doesn't store images
+          status: 'active', // Default status since DB doesn't have a status field yet
+          type: dbAgent.model.includes('gpt-4') ? 'advanced' : 'hello-world', // Determine type based on model
         }));
         
         setAgents(mappedAgents);
@@ -68,8 +82,8 @@ export default function AgentsPageClient({
     <div className="p-6">
       <h1 className="text-3xl font-cal font-bold mb-6 text-white">Your Agents</h1>
       {error ? (
-        <div className="rounded-lg border border-stone-700 bg-stone-900 p-5 shadow-sm transition-all hover:shadow-md">
-          <div className="p-4 text-center" data-testid="error-state">
+        <div className="rounded-lg border border-stone-700 bg-stone-900 p-5 shadow-sm transition-all hover:shadow-md" data-testid="error-state">
+          <div className="p-4 text-center">
             <p className="text-red-400">{error}</p>
           </div>
         </div>

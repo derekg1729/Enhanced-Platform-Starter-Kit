@@ -1659,3 +1659,81 @@ Estimated completion time: 2-3 days
 2. Edit form implementation: 0.5-1 day
 3. Delete dialog implementation: 0.5 day
 4. UI integration and testing: 0.5-1 day 
+
+## Agent Dashboard UI
+
+### Server/Client Component Architecture
+
+The Agent Dashboard UI follows Next.js best practices for server and client components:
+
+- **Server Components**: Used for initial data fetching and SEO-relevant content
+- **Client Components**: Used for interactive elements and client-side state management
+
+#### AgentsPage Component
+
+The AgentsPage component is structured as follows:
+
+- `app/app/(dashboard)/agents/page.tsx`: Server component that:
+  - Fetches initial agents data
+  - Handles metadata for the page
+  - Passes initial data to the client component
+
+- `app/app/(dashboard)/agents/AgentsPageClient.tsx`: Client component that:
+  - Manages loading, error, and data states
+  - Handles client-side data fetching
+  - Renders the AgentDashboard component with appropriate props
+
+- `app/app/(dashboard)/agents/metadata.ts`: Contains metadata configuration for the page
+
+This separation allows for:
+- Server-side rendering of initial content for better SEO and performance
+- Client-side state management for interactive elements
+- Clear separation of concerns between data fetching and UI rendering
+
+### Agent Card Component
+
+The Agent Card component is structured as follows:
+
+- **Purpose**: Display agent information in a card format
+- **Dependencies**: React, Next.js, TailwindCSS
+- **Implementation Notes**: Use React components to render agent information
+- **Related Tasks**: [TASK-005]
+
+## Agent Dashboard Implementation
+
+The Agent Dashboard is implemented using a client-side component that fetches data from the API. The implementation follows these key principles:
+
+1. **Server/Client Component Separation**: The dashboard is split into server and client components following Next.js best practices. The server component (`page.tsx`) handles metadata and renders the client component (`AgentsPageClient.tsx`), which manages state and data fetching.
+
+2. **Real-time Data Fetching**: The `AgentsPageClient` component fetches real agent data from the `/api/agents` API endpoint, which retrieves agents from the PostgreSQL database using Drizzle ORM.
+
+3. **Data Mapping**: Database agent records are mapped to the frontend Agent interface, with appropriate defaults for fields not stored in the database (e.g., image URLs).
+
+4. **State Management**: The component uses React hooks to manage loading states, error handling, and agent data.
+
+5. **User Experience**: The dashboard includes loading indicators, error messages, and an empty state when no agents exist, providing a complete user experience.
+
+6. **Testing**: Comprehensive tests verify the component's behavior in various scenarios, including successful data fetching, API errors, and empty states.
+
+## Database Integration
+
+The database integration for agents follows these patterns:
+
+1. **API Routes**: The `/api/agents` endpoint handles authentication and retrieves agents for the current user.
+
+2. **Data Access Layer**: The `agent-db.ts` module provides utility functions for CRUD operations on agents, abstracting database access from the API routes.
+
+3. **Schema Definition**: The agent schema is defined using Drizzle ORM in `agent-schema.ts`, with appropriate indexes and relationships.
+
+4. **Row-Level Security**: Agents are isolated by user ID, ensuring that users can only access their own agents.
+
+5. **Query Optimization**: Database queries are optimized with conditional logging and caching to prevent excessive logging in development mode.
+
+## Module Registry
+
+- **AgentsPageClient**: Client component that fetches and displays agents from the database
+- **AgentDashboard**: Component for displaying a list of agents with filtering and search
+- **AgentCard**: Component for displaying an individual agent
+- **agent-db.ts**: Database utility functions for agent CRUD operations
+- **agent-schema.ts**: Drizzle ORM schema definitions for agent-related tables
+- **api/agents/route.ts**: API route for agent operations
