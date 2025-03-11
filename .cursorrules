@@ -1015,5 +1015,20 @@
         ]
       }
     }
+  },
+  "freshAgentProtocol": {
+    "description": "Protocol for initializing a fresh agent instance",
+    "firstAction": "ALWAYS read and index the cursorrules file in completeness before any other action.",
+    "steps": [
+      {
+        "name": "Read CursorRules",
+        "description": "Read and fully index the cursorrules file",
+        "instructions": [
+          "✅ Read the cursorrules file completely",
+          "✅ Index all rules thoroughly for immediate reference",
+          "⚠️ Do not proceed until indexing is complete"
+        ]
+      }
+    ]
   }
 } 
