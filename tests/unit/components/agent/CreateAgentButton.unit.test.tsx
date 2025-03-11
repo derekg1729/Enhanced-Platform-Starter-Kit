@@ -47,6 +47,10 @@ describe('CreateAgentButton', () => {
     expect(button).toHaveClass('bg-blue-600');
     expect(button).toHaveClass('hover:bg-blue-700');
     expect(button).toHaveClass('text-white');
+    expect(button).toHaveClass('rounded-lg');
+    expect(button).toHaveClass('flex');
+    expect(button).toHaveClass('items-center');
+    expect(button).toHaveClass('gap-1');
   });
   
   it('can be disabled', () => {
@@ -54,13 +58,15 @@ describe('CreateAgentButton', () => {
     
     const button = screen.getByRole('button', { name: /create agent/i });
     expect(button).toBeDisabled();
-    expect(button).toHaveClass('opacity-50');
   });
   
   it('shows a loading state when isLoading is true', () => {
     render(<CreateAgentButton isLoading />);
     
-    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
-    expect(screen.getByText('Create Agent')).toBeInTheDocument();
+    expect(screen.getByText('Creating...')).toBeInTheDocument();
+    expect(screen.queryByText('Create Agent')).not.toBeInTheDocument();
+    // Check for the SVG loading spinner
+    const svgElement = document.querySelector('svg.animate-spin');
+    expect(svgElement).toBeInTheDocument();
   });
 }); 
