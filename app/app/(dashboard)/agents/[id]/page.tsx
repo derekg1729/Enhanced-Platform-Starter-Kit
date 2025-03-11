@@ -1,6 +1,10 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../../../../lib/auth';
+import { getAgentById } from '../../../../../lib/agent-db';
 import { Button } from '../../../../../components/ui/Button';
 import ThemeCard from '../../../../../components/ui/ThemeCard';
 import AgentChatWrapper from '../../../../../components/agent/AgentChatWrapper';
@@ -11,8 +15,29 @@ export const metadata: Metadata = {
   description: 'View and manage your agent',
 };
 
-export default function AgentDetailsPage({ params }: { params: { id: string } }) {
+export default async function AgentDetailsPage({ params }: { params: { id: string } }) {
   const { id } = params;
+  
+  // Get the current user from the session
+  const session = await getServerSession(authOptions);
+  
+  if (!session || !session.user || !session.user.email) {
+    return notFound();
+  }
+  
+  // Get the user ID from the session
+  const userId = (session.user as { id?: string }).id || session.user.email;
+  
+  // Fetch the agent details from the database
+  const agent = await getAgentById(id, userId);
+  
+  if (!agent) {
+    return notFound();
+  }
+
+  // Determine the status display
+  const statusDisplay = 'active';
+  const statusColor = 'green';
 
   return (
     <div className="p-6">
@@ -26,7 +51,9 @@ export default function AgentDetailsPage({ params }: { params: { id: string } })
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-cal font-bold text-white">Agent Details</h1>
         <div className="flex space-x-3">
-          <Button variant="secondary">Edit</Button>
+          <Link href={`/agents/${id}/edit`}>
+            <Button variant="secondary">Edit</Button>
+          </Link>
           <Button variant="danger">Delete</Button>
         </div>
       </div>
@@ -43,17 +70,29 @@ export default function AgentDetailsPage({ params }: { params: { id: string } })
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-stone-400 mb-1">Name</p>
-                <p className="text-white">Demo Agent</p>
+                <p className="text-white">{agent.name}</p>
               </div>
               <div>
                 <p className="text-sm text-stone-400 mb-1">Description</p>
-                <p className="text-white">This is a demo agent for testing purposes.</p>
+                <p className="text-white">{agent.description || 'No description provided.'}</p>
               </div>
               <div>
                 <p className="text-sm text-stone-400 mb-1">Status</p>
-                <div className="inline-block px-2 py-1 text-xs rounded-full border bg-green-900 text-green-400 border-green-800">
-                  Active
+                <div className={`inline-block px-2 py-1 text-xs rounded-full border bg-${statusColor}-900 text-${statusColor}-400 border-${statusColor}-800`}>
+                  {statusDisplay}
                 </div>
+              </div>
+              <div>
+                <p className="text-sm text-stone-400 mb-1">Model</p>
+                <p className="text-white">{agent.model}</p>
+              </div>
+              <div>
+                <p className="text-sm text-stone-400 mb-1">Temperature</p>
+                <p className="text-white">{agent.temperature}</p>
+              </div>
+              <div>
+                <p className="text-sm text-stone-400 mb-1">Max Tokens</p>
+                <p className="text-white">{agent.maxTokens}</p>
               </div>
             </div>
           </ThemeCard>
