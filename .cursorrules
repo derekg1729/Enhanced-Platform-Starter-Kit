@@ -1,5 +1,5 @@
 {
-  "version": "2.1",
+  "version": "2.3",
   "process": {
     "tdd": {
       "enabled": true,
@@ -414,7 +414,9 @@
           "instructions": [
             "Commit the updated CursorRules file with a descriptive message",
             "Update both the main and any relevant feature branches",
-            "Ensure the commit message includes the version number and a summary of changes"
+            "Ensure the commit message includes the version number and a summary of changes",
+            "NEVER use the --no-verify flag when committing, even during the CRIP process",
+            "If pre-commit hooks are timing out, fix the underlying issue rather than bypassing checks"
           ]
         },
         {
@@ -452,6 +454,10 @@
             ]
           }
         ]
+      },
+      "strictWarnings": {
+        "noVerifyFlag": "The --no-verify flag is STRICTLY PROHIBITED in ALL circumstances, including during the CRIP process itself. This flag bypasses critical checks and can introduce serious issues into the codebase.",
+        "timeoutHandling": "If pre-commit hooks are timing out, the correct approach is to fix the underlying performance issue or temporarily modify the hook configuration, NOT to bypass the hooks entirely."
       }
     },
     "instructions": {
@@ -734,12 +740,13 @@
         "buildFailures": "Fix the code issues before committing. Common problems include syntax errors, missing dependencies, or configuration issues."
       },
       "strictWarnings": {
-        "noVerifyFlag": "NEVER use git commit with the --no-verify flag to bypass pre-commit hooks. This bypasses critical checks and can introduce serious issues into the codebase.",
+        "noVerifyFlag": "NEVER use git commit with the --no-verify flag to bypass pre-commit hooks. This bypasses critical checks and can introduce serious issues into the codebase. This prohibition applies to ALL processes, including the CRIP process.",
         "alternativeApproaches": [
           "Fix the failing checks instead of bypassing them",
           "If the checks are taking too long, consider optimizing them rather than skipping them",
           "For emergency situations, get explicit team approval and document the reason for any exception",
-          "Use git stash to temporarily save changes that aren't ready for verification"
+          "Use git stash to temporarily save changes that aren't ready for verification",
+          "If timeout issues occur, address the performance of the hooks rather than bypassing them"
         ]
       }
     },
