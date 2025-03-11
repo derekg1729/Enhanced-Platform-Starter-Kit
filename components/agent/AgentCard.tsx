@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 
 export interface Agent {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   createdAt: Date | string;
   updatedAt?: Date | string;
   imageUrl?: string | null;
@@ -19,7 +19,7 @@ export interface Agent {
   systemPrompt?: string;
   model?: string;
   temperature?: string;
-  maxTokens?: number;
+  maxTokens?: number | null;
 }
 
 interface AgentCardProps {
@@ -33,12 +33,12 @@ export default function AgentCard({ agent, onDelete, isDeleting = false }: Agent
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleClick = () => {
-    router.push(`/app/agents/${agent.id}`);
+    router.push(`/agents/${agent.id}`);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/app/agents/${agent.id}/edit`);
+    router.push(`/agents/${agent.id}/edit`);
   };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -73,13 +73,13 @@ export default function AgentCard({ agent, onDelete, isDeleting = false }: Agent
   return (
     <>
       <div 
-        className="border rounded-lg p-6 space-y-4 hover:shadow-md transition-shadow cursor-pointer"
+        className="border rounded-lg p-6 space-y-4 hover:shadow-md transition-shadow cursor-pointer bg-gray-800"
         onClick={handleClick}
       >
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-semibold">{agent.name}</h3>
-            <p className="text-sm text-muted-foreground mt-1">{agent.description}</p>
+            <h3 className="text-lg font-semibold text-white">{agent.name}</h3>
+            <p className="text-sm text-gray-300 mt-1">{agent.description || 'No description'}</p>
           </div>
           <div className="flex items-center space-x-2">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -90,7 +90,7 @@ export default function AgentCard({ agent, onDelete, isDeleting = false }: Agent
           </div>
         </div>
         
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-gray-400">
           Created: {formattedDate}
         </div>
         
