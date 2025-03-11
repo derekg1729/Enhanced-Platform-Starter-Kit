@@ -4,30 +4,6 @@ import { useState, useEffect } from 'react';
 import AgentDashboard from '../../../../components/agent/AgentDashboard';
 import { Agent } from '../../../../components/agent/AgentCard';
 
-// Mock data for testing - will be removed in production
-const mockAgents: Agent[] = [
-  {
-    id: 'agent-1',
-    name: 'API Agent 1',
-    description: 'This agent comes from the API',
-    createdAt: new Date('2023-06-01'),
-    updatedAt: new Date('2023-06-02'),
-    imageUrl: '/placeholder.png',
-    status: 'active' as const,
-    type: 'hello-world',
-  },
-  {
-    id: 'agent-2',
-    name: 'API Agent 2',
-    description: 'This is another agent from the API',
-    createdAt: new Date('2023-06-10'),
-    updatedAt: new Date('2023-06-15'),
-    imageUrl: '/placeholder.png',
-    status: 'inactive' as const,
-    type: 'email-assistant',
-  },
-];
-
 // Props for testing purposes
 interface AgentsPageClientProps {
   // These props are only used for testing
@@ -55,34 +31,30 @@ export default function AgentsPageClient({
     
     const fetchAgents = async () => {
       try {
-        // In a real implementation, we would fetch from the API
-        // const response = await fetch('/api/agents');
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch agents');
-        // }
-        // const data = await response.json();
-        // setAgents(data);
-
-        // For testing, we'll use the global.fetch mock if it exists
-        if (typeof global.fetch === 'function' && global.fetch.toString().includes('mockImplementation')) {
-          try {
-            const response = await fetch('/api/agents');
-            if (!response.ok) {
-              throw new Error('Failed to fetch agents');
-            }
-            const data = await response.json();
-            setAgents(data);
-          } catch (err) {
-            console.error('Error fetching agents:', err);
-            setError('Error loading agents. Please try again later.');
-          }
-        } else {
-          // Otherwise use mock data with a delay to simulate loading
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          setAgents(mockAgents);
+        // Fetch agents from the API
+        const response = await fetch('/api/agents');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch agents: ${response.status} ${response.statusText}`);
         }
+        
+        const data = await response.json();
+        
+        // Map the API response to the Agent interface
+        const mappedAgents: Agent[] = data.map((agent: any) => ({
+          id: agent.id,
+          name: agent.name,
+          description: agent.description || '',
+          createdAt: agent.createdAt,
+          updatedAt: agent.updatedAt,
+          imageUrl: agent.imageUrl || '/placeholder.png',
+          status: agent.status || 'active',
+          type: agent.type || 'hello-world',
+        }));
+        
+        setAgents(mappedAgents);
       } catch (err) {
-        console.error('Error in fetchAgents:', err);
+        console.error('Error fetching agents:', err);
         setError('Error loading agents. Please try again later.');
       } finally {
         setIsLoading(false);
