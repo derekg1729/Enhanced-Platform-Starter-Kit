@@ -3,6 +3,14 @@ import { render, screen } from '@testing-library/react';
 import AgentsPageClient from '../../../app/app/(dashboard)/agents/AgentsPageClient';
 import { Agent } from '../../../components/agent/AgentCard';
 
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
+
 // Mock data for testing
 const mockAgents: Agent[] = [
   {
@@ -29,25 +37,25 @@ const mockAgents: Agent[] = [
 
 describe('AgentsPage', () => {
   it('displays loading state initially', () => {
-    render(<AgentsPageClient initialLoading={true} />);
+    render(<AgentsPageClient initialLoading={true} testMode={true} />);
     expect(screen.getByTestId('loading-state')).toBeInTheDocument();
   });
 
   it('displays agents after loading', () => {
-    render(<AgentsPageClient initialLoading={false} initialAgents={mockAgents} />);
+    render(<AgentsPageClient initialLoading={false} initialAgents={mockAgents} testMode={true} />);
     expect(screen.queryByTestId('loading-state')).not.toBeInTheDocument();
     expect(screen.getByText('API Agent 1')).toBeInTheDocument();
     expect(screen.getByText('API Agent 2')).toBeInTheDocument();
   });
 
   it('displays empty state when no agents exist', () => {
-    render(<AgentsPageClient initialLoading={false} initialAgents={[]} />);
+    render(<AgentsPageClient initialLoading={false} initialAgents={[]} testMode={true} />);
     expect(screen.queryByTestId('loading-state')).not.toBeInTheDocument();
     expect(screen.getByText(/No agents found/i)).toBeInTheDocument();
   });
 
   it('displays error message when there is an error', () => {
-    render(<AgentsPageClient initialLoading={false} initialError="Failed to fetch agents" />);
+    render(<AgentsPageClient initialLoading={false} initialError="Failed to fetch agents" testMode={true} />);
     expect(screen.queryByTestId('loading-state')).not.toBeInTheDocument();
     expect(screen.getByText(/Failed to fetch agents/i)).toBeInTheDocument();
   });
