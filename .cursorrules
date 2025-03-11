@@ -1,5 +1,5 @@
 {
-  "version": "2.7",
+  "version": "2.8",
   "process": {
     "tdd": {
       "enabled": true,
@@ -423,6 +423,39 @@
       "name": "Computer Heuristics Improvement Protocol",
       "description": "Process for updating and improving the CursorRules file",
       "acronym": "CHIP",
+      "autoTriggers": {
+        "name": "Automatic CHIP Triggers",
+        "description": "Conditions that should automatically trigger the CHIP process",
+        "errorPatterns": [
+          {
+            "pattern": "Event handlers cannot be passed to Client Component props",
+            "category": "Server/Client Boundary",
+            "severity": "High",
+            "action": "Immediate CHIP Review",
+            "rationale": "Violations of server/client component boundaries indicate potential architectural issues that need systematic review"
+          },
+          {
+            "pattern": "TypeError: Cannot read properties of undefined",
+            "category": "Runtime Error",
+            "severity": "Medium",
+            "action": "CHIP Review if repeated",
+            "rationale": "Common runtime errors may indicate systemic issues in error handling or type safety"
+          },
+          {
+            "pattern": "Test timed out in",
+            "category": "Test Infrastructure",
+            "severity": "High",
+            "action": "Immediate CHIP Review",
+            "rationale": "Test timeouts may indicate systemic issues in test infrastructure or performance"
+          }
+        ],
+        "rules": [
+          "CHIP MUST be triggered when encountering any High severity error patterns",
+          "CHIP MUST be triggered when encountering Medium severity patterns repeatedly",
+          "CHIP review MUST include analysis of why existing rules did not prevent the error",
+          "New error patterns MUST be added to this list when identified through CHIP analysis"
+        ]
+      },
       "steps": [
         {
           "name": "Pause Development",
