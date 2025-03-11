@@ -297,7 +297,7 @@ This backlog is organized by features. Tasks within the currently active feature
 
 - **[TASK-HW020] Implement Agent Creation Form Submission**
   - **Priority**: High
-  - **Status**: Todo
+  - **Status**: Done
   - **Description**: Connect the agent creation form to the API to create real agents in the database.
   - **Acceptance Criteria**:
     - Implement form submission to the `/api/agents` endpoint

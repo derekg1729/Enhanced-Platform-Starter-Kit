@@ -21,13 +21,7 @@ The Agent Platform is built on a multi-tenant architecture with a Next.js fronte
                                  │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Backend Services                         │
-│                                                                 │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐  │
-│  │   PostgreSQL    │◄──►│  Agent Runtime  │◄──►│ Third-Party │  │
-│  │    Database     │    │   Containers    │    │    APIs     │  │
-│  └─────────────────┘    └─────────────────┘    └─────────────┘  │
-│                                                                 │
+│                        PostgreSQL Database                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1737,3 +1731,76 @@ The database integration for agents follows these patterns:
 - **agent-db.ts**: Database utility functions for agent CRUD operations
 - **agent-schema.ts**: Drizzle ORM schema definitions for agent-related tables
 - **api/agents/route.ts**: API route for agent operations
+
+## Agent Creation Implementation
+
+The Agent Creation form allows users to create new agents with customized settings.
+
+### Form Implementation
+
+- React Hook Form for form state management and validation
+- Zod schema for validation rules
+- Client-side validation for immediate feedback
+- Server-side validation for data integrity
+
+### API Integration
+
+- Form data is submitted to the `/api/agents` endpoint
+- API responses are handled appropriately
+- Success redirects to the agent dashboard
+- Error messages are displayed for failed submissions
+
+### User Experience
+
+- Responsive form layout
+- Validation feedback
+- Loading state during submission
+- Error messages for failed submissions
+
+### Testing
+
+- Unit tests for form validation
+- Integration tests for form submission
+- Tests for error handling
+- Tests for successful submission
+
+## Database Integration
+
+The application uses a PostgreSQL database with Drizzle ORM for data access.
+
+### Data Access Patterns
+
+- API routes authenticate users using NextAuth
+- Data access layer for CRUD operations
+- Schema definitions using Drizzle ORM
+- Row-level security for user isolation
+- Query optimization for performance
+
+### Multi-tenant Isolation
+
+- Data is isolated by user ID
+- Queries include user ID filters
+- Row-level security enforces isolation
+
+## Module Registry
+
+### Components
+
+- `AgentsPageClient`: Client component for displaying agents
+- `AgentDashboard`: Component for rendering agent cards
+- `AgentCard`: Component for displaying agent information
+- `AgentCreationForm`: Form for creating new agents
+- `CreateAgentButton`: Button for navigating to agent creation
+
+### Database Utilities
+
+- `getAgentsByUserId`: Retrieves agents for a user
+- `createAgent`: Creates a new agent
+- `updateAgent`: Updates an existing agent
+- `deleteAgent`: Deletes an agent
+
+### API Routes
+
+- `/api/agents`: CRUD operations for agents
+- `/api/agents/[agentId]`: Operations for a specific agent
+- `/api/agents/[agentId]/chat`: Chat with a specific agent

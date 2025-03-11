@@ -70,8 +70,28 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
       if (onSubmit) {
         await onSubmit(data);
       } else {
-        // In a real implementation, this would call an API
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Send the data to the API
+        const response = await fetch('/api/agents', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: data.name,
+            description: data.description,
+            systemPrompt: data.prompt,
+            model: data.model,
+            temperature: data.temperature,
+            maxTokens: 2048, // Default max tokens
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create agent');
+        }
+
+        const agent = await response.json();
         router.push('/agents');
       }
     } catch (err) {
@@ -90,7 +110,7 @@ export default function AgentCreationForm({ onSubmit }: AgentCreationFormProps) 
     <ThemeCard>
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         {error && (
-          <div className="p-3 bg-red-900/50 border border-red-700 rounded-md text-red-400 text-sm mb-4">
+          <div className="p-3 bg-red-900/50 border border-red-700 rounded-md text-red-400 text-sm mb-4" data-testid="error-message">
             {error}
           </div>
         )}
