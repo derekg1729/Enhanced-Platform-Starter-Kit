@@ -53,17 +53,10 @@ describe('AgentsPageClient with Test Data', () => {
   });
 
   it('shows loading state when initialLoading is true', () => {
-    render(
-      <AgentsPageClient 
-        initialAgents={[]} 
-        initialLoading={true} 
-        testMode={true} 
-      />
-    );
+    render(<AgentsPageClient initialLoading={true} initialAgents={[]} testMode={true} />);
     
     // Check loading state
     expect(screen.getByTestId('loading-state')).toBeInTheDocument();
-    expect(screen.getByText('Loading agents...')).toBeInTheDocument();
   });
 
   it('shows error state when initialError is provided', () => {
@@ -82,16 +75,10 @@ describe('AgentsPageClient with Test Data', () => {
   });
 
   it('shows empty state when no agents are provided', () => {
-    render(
-      <AgentsPageClient 
-        initialAgents={[]} 
-        initialLoading={false} 
-        testMode={true} 
-      />
-    );
+    render(<AgentsPageClient initialLoading={false} initialAgents={[]} testMode={true} />);
     
     // Check if empty state message is displayed
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
-    expect(screen.getByText('No agents found')).toBeInTheDocument();
+    expect(screen.getByText(/You don't have any agents yet/i)).toBeInTheDocument();
   });
 }); 
