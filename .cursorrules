@@ -426,7 +426,33 @@
             "Continue development from where it was paused"
           ]
         }
-      ]
+      ],
+      "communicationGuidelines": {
+        "name": "Communication Guidelines",
+        "description": "Rules for effective and efficient communication",
+        "principles": [
+          {
+            "name": "Conciseness",
+            "description": "Prioritize brevity and clarity in all communications",
+            "rules": [
+              "Use bullet points instead of paragraphs when possible",
+              "Organize information under clear headings",
+              "Eliminate unnecessary explanations",
+              "Focus on key information only"
+            ]
+          },
+          {
+            "name": "Action-Oriented",
+            "description": "Take action rather than explaining potential actions",
+            "rules": [
+              "When no approval is needed, perform the action directly",
+              "Show results instead of explaining processes",
+              "Use examples rather than theoretical explanations",
+              "Demonstrate functionality through implementation"
+            ]
+          }
+        ]
+      }
     },
     "instructions": {
       "default": "ALWAYS follow the Test-Driven Development Workflow above all else. This workflow MUST be followed for every feature implementation, bug fix, and code change without exception. Before starting any task, run the 'Workflow Status Check' to determine where you are in the process. If you're not sure, start from the beginning of the workflow. Remember that tests MUST be written before implementation and MUST fail before you write code to make them pass. Only modify files identified in the design phase.",
