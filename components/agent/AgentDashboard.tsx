@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AgentCard, { Agent } from './AgentCard';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 
@@ -60,12 +60,15 @@ export default function AgentDashboard({ agents, isLoading }: AgentDashboardProp
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" data-testid="loading-state">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Your Agents</h2>
-          <Button disabled>
+          <button 
+            disabled 
+            className="bg-blue-600/50 text-white rounded-lg flex items-center gap-1 px-4 py-2 cursor-not-allowed"
+          >
             <PlusIcon /> Create Agent
-          </Button>
+          </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
@@ -87,12 +90,14 @@ export default function AgentDashboard({ agents, isLoading }: AgentDashboardProp
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Your Agents</h2>
-        <Button asChild>
-          <Link href="/app/agents/create">
-            <PlusIcon /> Create Agent
-          </Link>
-        </Button>
+        <h2 className="text-2xl font-bold text-white">Your Agents</h2>
+        <Link 
+          href="/agents/new"
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1 px-4 py-2"
+          data-testid="create-agent-button"
+        >
+          <PlusIcon /> Create Agent
+        </Link>
       </div>
       
       {error && (
@@ -102,11 +107,14 @@ export default function AgentDashboard({ agents, isLoading }: AgentDashboardProp
       )}
       
       {agents.length === 0 ? (
-        <div className="text-center py-12 border rounded-lg">
-          <p className="text-muted-foreground">You don&apos;t have any agents yet.</p>
-          <Button asChild className="mt-4">
-            <Link href="/app/agents/create">Create your first agent</Link>
-          </Button>
+        <div className="text-center py-12 border rounded-lg" data-testid="empty-state">
+          <p className="text-muted-foreground text-white">You don&apos;t have any agents yet.</p>
+          <Link 
+            href="/agents/new"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1 px-4 py-2 mt-4 inline-flex"
+          >
+            <PlusIcon /> Create your first agent
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
