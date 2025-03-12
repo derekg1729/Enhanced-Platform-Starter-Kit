@@ -39,6 +39,33 @@
   3. Observe the technical error message instead of a user-friendly explanation
 - **Impact**: Users receive technical error messages instead of clear guidance on how to update their agent configuration to use available models.
 
+### BUG-020
+- **Severity**: Medium
+- **Status**: Open
+- **Description**: Agent creation form should remove API connections and model selector
+- **Error Pattern**: UI shows unnecessary fields during agent creation
+- **Root Cause**: Agent creation form includes fields that should only be shown during editing
+- **Reproduction Steps**: 
+  1. Navigate to the agent creation page
+  2. Observe that API connections and model selector are shown
+- **Impact**: Confusing user experience during agent creation
+- **Assigned To**: TBD
+- **Created**: 2024-06-25T20:00:00Z
+
+### BUG-021
+- **Severity**: Medium
+- **Status**: Open
+- **Description**: GPT-4 incorrectly responds as GPT-3
+- **Error Pattern**: Model identification in responses is incorrect
+- **Root Cause**: TBD - Possible issue with model identification in response handling
+- **Reproduction Steps**: 
+  1. Create an agent with GPT-4 model
+  2. Chat with the agent
+  3. Observe that the agent identifies itself as GPT-3
+- **Impact**: Incorrect model identification confuses users
+- **Assigned To**: TBD
+- **Created**: 2024-06-25T20:00:00Z
+
 ## Fixed Bugs
 
 ### [BUG-019] Agent Names Being Renamed to "placeholder"

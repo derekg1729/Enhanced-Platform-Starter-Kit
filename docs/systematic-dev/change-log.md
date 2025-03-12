@@ -47,6 +47,16 @@
 - **Details**: Added a new feature to the backlog for implementing user-associated API keys and enhancing the model selector based on available API keys. This will allow API keys to be inherited by all of a user's agents and improve the model selection experience.
 - **Timestamp**: 2024-06-25T10:15:00Z
 
+### BUG-020
+- **Status**: Identified
+- **Description**: Identified issue where agent creation form shows unnecessary API connections and model selector fields
+- **Timestamp**: 2024-06-25T20:00:00Z
+
+### BUG-021
+- **Status**: Identified
+- **Description**: Identified issue where GPT-4 model incorrectly identifies itself as GPT-3 in responses
+- **Timestamp**: 2024-06-25T20:00:00Z
+
 ## 2024-06-24
 
 ### [BUG-012] Fixed
