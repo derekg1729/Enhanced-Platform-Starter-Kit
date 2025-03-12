@@ -2,6 +2,31 @@
 
 ## 2024-06-25
 
+### [BUG-019] Fixed
+- **Description**: Fixed issue with agent names being renamed to "placeholder"
+- **Details**: Updated the ModelSelectorWrapper component to fetch and use the actual agent name and system prompt when updating the model, instead of using placeholder values. Also enhanced the updateAgent function to only update fields that are explicitly provided, preserving existing values for fields that aren't specified. Modified the API route to support partial updates.
+- **Timestamp**: 2024-06-25T16:30:00Z
+
+### [BUG-019] Identified
+- **Description**: Identified issue with agent names being renamed to "placeholder"
+- **Details**: Discovered that agent names are being renamed to "placeholder" when updating the model or API connection, making it difficult for users to identify their agents.
+- **Timestamp**: 2024-06-25T16:00:00Z
+
+### [BUG-013] Fixed
+- **Description**: Fixed chat functionality to work with Claude models
+- **Details**: Fixed the Anthropic streaming implementation to handle both AsyncIterable and ReadableStream objects returned by the Anthropic API. The previous implementation was expecting a standard ReadableStream with a getReader method, but the Anthropic API returns an AsyncIterable object. Added detection logic to determine the type of stream and process it accordingly, with proper error handling for unsupported stream types. Added comprehensive tests to verify the streaming functionality works with different types of streams.
+- **Timestamp**: 2024-06-25T15:00:00Z
+
+### [BUG-013] Reopened
+- **Description**: Reopened chat functionality bug with Claude models due to streaming error
+- **Details**: Discovered a streaming error in the Anthropic integration where the stream object doesn't have the expected interface. The error occurs when trying to use the `getReader` method on the stream returned by the Anthropic API.
+- **Timestamp**: 2024-06-25T14:00:00Z
+
+### [TASK-AM001] Completed
+- **Description**: Added Anthropic models validation test and update script
+- **Details**: Created a test to verify that our application's model list matches the available models from the Anthropic API. Added a script to automatically update the model lists in the application code. Exported the model constants from the Anthropic library for better reusability.
+- **Timestamp**: 2024-06-25T13:00:00Z
+
 ### [BUG-016] Identified
 - **Description**: Identified insecure API key encryption implementation
 - **Details**: Discovered a security vulnerability in lib/api-key-utils.ts where a hardcoded fallback encryption key is used when the environment variable is not set, potentially exposing stored API keys.

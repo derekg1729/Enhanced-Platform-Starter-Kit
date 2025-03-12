@@ -18,8 +18,10 @@ export default function ModelSelectorWrapper({
   const [apiConnectionId, setApiConnectionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [agentName, setAgentName] = useState<string>('');
+  const [systemPrompt, setSystemPrompt] = useState<string>('');
   
-  // Fetch the current API connection ID for the agent
+  // Fetch the current agent details
   useEffect(() => {
     const fetchAgentDetails = async () => {
       try {
@@ -35,6 +37,8 @@ export default function ModelSelectorWrapper({
         
         const agentData = await response.json();
         setApiConnectionId(agentData.apiConnectionId);
+        setAgentName(agentData.name);
+        setSystemPrompt(agentData.systemPrompt);
       } catch (err) {
         console.error('Error fetching agent details:', err);
         setError('Failed to load agent details');
@@ -47,9 +51,9 @@ export default function ModelSelectorWrapper({
   }, [agentId]);
   
   const handleSaveModel = async (model: string) => {
-    // Don't proceed if we don't have the API connection ID
-    if (!apiConnectionId) {
-      alert('Cannot update model: Missing API connection information');
+    // Don't proceed if we don't have the API connection ID or agent details
+    if (!apiConnectionId || !agentName || !systemPrompt) {
+      alert('Cannot update model: Missing agent information');
       return;
     }
     
@@ -63,10 +67,10 @@ export default function ModelSelectorWrapper({
           },
           body: JSON.stringify({
             model: model,
-            // Include required fields from the API
-            name: 'placeholder', // Will be ignored by the API since we're only updating the model
-            systemPrompt: 'placeholder', // Will be ignored by the API since we're only updating the model
-            apiConnectionId: apiConnectionId, // Use the actual API connection ID
+            // Include the actual agent details instead of placeholders
+            name: agentName,
+            systemPrompt: systemPrompt,
+            apiConnectionId: apiConnectionId,
           }),
         });
         
@@ -83,7 +87,7 @@ export default function ModelSelectorWrapper({
     });
   };
   
-  // Show loading state while fetching the API connection ID
+  // Show loading state while fetching the agent details
   if (isLoading) {
     return (
       <div className="p-4 bg-stone-800 rounded-lg border border-stone-700">
@@ -92,7 +96,7 @@ export default function ModelSelectorWrapper({
     );
   }
   
-  // Show error state if we couldn't fetch the API connection ID
+  // Show error state if we couldn't fetch the agent details
   if (error) {
     return (
       <div className="p-4 bg-stone-800 rounded-lg border border-stone-700">
@@ -107,11 +111,11 @@ export default function ModelSelectorWrapper({
     );
   }
   
-  // Don't render the model selector if we don't have the API connection ID
-  if (!apiConnectionId) {
+  // Don't render the model selector if we don't have the required agent details
+  if (!apiConnectionId || !agentName || !systemPrompt) {
     return (
       <div className="p-4 bg-stone-800 rounded-lg border border-stone-700">
-        <p className="text-red-400">No API connection found for this agent. Please add an API connection first.</p>
+        <p className="text-red-400">Missing agent information. Please refresh the page and try again.</p>
       </div>
     );
   }

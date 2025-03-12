@@ -2,19 +2,6 @@
 
 ## Open Bugs
 
-### [BUG-013] Chat Functionality Only Works with OpenAI Models
-- **Severity**: High
-- **Status**: Open
-- **Description**: When a user selects a Claude model for an agent, the chat functionality fails with "Failed to send message. Please try again."
-- **Error Message**: "This agent does not have an OpenAI API connection configured" or "Failed to send message. Please try again."
-- **Root Cause**: The chat API route is hardcoded to only work with OpenAI models and connections. It specifically looks for an OpenAI API connection and uses the OpenAI library for generating chat completions, even when a Claude model is selected.
-- **Reproduction Steps**:
-  1. Create an agent with an OpenAI API connection
-  2. Change the model to a Claude model (e.g., claude-3-haiku)
-  3. Try to send a message in the chat interface
-  4. Observe the error message
-- **Impact**: Users cannot use Claude models for chat, even though they can select them in the model selector.
-
 ### [BUG-016] Insecure API Key Encryption Implementation
 - **Severity**: High
 - **Status**: Open
@@ -52,9 +39,36 @@
   3. Observe the technical error message instead of a user-friendly explanation
 - **Impact**: Users receive technical error messages instead of clear guidance on how to update their agent configuration to use available models.
 
-<!-- List of open bugs with Critical or High severity -->
-
 ## Fixed Bugs
+
+### [BUG-019] Agent Names Being Renamed to "placeholder"
+- **Severity**: High
+- **Status**: Fixed
+- **Description**: Agent names were being renamed to "placeholder" when updating the model or API connection.
+- **Error Pattern**: Logs showed "Found agent: placeholder with model gpt-4-turbo" for agents that should have had their original names.
+- **Root Cause**: The ModelSelectorWrapper component was using placeholder values for the name and systemPrompt fields when updating the model, and the API was not properly handling partial updates, causing it to overwrite the agent name with the placeholder value.
+- **Fix**: 
+  1. Updated the ModelSelectorWrapper component to fetch and use the actual agent name and system prompt when updating the model
+  2. Enhanced the updateAgent function to only update fields that are explicitly provided, preserving existing values for fields that aren't specified
+  3. Modified the API route to support partial updates and removed the requirement for all fields to be present
+  4. Added proper validation to ensure the agent details are loaded before allowing model updates
+- **Prevention**: Added comprehensive validation in both the client and server components to ensure agent details are preserved during updates.
+- **Fixed Date**: June 25, 2024
+
+### [BUG-013] Chat Functionality Only Works with OpenAI Models
+- **Severity**: High
+- **Status**: Fixed
+- **Description**: When a user selects a Claude model for an agent, the chat functionality fails with a streaming error.
+- **Error Message**: "TypeError: stream.getReader is not a function" in the AnthropicStream function
+- **Root Cause**: The Anthropic streaming implementation was not correctly handling the stream object returned by the Anthropic API. The Anthropic API returns an AsyncIterable object, but our code was expecting a standard ReadableStream with a getReader method.
+- **Fix**: 
+  1. Updated the AnthropicStream function to handle both AsyncIterable and ReadableStream objects
+  2. Added detection logic to determine the type of stream and process it accordingly
+  3. Implemented proper error handling for unsupported stream types
+  4. Added comprehensive tests to verify the streaming functionality works with different types of streams
+  5. Ensured backward compatibility with existing code that expects a ReadableStream
+- **Prevention**: Added a new test suite specifically for Anthropic streaming functionality to catch any regressions in the future. The tests verify that the implementation can handle both AsyncIterable and ReadableStream objects.
+- **Fixed Date**: June 25, 2024
 
 ### [BUG-012] Model Update Error in Agent Details Page
 - **Severity**: High

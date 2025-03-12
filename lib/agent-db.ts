@@ -152,18 +152,33 @@ export async function updateAgent(
   }>
 ): Promise<Agent | null> {
   return await db.transaction(async (tx) => {
-    // Update the agent
+    // First, get the current agent to preserve existing values
+    const [currentAgent] = await tx
+      .select()
+      .from(agents)
+      .where(and(eq(agents.id, id), eq(agents.userId, userId)));
+    
+    if (!currentAgent) {
+      return null;
+    }
+    
+    // Create an update object with only the fields that are provided
+    const updateData: Record<string, any> = {
+      updatedAt: new Date(),
+    };
+    
+    // Only include fields that are provided in the data object
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.systemPrompt !== undefined) updateData.systemPrompt = data.systemPrompt;
+    if (data.model !== undefined) updateData.model = data.model;
+    if (data.temperature !== undefined) updateData.temperature = data.temperature.toString();
+    if (data.maxTokens !== undefined) updateData.maxTokens = data.maxTokens;
+    
+    // Update the agent with only the provided fields
     const [agent] = await tx
       .update(agents)
-      .set({
-        name: data.name,
-        description: data.description,
-        systemPrompt: data.systemPrompt,
-        model: data.model,
-        temperature: data.temperature?.toString(),
-        maxTokens: data.maxTokens,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(and(eq(agents.id, id), eq(agents.userId, userId)))
       .returning();
 

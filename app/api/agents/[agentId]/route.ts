@@ -49,6 +49,7 @@ export async function GET(
  * 
  * Updates a specific agent.
  * Requires authentication and ownership of the agent.
+ * Supports partial updates - only the fields that are provided will be updated.
  */
 export async function PUT(
   req: NextRequest,
@@ -63,12 +64,12 @@ export async function PUT(
   // Parse the request body
   const body = await req.json();
 
-  // Validate required fields
-  if (!body.name || !body.systemPrompt || !body.apiConnectionId) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  // For model updates, we need at least the model and apiConnectionId
+  if (body.model !== undefined && !body.apiConnectionId) {
+    return NextResponse.json({ error: 'API connection ID is required when updating the model' }, { status: 400 });
   }
 
-  // Update the agent
+  // Update the agent with the provided fields
   const updatedAgent = await updateAgent(
     params.agentId,
     session.user.id,

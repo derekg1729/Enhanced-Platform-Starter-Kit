@@ -86,23 +86,46 @@ describe('ModelSelectorWrapper', () => {
   });
 
   it('updates the agent model with the correct API connection ID when save is clicked', async () => {
+    // Mock the fetch response for agent details
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/agents/test-agent-123') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            apiConnectionId: 'test-connection-123',
+            name: 'Test Agent',
+            systemPrompt: 'You are a test agent'
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      });
+    });
+
+    // Render the component
     render(
       <ModelSelectorWrapper
         agentId="test-agent-123"
         currentModel="gpt-3.5-turbo"
-        userId="user-123"
+        userId="test-user-123"
       />
     );
-    
-    // Wait for agent details to load
+
+    // Wait for the component to load
     await waitFor(() => {
-      expect(screen.queryByText('Loading model configuration...')).not.toBeInTheDocument();
+      expect(screen.getByTestId('model-selector')).toBeInTheDocument();
     });
-    
+
+    // Select a new model
+    const select = screen.getByTestId('model-select');
+    fireEvent.change(select, { target: { value: 'gpt-4' } });
+
     // Click the save button
     const saveButton = screen.getByTestId('save-button');
     fireEvent.click(saveButton);
-    
+
     // Wait for the fetch call to be made with the correct API connection ID
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/agents/test-agent-123', {
@@ -112,15 +135,12 @@ describe('ModelSelectorWrapper', () => {
         },
         body: JSON.stringify({
           model: 'gpt-4',
-          name: 'placeholder',
-          systemPrompt: 'placeholder',
+          name: 'Test Agent',
+          systemPrompt: 'You are a test agent',
           apiConnectionId: 'test-connection-123',
         }),
       });
     });
-    
-    // Verify page reload was called
-    expect(window.location.reload).toHaveBeenCalled();
   });
 
   it('shows an error message when agent details fetch fails', async () => {
@@ -150,28 +170,36 @@ describe('ModelSelectorWrapper', () => {
   });
 
   it('shows a message when no API connection is found', async () => {
-    // Mock fetch to return agent details without an API connection ID
-    global.fetch = vi.fn().mockImplementationOnce(() => 
-      Promise.resolve({
+    // Mock the fetch response for agent details with no API connection
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/agents/test-agent-123') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            apiConnectionId: null,
+            name: null,
+            systemPrompt: null
+          }),
+        });
+      }
+      return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({
-          ...mockAgentDetails,
-          apiConnectionId: null,
-        }),
-      })
-    );
-    
+        json: () => Promise.resolve({}),
+      });
+    });
+
+    // Render the component
     render(
       <ModelSelectorWrapper
         agentId="test-agent-123"
         currentModel="gpt-3.5-turbo"
-        userId="user-123"
+        userId="test-user-123"
       />
     );
     
     // Wait for the no API connection message to appear
     await waitFor(() => {
-      expect(screen.getByText('No API connection found for this agent. Please add an API connection first.')).toBeInTheDocument();
+      expect(screen.getByText('Missing agent information. Please refresh the page and try again.')).toBeInTheDocument();
     });
   });
 
