@@ -244,6 +244,106 @@ describe('Chat API Route with Multiple Model Providers', () => {
     expect(mockGenerateOpenAIChatCompletion).not.toHaveBeenCalled();
   });
 
+  it('should use Anthropic for Claude models even with case-insensitive service name', async () => {
+    // Set up mocks for Anthropic model
+    mockGetAgentById.mockResolvedValue({
+      ...mockAgent,
+      model: 'claude-3-haiku',
+    });
+    
+    // Mock API connection with different case for service name
+    mockGetApiConnectionsForAgent.mockResolvedValue([
+      {
+        id: 'anthropic-connection-123',
+        name: 'Anthropic Connection',
+        service: 'Anthropic', // Note the capital 'A' - different case than the model provider
+        apiKey: 'encrypted-anthropic-key',
+        userId,
+      },
+    ]);
+    
+    mockGetModelProvider.mockReturnValue('anthropic');
+    
+    // Override the mock implementation for this test to verify the correct API connection is used
+    let capturedApiConnectionId: string | undefined;
+    mockGenerateAnthropicChatCompletion.mockImplementationOnce(async (options) => {
+      capturedApiConnectionId = options.apiConnectionId;
+      return {
+        id: 'msg_123',
+        type: 'message',
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Hello from Claude' }],
+        model: 'claude-3-haiku',
+        stream: true,
+      };
+    });
+
+    // Create request
+    const request = new NextRequest('http://localhost/api/agents/test-agent-123/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message: 'Hello' }),
+    });
+
+    // Call the API route
+    await mockPOST(request, { params: { agentId } });
+
+    // Verify Anthropic was used
+    expect(mockGetModelProvider).toHaveBeenCalledWith('claude-3-haiku');
+    expect(mockGenerateAnthropicChatCompletion).toHaveBeenCalled();
+    expect(mockGenerateOpenAIChatCompletion).not.toHaveBeenCalled();
+    expect(capturedApiConnectionId).toBe('anthropic-connection-123');
+  });
+
+  it('should handle service name variations for model providers', async () => {
+    // Set up mocks for Claude model
+    mockGetAgentById.mockResolvedValue({
+      ...mockAgent,
+      model: 'claude-3-sonnet',
+    });
+    
+    // Mock API connection with a slightly different service name
+    mockGetApiConnectionsForAgent.mockResolvedValue([
+      {
+        id: 'anthropic-connection-123',
+        name: 'Anthropic Connection',
+        service: 'anthropic-ai', // Different from the exact model provider name
+        apiKey: 'encrypted-anthropic-key',
+        userId,
+      },
+    ]);
+    
+    mockGetModelProvider.mockReturnValue('anthropic');
+    
+    // Override the mock implementation for this test to verify the correct API connection is used
+    let capturedApiConnectionId: string | undefined;
+    mockGenerateAnthropicChatCompletion.mockImplementationOnce(async (options) => {
+      capturedApiConnectionId = options.apiConnectionId;
+      return {
+        id: 'msg_123',
+        type: 'message',
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Hello from Claude' }],
+        model: 'claude-3-sonnet',
+        stream: true,
+      };
+    });
+
+    // Create request
+    const request = new NextRequest('http://localhost/api/agents/test-agent-123/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message: 'Hello' }),
+    });
+
+    // Call the API route
+    await mockPOST(request, { params: { agentId } });
+
+    // Verify Anthropic was used despite the service name difference
+    expect(mockGetModelProvider).toHaveBeenCalledWith('claude-3-sonnet');
+    expect(mockGenerateAnthropicChatCompletion).toHaveBeenCalled();
+    expect(mockGenerateOpenAIChatCompletion).not.toHaveBeenCalled();
+    expect(capturedApiConnectionId).toBe('anthropic-connection-123');
+  });
+
   it('should return an error for unknown model providers', async () => {
     // Set up mocks for unknown model
     mockGetAgentById.mockResolvedValue({

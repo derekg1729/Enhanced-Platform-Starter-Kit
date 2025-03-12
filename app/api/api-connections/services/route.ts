@@ -30,7 +30,14 @@ const API_SERVICES = [
     name: 'Anthropic',
     description: 'Anthropic API for Claude models',
     url: 'https://console.anthropic.com/keys',
-    models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
+    models: [
+      'claude-3-7-sonnet-20250219',
+      'claude-3-7-sonnet-thinking-20250219',
+      'claude-3-5-sonnet-20240620',
+      'claude-3-opus-20240229',
+      'claude-3-sonnet-20240229',
+      'claude-3-haiku-20240307'
+    ],
     keyFormat: /^sk-ant-[A-Za-z0-9]{32,}$/,
     keyName: 'API Key',
     keyInstructions: 'Create an API key in the Anthropic console',

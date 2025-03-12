@@ -48,12 +48,26 @@ A test-driven fork of the [Vercel Platforms Starter Kit](https://vercel.com/guid
    #### GitHub OAuth (Authentication)
    1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
    2. Click "New OAuth App"
-   3. Set Homepage URL to `http://localhost:3000` (for development) or your production domain
-   4. Set Authorization callback URLs:
-      - Development: `http://app.localhost:3000/api/auth/callback/github`
-      - Production: `https://app.yourdomain.com/api/auth/callback/github` (replace with your actual domain)
-   5. Copy Client ID to `AUTH_GITHUB_ID` and Client Secret to `AUTH_GITHUB_SECRET`
-   6. For production, you may need to create a separate OAuth app with the production URLs
+   3. Fill in the required fields:
+      - Application name: `Agent Platform (Local)`
+      - Homepage URL: `http://localhost:3000`
+      - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
+   4. Click "Register application"
+   5. Copy the Client ID and Client Secret to your `.env.local` file
+
+   #### Anthropic API (Claude Models)
+   1. Go to [Anthropic Console](https://console.anthropic.com/keys)
+   2. Create an API key
+   3. Add the API key to your `.env.local` file as `ANTHROPIC_API_KEY`
+   4. To update Anthropic models when new ones are released:
+      ```bash
+      pnpm update-anthropic-models
+      ```
+
+   #### OpenAI API (GPT Models)
+   1. Go to [OpenAI API Keys](https://platform.openai.com/api-keys)
+   2. Create an API key
+   3. Add the API key to your `.env.local` file as `OPENAI_API_KEY`
 
    #### Vercel (Deployment & Project Config)
    1. Create a project on [Vercel](https://vercel.com/new)

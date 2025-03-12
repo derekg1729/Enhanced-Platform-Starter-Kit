@@ -20,6 +20,7 @@
     "pre-commit": "npm run check-env && npm run lint && npm run typecheck && npm run test && npm run build",
     "setup-hooks": "npx husky init && chmod +x .husky/pre-commit",
     "check-env": "node scripts/check-env-consistency.js",
+    "update-anthropic-models": "ts-node scripts/update-anthropic-models.ts",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -62,6 +63,7 @@
     "next": "14.0.2",
     "next-auth": "^4.24.7",
     "next-mdx-remote": "^4.4.1",
+    "node-fetch": "2",
     "openai": "^4.86.2",
     "openai-edge": "^1.2.2",
     "pg": "^8.11.3",

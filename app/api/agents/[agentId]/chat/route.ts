@@ -176,30 +176,38 @@ export async function POST(
     console.log(`Determined model provider: ${modelProvider} for model ${agent.model}`);
     
     // Find the appropriate API connection for the model provider
+    // First try exact match
     let apiConnection = apiConnections.find(
       (conn) => conn.service === modelProvider
     );
 
-    // If no exact match is found, try to find a connection with a similar service name
-    if (!apiConnection && apiConnections.length > 0) {
-      console.log(`No exact match found for ${modelProvider}, trying to find a similar service`);
-      
-      // Try case-insensitive matching
+    // If no exact match is found, try case-insensitive matching
+    if (!apiConnection) {
+      console.log(`No exact match found for ${modelProvider}, trying case-insensitive matching`);
       apiConnection = apiConnections.find(
         (conn) => conn.service.toLowerCase() === modelProvider.toLowerCase()
       );
-      
-      // If still no match, use the first available connection as a fallback
-      if (!apiConnection) {
-        console.log(`No similar service found, using first available connection as fallback`);
-        apiConnection = apiConnections[0];
-      }
+    }
+    
+    // If still no match, try to find a connection that contains the model provider name
+    if (!apiConnection) {
+      console.log(`No case-insensitive match found, trying partial matching`);
+      apiConnection = apiConnections.find(
+        (conn) => conn.service.toLowerCase().includes(modelProvider.toLowerCase()) || 
+                 modelProvider.toLowerCase().includes(conn.service.toLowerCase())
+      );
+    }
+    
+    // If still no match, use the first available connection as a fallback
+    if (!apiConnection && apiConnections.length > 0) {
+      console.log(`No matching service found, using first available connection as fallback`);
+      apiConnection = apiConnections[0];
     }
 
     if (!apiConnection) {
       console.error(`No API connection found for model provider ${modelProvider}`);
       return NextResponse.json(
-        { error: `No ${modelProvider} API connection found for this agent` },
+        { error: `No API connection found for model provider ${modelProvider}. Please add an API connection for ${modelProvider}.` },
         { status: 400 }
       );
     }
@@ -311,9 +319,17 @@ export async function POST(
           { error: 'Rate limit exceeded. Please try again later.' },
           { status: 429 }
         );
-      } else if (error.message?.includes('model')) {
+      } else if (error.message?.includes('model') && error.message?.includes('not found') || error.message?.includes('not available')) {
+        // Provide a more helpful error message for model not found errors
+        let errorMessage = 'The selected model is not available.';
+        
+        // For Anthropic models, suggest using the full model name with version
+        if (modelProvider === ModelProvider.ANTHROPIC) {
+          errorMessage += ' For Claude models, please use one of the following model names: claude-3-7-sonnet-20250219, claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-sonnet-20240229, or claude-3-haiku-20240307.';
+        }
+        
         return NextResponse.json(
-          { error: 'The selected model is not available. Please choose a different model.' },
+          { error: errorMessage },
           { status: 400 }
         );
       }
