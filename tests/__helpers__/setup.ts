@@ -32,6 +32,7 @@ vi.mock('next/link', () => ({
 // Mock environment variables
 process.env.NEXT_PUBLIC_ROOT_DOMAIN = 'localhost:3000'
 process.env.NEXTAUTH_URL = 'http://app.localhost:3000'
+process.env.API_KEY_ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
 
 // Mock database functions
 vi.mock('@/lib/user-db', () => ({
