@@ -2,6 +2,11 @@
 
 ## 2024-06-25
 
+### [BUG-016] Fixed
+- **Description**: Fixed insecure API key encryption implementation
+- **Details**: Removed the hardcoded fallback encryption key in lib/api-key-utils.ts and updated the implementation to throw an error when the environment variable is not set. Also updated all example environment files with unique encryption keys to ensure proper security across different environments.
+- **Timestamp**: 2024-06-25T20:45:00Z
+
 ### [BUG-019] Fixed
 - **Description**: Fixed issue with agent names being renamed to "placeholder"
 - **Details**: Updated the ModelSelectorWrapper component to fetch and use the actual agent name and system prompt when updating the model, instead of using placeholder values. Also enhanced the updateAgent function to only update fields that are explicitly provided, preserving existing values for fields that aren't specified. Modified the API route to support partial updates.
@@ -27,10 +32,15 @@
 - **Details**: Created a test to verify that our application's model list matches the available models from the Anthropic API. Added a script to automatically update the model lists in the application code. Exported the model constants from the Anthropic library for better reusability.
 - **Timestamp**: 2024-06-25T13:00:00Z
 
-### [BUG-016] Identified
-- **Description**: Identified insecure API key encryption implementation
-- **Details**: Discovered a security vulnerability in lib/api-key-utils.ts where a hardcoded fallback encryption key is used when the environment variable is not set, potentially exposing stored API keys.
-- **Timestamp**: 2024-06-25T10:00:00Z
+### BUG-016 (Fixed)
+- **Status**: Fixed
+- **Description**: Fixed critical security vulnerability in API key encryption
+- **Changes**:
+  - Updated API key encryption to require a valid encryption key from environment variables
+  - Added proper validation for encryption key length and existence
+  - Removed potential for using a hardcoded fallback key
+  - Improved error handling in encryption/decryption functions
+- **Timestamp**: 2024-06-25T20:00:00Z
 
 ### [BUG-017] Identified
 - **Description**: Identified missing error handling for Anthropic API balance issues

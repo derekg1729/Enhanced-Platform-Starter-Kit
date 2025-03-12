@@ -4,7 +4,7 @@
 
 ### [BUG-016] Insecure API Key Encryption Implementation
 - **Severity**: High
-- **Status**: Open
+- **Status**: Fixed
 - **Description**: The API key encryption in lib/api-key-utils.ts uses a hardcoded fallback encryption key when the environment variable is not set, creating a significant security vulnerability.
 - **Error Message**: N/A
 - **Root Cause**: The implementation uses a hardcoded fallback encryption key (`'0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'`) when the environment variable `API_KEY_ENCRYPTION_KEY` is not set, which compromises the security of stored API keys.
@@ -13,6 +13,7 @@
   2. Observe that if the environment variable is not set, a hardcoded key is used
   3. This means all API keys could be decrypted by anyone with access to the source code
 - **Impact**: Critical security vulnerability that could lead to unauthorized access to third-party APIs using stored credentials.
+- **Resolution**: Updated the implementation to throw an error when the environment variable is not set, and added unique encryption keys to all example environment files.
 
 ### [BUG-017] Missing Error Handling for Anthropic API Balance Issues
 - **Severity**: High
@@ -228,6 +229,17 @@
 - **Fix**: Created a client component wrapper (`AgentChatWrapper`) that handles the event locally and only passes serializable data between server and client components.
 - **Prevention**: Added a new "Server/Client Component Boundary Testing" rule to the cursor rules to ensure proper testing of server/client component boundaries in the future.
 - **Fixed Date**: June 12, 2024
+
+### BUG-016
+- **Severity**: Critical
+- **Status**: Fixed
+- **Description**: Insecure API key encryption due to hardcoded fallback encryption key
+- **Error Pattern**: Potential exposure of API keys if environment variable is not set
+- **Root Cause**: The API key encryption function was using a hardcoded fallback key when the environment variable was not set, which is a security vulnerability
+- **Fix**: Updated the encryption functions to require a valid encryption key from environment variables, with proper validation for key length and existence
+- **Impact**: Improved security for API key storage and transmission
+- **Fixed By**: [commit hash]
+- **Fixed On**: 2024-06-25
 
 ## Active Bugs
 

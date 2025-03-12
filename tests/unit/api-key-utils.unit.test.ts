@@ -1,142 +1,49 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  encryptApiKey, 
-  decryptApiKey, 
-  isValidEncryptedFormat, 
-  safeDecryptApiKey 
-} from '../../lib/api-key-utils';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock the actual functions to avoid real crypto operations
-vi.mock('../../lib/api-key-utils', async () => {
-  const actual = await vi.importActual('../../lib/api-key-utils');
-  
-  return {
-    ...actual,
-    encryptApiKey: vi.fn().mockReturnValue('0123456789abcdef:authtag:encryptedfinal'),
-    decryptApiKey: vi.fn().mockImplementation((encryptedData) => {
-      if (!encryptedData.includes(':')) {
-        throw new Error('Invalid encrypted data format');
-      }
-      return 'decrypted';
-    }),
-    isValidEncryptedFormat: vi.fn().mockImplementation((encryptedData) => {
-      return encryptedData.split(':').length === 3;
-    }),
-    safeDecryptApiKey: vi.fn().mockImplementation((encryptedData) => {
-      if (!encryptedData.includes(':')) {
-        return null;
-      }
-      if (encryptedData === 'throw-error') {
-        return null;
-      }
-      return 'decrypted';
-    }),
-  };
-});
+// Store the original environment variables
+const originalEnv = { ...process.env };
+
+// Import the functions to test
+import { 
+  getEncryptionKey
+} from '../../lib/api-key-utils';
 
 describe('API Key Utilities', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset environment variables before each test
+    process.env = { ...originalEnv };
   });
 
-  describe('encryptApiKey', () => {
-    it('should encrypt an API key', () => {
-      const apiKey = 'sk-test123456';
-      
-      const result = encryptApiKey(apiKey);
-      
-      // With our mocks, the result should be in the format "iv:authTag:encryptedData"
-      expect(result).toBe('0123456789abcdef:authtag:encryptedfinal');
-      
-      // Verify that the function was called with the correct arguments
-      expect(encryptApiKey).toHaveBeenCalledWith(apiKey);
-    });
+  afterEach(() => {
+    // Restore environment variables after each test
+    process.env = { ...originalEnv };
   });
 
-  describe('decryptApiKey', () => {
-    it('should decrypt an encrypted API key', () => {
-      const encryptedKey = '0123456789abcdef:authtag:encrypted';
+  describe('getEncryptionKey', () => {
+    it('should return the encryption key from environment variable', () => {
+      // Set the environment variable
+      process.env.API_KEY_ENCRYPTION_KEY = 'test-encryption-key-that-is-at-least-32-chars';
       
-      const result = decryptApiKey(encryptedKey);
+      const key = getEncryptionKey();
       
-      expect(result).toBe('decrypted');
-      
-      // Verify that the function was called with the correct arguments
-      expect(decryptApiKey).toHaveBeenCalledWith(encryptedKey);
+      expect(key).toBe('test-encryption-key-that-is-at-least-32-chars');
     });
 
-    it('should throw an error for invalid encrypted data format', () => {
-      const invalidFormat = 'invalid-format';
+    it('should throw an error when encryption key is not set', () => {
+      // Ensure the environment variable is not set
+      delete process.env.API_KEY_ENCRYPTION_KEY;
       
-      expect(() => decryptApiKey(invalidFormat)).toThrow('Invalid encrypted data format');
-    });
-  });
-
-  describe('isValidEncryptedFormat', () => {
-    it('should return true for valid encrypted format', () => {
-      const validFormat = '0123456789abcdef:authtag:encrypted';
-      
-      const result = isValidEncryptedFormat(validFormat);
-      
-      expect(result).toBe(true);
-      
-      // Verify that the function was called with the correct arguments
-      expect(isValidEncryptedFormat).toHaveBeenCalledWith(validFormat);
+      // The function should throw an error
+      expect(() => getEncryptionKey()).toThrow('API_KEY_ENCRYPTION_KEY environment variable is not set');
     });
 
-    it('should return false for invalid encrypted format', () => {
-      const invalidFormat = 'invalid-format';
+    it('should throw an error when encryption key is too short', () => {
+      // Set an invalid encryption key (too short)
+      process.env.API_KEY_ENCRYPTION_KEY = 'short';
       
-      // Mock the implementation to return false for this test
-      vi.mocked(isValidEncryptedFormat).mockReturnValueOnce(false);
-      
-      const result = isValidEncryptedFormat(invalidFormat);
-      
-      expect(result).toBe(false);
-      
-      // Verify that the function was called with the correct arguments
-      expect(isValidEncryptedFormat).toHaveBeenCalledWith(invalidFormat);
-    });
-  });
-
-  describe('safeDecryptApiKey', () => {
-    it('should safely decrypt a valid encrypted key', () => {
-      const encryptedKey = '0123456789abcdef:authtag:encrypted';
-      
-      const result = safeDecryptApiKey(encryptedKey);
-      
-      expect(result).toBe('decrypted');
-      
-      // Verify that the function was called with the correct arguments
-      expect(safeDecryptApiKey).toHaveBeenCalledWith(encryptedKey);
-    });
-
-    it('should return null for invalid format', () => {
-      const invalidFormat = 'invalid-format';
-      
-      // Mock the implementation to return null for this test
-      vi.mocked(safeDecryptApiKey).mockReturnValueOnce(null);
-      
-      const result = safeDecryptApiKey(invalidFormat);
-      
-      expect(result).toBe(null);
-      
-      // Verify that the function was called with the correct arguments
-      expect(safeDecryptApiKey).toHaveBeenCalledWith(invalidFormat);
-    });
-
-    it('should return null if decryption fails', () => {
-      const encryptedKey = 'throw-error';
-      
-      // Mock console.error to avoid polluting the test output
-      vi.spyOn(console, 'error').mockImplementation(() => {});
-      
-      const result = safeDecryptApiKey(encryptedKey);
-      
-      expect(result).toBe(null);
-      
-      // Verify that the function was called with the correct arguments
-      expect(safeDecryptApiKey).toHaveBeenCalledWith(encryptedKey);
+      // The function should throw an error
+      expect(() => getEncryptionKey()).toThrow('API_KEY_ENCRYPTION_KEY must be at least 32 characters long');
     });
   });
 }); 
