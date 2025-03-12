@@ -2,6 +2,11 @@
 
 ## 2024-06-25
 
+### [SECURITY] Added API Key Encryption Environment Variable Validation Tests
+- **Description**: Added tests to validate API key encryption environment variables
+- **Details**: Created a new test file `tests/integration/security/env-encryption-keys.integration.test.ts` that validates the existence and proper format of API_KEY_ENCRYPTION_KEY in all environment files. Also updated the environment consistency check script to include API_KEY_ENCRYPTION_KEY as a required variable, and fixed formatting issues in example environment files.
+- **Timestamp**: 2024-06-25T22:55:00Z
+
 ### [BUG-016] Fixed
 - **Description**: Fixed insecure API key encryption implementation
 - **Details**: Removed the hardcoded fallback encryption key in lib/api-key-utils.ts and updated the implementation to throw an error when the environment variable is not set. Also updated all example environment files with unique encryption keys to ensure proper security across different environments.
