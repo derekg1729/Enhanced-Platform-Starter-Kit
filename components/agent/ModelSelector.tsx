@@ -70,11 +70,16 @@ export default function ModelSelector({ agentId, currentModel, onSave }: ModelSe
     const connectedServiceIds = connections.map(conn => conn.service);
     
     // Get all models from connected services
-    const availableModels: string[] = [];
-    apiServices.forEach(service => {
-      if (connectedServiceIds.includes(service.id)) {
-        availableModels.push(...service.models);
-      }
+    let availableModels: string[] = [];
+    
+    // Filter API services to only include connected ones
+    const connectedServices = apiServices.filter(service => 
+      connectedServiceIds.includes(service.id)
+    );
+    
+    // Add all models from connected services to the available models array
+    connectedServices.forEach(service => {
+      availableModels = [...availableModels, ...service.models];
     });
     
     return availableModels;

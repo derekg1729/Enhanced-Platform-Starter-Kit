@@ -23,6 +23,18 @@ export async function getUserById(id: string): Promise<User | null> {
 }
 
 /**
+ * Gets a user by email address
+ */
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email));
+
+  return user || null;
+}
+
+/**
  * Creates a new user
  */
 export async function createUser(data: {

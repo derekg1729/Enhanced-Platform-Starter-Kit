@@ -4,6 +4,34 @@
 
 This backlog is organized by features. Tasks within the currently active feature should be prioritized over other tasks, regardless of their individual priority levels. The current active feature is **hello-world-agent**.
 
+## Upcoming Features
+
+### Feature: user-api-keys
+
+- **[TASK-UAK001] Implement User-Associated API Keys**
+  - **Priority**: Medium
+  - **Status**: Planned
+  - **Description**: Redesign the API key management system to associate API keys with users rather than individual agents, allowing keys to be inherited by all of a user's agents.
+  - **Acceptance Criteria**:
+    - Update database schema to associate API keys with users instead of agents
+    - Implement UI for managing user-level API keys
+    - Create migration path for existing agent-specific API keys
+    - Update agent creation and editing flows to use user's API keys
+    - Ensure proper security and isolation between tenants
+    - Add comprehensive tests for the new functionality
+
+- **[TASK-UAK002] Enhance Model Selector Based on Available API Keys**
+  - **Priority**: Medium
+  - **Status**: Planned
+  - **Description**: Update the model selector to dynamically show all possible AI models based on the user's available API keys.
+  - **Acceptance Criteria**:
+    - Model selector should query available models based on user's API connections
+    - Remove model-specific API key inputs from the agent configuration page
+    - Group models by provider (OpenAI, Anthropic, etc.)
+    - Show appropriate messaging when no API keys are configured
+    - Add visual indicators for recommended or preferred models
+    - Implement comprehensive tests for the enhanced model selector
+
 ## Active Feature: hello-world-agent
 
 ### Phase 0: Frontend Foundation

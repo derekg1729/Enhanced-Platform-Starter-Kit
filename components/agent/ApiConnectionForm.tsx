@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
 import ThemeCard from '../ui/ThemeCard';
 import React from 'react';
 
@@ -44,28 +45,6 @@ interface ApiConnectionFormProps {
   onSubmit?: (data: ApiConnectionFormData) => Promise<void>;
   isEdit?: boolean;
 }
-
-// Add this interface above the ApiConnectionForm component
-interface CustomSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  error?: boolean;
-  className?: string;
-}
-
-// Create a custom Select component that accepts the required props
-const CustomSelect = React.forwardRef<HTMLSelectElement, CustomSelectProps>(
-  ({ className, error, children, ...props }, ref) => {
-    return (
-      <select
-        ref={ref}
-        className={`w-full rounded-md border ${error ? 'border-red-500' : 'border-gray-300'} bg-background px-3 py-2 text-sm ${className}`}
-        {...props}
-      >
-        {children}
-      </select>
-    );
-  }
-);
-CustomSelect.displayName = 'CustomSelect';
 
 export default function ApiConnectionForm({ initialData, onSubmit, isEdit = false }: ApiConnectionFormProps) {
   const router = useRouter();
@@ -214,7 +193,7 @@ export default function ApiConnectionForm({ initialData, onSubmit, isEdit = fals
           <label htmlFor="service" className="block text-sm font-medium text-stone-300 mb-1">
             Service
           </label>
-          <CustomSelect
+          <Select
             id="service"
             {...register('service', { required: 'Service is required' })}
             className="w-full"
@@ -227,7 +206,7 @@ export default function ApiConnectionForm({ initialData, onSubmit, isEdit = fals
                 {service.name}
               </option>
             ))}
-          </CustomSelect>
+          </Select>
           {errors.service && (
             <p className="mt-1 text-sm text-red-400">{errors.service.message}</p>
           )}
@@ -257,19 +236,15 @@ export default function ApiConnectionForm({ initialData, onSubmit, isEdit = fals
           {selectedService && (
             <p className="mt-1 text-xs text-stone-500">
               {selectedService.keyInstructions}
-              {selectedService.url && (
-                <>
-                  {' '}
-                  <a 
-                    href={selectedService.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:underline"
-                  >
-                    Get API key
-                  </a>
-                </>
-              )}
+              {' '}
+              <a 
+                href={selectedService.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline"
+              >
+                Get API key
+              </a>
             </p>
           )}
         </div>

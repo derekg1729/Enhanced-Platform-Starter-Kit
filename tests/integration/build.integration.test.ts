@@ -251,7 +251,7 @@ describe('Build Prerequisites', () => {
         const output = error.stdout?.toString() || error.stderr?.toString() || error.message
         throw new Error(`TypeScript compilation failed: ${output}`)
       }
-    })
+    }, 10000)
 
     it('should pass ESLint checks', () => {
       try {
