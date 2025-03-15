@@ -179,6 +179,31 @@ export const posts = pgTable(
   },
 );
 
+export const agents = pgTable(
+  "agents",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    name: text("name").notNull(),
+    description: text("description"),
+    model: text("model").notNull().default("gpt-4"),
+    createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt", { mode: "date" })
+      .notNull()
+      .$onUpdate(() => new Date()),
+    userId: text("userId").references(() => users.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  },
+  (table) => {
+    return {
+      userIdIdx: index().on(table.userId),
+    };
+  },
+);
+
 export const postsRelations = relations(posts, ({ one }) => ({
   site: one(sites, { references: [sites.id], fields: [posts.siteId] }),
   user: one(users, { references: [users.id], fields: [posts.userId] }),
@@ -197,13 +222,19 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, { references: [users.id], fields: [accounts.userId] }),
 }));
 
+export const agentsRelations = relations(agents, ({ one }) => ({
+  user: one(users, { references: [users.id], fields: [agents.userId] }),
+}));
+
 export const userRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   sites: many(sites),
   posts: many(posts),
+  agents: many(agents),
 }));
 
 export type SelectSite = typeof sites.$inferSelect;
 export type SelectPost = typeof posts.$inferSelect;
 export type SelectExample = typeof examples.$inferSelect;
+export type SelectAgent = typeof agents.$inferSelect;

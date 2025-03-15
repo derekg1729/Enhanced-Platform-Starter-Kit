@@ -13,7 +13,7 @@ import { customAlphabet } from "nanoid";
 import { revalidateTag } from "next/cache";
 import { withPostAuth, withSiteAuth } from "./auth";
 import db from "./db";
-import { SelectPost, SelectSite, posts, sites, users } from "./schema";
+import { SelectPost, SelectSite, posts, sites, users, agents } from "./schema";
 
 const nanoid = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
@@ -130,7 +130,7 @@ export const updateSite = withSiteAuth(
         if (!process.env.BLOB_READ_WRITE_TOKEN) {
           return {
             error:
-              "Missing BLOB_READ_WRITE_TOKEN token. Note: Vercel Blob is currently in beta – please fill out this form for access: https://tally.so/r/nPDMNd",
+              "Missing BLOB_READ_WRITE_TOKEN token. Note: Vercel Blob is currently in beta – please fill out this form for access: https://tally.so/r/nPDMNd",
           };
         }
 
@@ -419,5 +419,48 @@ export const editUser = async (
         error: error.message,
       };
     }
+  }
+};
+
+/**
+ * Deletes an agent by ID
+ * @param id - The ID of the agent to delete
+ * @returns An object indicating success or error
+ */
+export const deleteAgent = async (id: string) => {
+  try {
+    const session = await getSession();
+    if (!session?.user.id) {
+      return {
+        error: "Not authenticated",
+      };
+    }
+
+    // Check if the agent exists and belongs to the user
+    const agent = await db.query.agents.findFirst({
+      where: (agents, { eq, and }) => 
+        and(eq(agents.id, id), eq(agents.userId, session.user.id)),
+    });
+
+    if (!agent) {
+      return {
+        error: "Agent not found or you don't have permission to delete it",
+      };
+    }
+
+    // Delete the agent
+    await db.delete(agents).where(eq(agents.id, id));
+
+    // Revalidate the agents cache
+    revalidateTag("agents");
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("Error deleting agent:", error);
+    return {
+      error: "Failed to delete agent",
+    };
   }
 };
