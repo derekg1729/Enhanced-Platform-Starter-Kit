@@ -327,4 +327,17 @@
   - Create dashboard for monitoring test and lint status
   - Document best practices for frequent testing in the development workflow
 - **Priority**: Medium-High
-- **Status**: To Do 
+- **Status**: To Do
+
+### [TASK-028]
+- **Title**: Implement fetchers utility tests
+- **Description**: Add comprehensive tests for the fetchers utility functions to ensure they work correctly across different scenarios.
+- **Acceptance Criteria**:
+  - Create unit tests for getSiteData function
+  - Create unit tests for getPostsForSite function
+  - Create unit tests for getPostData function
+  - Create unit tests for getMdxSource function
+  - Ensure tests cover both success and error cases
+  - Verify proper handling of subdomains and custom domains
+- **Priority**: High
+- **Status**: Done 
