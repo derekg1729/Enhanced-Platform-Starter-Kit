@@ -1,5 +1,13 @@
 {
-  "version": "2.10",
+  "version": "2.11",
+  "meta": {
+    "description": "Rules for the agent-platform project",
+    "priority": [
+      "Test-Driven Development is mandatory for all code changes.",
+      "NEVER use git commit with the --no-verify flag to bypass pre-commit hooks. This bypasses critical checks and can introduce serious issues into the codebase.",
+      "When pre-commit hooks fail, follow the error recovery paths in the errorRecovery section rather than bypassing the hooks."
+    ]
+  },
   "process": {
     "tdd": {
       "enabled": true,
@@ -421,6 +429,146 @@
             ]
           }
         }
+      }
+    },
+    "errorRecovery": {
+      "preCommitHookFailures": {
+        "description": "Guidance for handling pre-commit hook failures",
+        "environmentConsistencyFailure": {
+          "description": "How to handle environment consistency check failures",
+          "steps": [
+            "Review the error message to understand which environment variables are missing or inconsistent",
+            "For API_KEY_ENCRYPTION_KEY issues, run 'node scripts/generate-encryption-key.js' to generate a secure key",
+            "For domain inconsistencies, note that NEXT_PUBLIC_ROOT_DOMAIN should be different across environments",
+            "Update the relevant .env files to fix the issues",
+            "Run 'npm run check-env' to verify the fixes before attempting to commit again",
+            "If committing documentation-only changes, consider using the documentation-only commit process"
+          ]
+        },
+        "lintingFailure": {
+          "description": "How to handle linting failures",
+          "steps": [
+            "Review the linting errors in the output",
+            "Fix the issues in the relevant files",
+            "Run 'npm run lint' to verify the fixes before attempting to commit again"
+          ]
+        },
+        "typeCheckFailure": {
+          "description": "How to handle TypeScript type checking failures",
+          "steps": [
+            "Review the type errors in the output",
+            "Fix the type issues in the relevant files",
+            "Run 'npm run typecheck' to verify the fixes before attempting to commit again"
+          ]
+        },
+        "testFailure": {
+          "description": "How to handle test failures",
+          "steps": [
+            "Review the test failures in the output",
+            "Fix the issues in the code or tests",
+            "Run 'npm run test' to verify the fixes before attempting to commit again",
+            "NEVER modify tests to make them pass unless the test itself is incorrect"
+          ]
+        },
+        "buildFailure": {
+          "description": "How to handle build failures",
+          "steps": [
+            "Review the build errors in the output",
+            "Fix the issues in the relevant files",
+            "Run 'npm run build' to verify the fixes before attempting to commit again"
+          ]
+        },
+        "documentationOnlyCommits": {
+          "description": "Process for documentation-only commits that may fail environment checks",
+          "steps": [
+            "Ensure your changes only affect documentation files (.md, etc.) or design documents",
+            "Stage only the documentation files: 'git add docs/...'",
+            "Use a commit message that clearly indicates it's a documentation change",
+            "If environment checks fail, DO NOT use --no-verify",
+            "Instead, create a separate branch for documentation changes: 'git checkout -b docs/your-feature'",
+            "Commit the documentation changes on this branch",
+            "Create a pull request for the documentation changes",
+            "In parallel, fix the environment issues on your main development branch"
+          ]
+        }
+      }
+    },
+    "preCommitWorkflow": {
+      "description": "MANDATORY steps that MUST be followed before committing any changes",
+      "criticalWarning": "NEVER BYPASS THESE STEPS! Committing code that doesn't pass all checks can break the build for everyone.",
+      "enforcementMechanism": "Use 'npm run setup-hooks' to install Git hooks that enforce this workflow",
+      "steps": [
+        {
+          "name": "changelogVerification",
+          "command": "npm run verify-changelog",
+          "description": "Verify changelog updates are committed with their related code changes",
+          "required": true,
+          "rules": [
+            "NEVER commit changelog updates separately from their related code changes",
+            "ALL feature completions must include both code and documentation updates in the same commit",
+            "Verify all modified files with 'git status' before committing",
+            "Use atomic commits that include all related changes: code, tests, and documentation"
+          ]
+        },
+        {
+          "name": "environmentCheck",
+          "command": "npm run check-env",
+          "description": "Verify environment variables are consistent across environments",
+          "required": true,
+          "recoveryPath": "See errorRecovery.preCommitHookFailures.environmentConsistencyFailure for steps to resolve environment issues"
+        },
+        {
+          "name": "linting",
+          "command": "npm run lint",
+          "description": "Run linting to catch syntax and style issues",
+          "required": true,
+          "recoveryPath": "See errorRecovery.preCommitHookFailures.lintingFailure for steps to resolve linting issues"
+        },
+        {
+          "name": "typeCheck",
+          "command": "npm run typecheck",
+          "description": "Verify TypeScript types are correct",
+          "required": true,
+          "recoveryPath": "See errorRecovery.preCommitHookFailures.typeCheckFailure for steps to resolve type issues"
+        },
+        {
+          "name": "testing",
+          "command": "npm run test",
+          "description": "Run all tests to ensure functionality works as expected",
+          "required": true,
+          "recoveryPath": "See errorRecovery.preCommitHookFailures.testFailure for steps to resolve test failures"
+        },
+        {
+          "name": "buildCheck",
+          "command": "npm run build",
+          "description": "Verify the application builds successfully",
+          "required": true,
+          "criticalWarning": "NEVER commit code that doesn't build successfully",
+          "recoveryPath": "See errorRecovery.preCommitHookFailures.buildFailure for steps to resolve build issues"
+        }
+      ],
+      "automatedEnforcement": {
+        "preCommitHook": "npm run pre-commit",
+        "ciChecks": ["lint", "test", "build", "typecheck"]
+      },
+      "taskCompletionRequirement": {
+        "description": "Code MUST be committed after completing each task or bug fix",
+        "commitMessage": "Include the task ID or bug ID in the commit message along with a brief description",
+        "timing": "Commit immediately after all checks pass and the task is marked as completed in the documentation"
+      },
+      "troubleshooting": {
+        "testFailures": "Fix the issues before committing. Do not modify tests to make them pass unless the test itself is incorrect.",
+        "buildFailures": "Fix the code issues before committing. Common problems include syntax errors, missing dependencies, or configuration issues."
+      },
+      "strictWarnings": {
+        "noVerifyFlag": "NEVER use git commit with the --no-verify flag to bypass pre-commit hooks. This bypasses critical checks and can introduce serious issues into the codebase. This prohibition applies to ALL processes, including the CHIP process.",
+        "alternativeApproaches": [
+          "Fix the failing checks instead of bypassing them",
+          "If the checks are taking too long, consider optimizing them rather than skipping them",
+          "For documentation-only changes, follow the documentationOnlyCommits process",
+          "Use git stash to temporarily save changes that aren't ready for verification",
+          "If timeout issues occur, address the performance of the hooks rather than bypassing them"
+        ]
       }
     },
     "ruleImprovement": {

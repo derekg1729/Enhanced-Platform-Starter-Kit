@@ -770,4 +770,122 @@ This backlog is organized by features. Tasks within the currently active feature
     - Feedback score calculation
     - Feedback trends over time
     - Export functionality
-    - Unit tests for analytics calculations 
+    - Unit tests for analytics calculations
+
+## Hello World V2 Feature Tasks
+
+### HW2-1: Database Schema for Agents and Messages
+- **Priority**: High
+- **Status**: Not Started
+- **Description**: Create database schema for agents and messages tables
+- **Acceptance Criteria**:
+  - Add Agent model to schema with all required fields
+  - Add Message model to schema with all required fields
+  - Create migration file for the new tables
+  - Ensure proper relationships between tables
+  - Implement encryption for API keys
+
+### HW2-2: API Routes for Agent CRUD Operations
+- **Priority**: High
+- **Status**: Not Started
+- **Description**: Implement API routes for creating, reading, updating, and deleting agents
+- **Acceptance Criteria**:
+  - Create route handler for GET /api/agents
+  - Create route handler for POST /api/agents
+  - Create route handler for GET /api/agents/[id]
+  - Create route handler for PATCH /api/agents/[id]
+  - Create route handler for DELETE /api/agents/[id]
+  - Implement proper authentication and authorization
+  - Add validation for request payloads
+
+### HW2-3: API Route for Agent Chat
+- **Priority**: High
+- **Status**: Not Started
+- **Description**: Implement API route for agent chat functionality
+- **Acceptance Criteria**:
+  - Create route handler for POST /api/agents/[id]/chat
+  - Implement streaming response for chat messages
+  - Store chat messages in the database
+  - Handle different AI model selections
+  - Implement proper error handling for API failures
+
+### HW2-4: Agents Listing Page
+- **Priority**: Medium
+- **Status**: Not Started
+- **Description**: Create page for listing all agents
+- **Acceptance Criteria**:
+  - Create server component to fetch agents data
+  - Display agents in a grid layout using AgentCard components
+  - Include CreateAgentButton component
+  - Implement empty state for when no agents exist
+  - Ensure responsive design for different screen sizes
+
+### HW2-5: Agent Card Component
+- **Priority**: Medium
+- **Status**: Not Started
+- **Description**: Create component for displaying agent information
+- **Acceptance Criteria**:
+  - Display agent name, description, and model
+  - Include options for editing and deleting agents
+  - Add visual indicator for agent status
+  - Ensure consistent styling with SiteCard component
+  - Make card clickable to navigate to agent detail page
+
+### HW2-6: Create Agent Modal
+- **Priority**: Medium
+- **Status**: Not Started
+- **Description**: Create modal for adding new agents
+- **Acceptance Criteria**:
+  - Include form fields for agent name, description, and model selection
+  - Add API key selection or input
+  - Implement form validation
+  - Add loading state during submission
+  - Display appropriate error messages
+  - Close modal and refresh list on successful creation
+
+### HW2-7: Agent Detail Page with Chat Interface
+- **Priority**: Medium
+- **Status**: Not Started
+- **Description**: Create page for agent details and chat interface
+- **Acceptance Criteria**:
+  - Display agent details at the top of the page
+  - Implement chat interface with message history
+  - Add input field for new messages
+  - Display streaming responses from the agent
+  - Show loading indicators during message processing
+  - Implement error handling for failed messages
+  - Add option to clear chat history
+
+### HW2-8: Agent Chat Component
+- **Priority**: Medium
+- **Status**: Not Started
+- **Description**: Create component for chat functionality
+- **Acceptance Criteria**:
+  - Display chat messages with appropriate styling for user and assistant
+  - Implement auto-scrolling to latest message
+  - Support markdown rendering in messages
+  - Add typing indicator during streaming
+  - Ensure accessibility for screen readers
+  - Optimize performance for long chat histories
+
+### HW2-9: Integration and Testing
+- **Priority**: High
+- **Status**: Not Started
+- **Description**: Ensure all components work together and pass tests
+- **Acceptance Criteria**:
+  - All unit tests pass
+  - All integration tests pass
+  - Manual testing confirms functionality
+  - No regressions in existing features
+  - Performance meets expectations
+
+### HW2-10: Documentation
+- **Priority**: Low
+- **Status**: Not Started
+- **Description**: Document the Hello World V2 feature
+- **Acceptance Criteria**:
+  - Update README with feature description
+  - Document API endpoints
+  - Add usage examples
+  - Include screenshots of UI
+  - Document any known limitations 
