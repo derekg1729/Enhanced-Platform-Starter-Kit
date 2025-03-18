@@ -44,8 +44,9 @@ export default async function AgentPage({ params }: { params: { id: string } }) 
   const timeAgo = formatDistanceToNow(createdAt, { addSuffix: true });
 
   return (
-    <div className="flex max-w-screen-xl flex-col space-y-12 p-8">
+    <div className="flex max-w-screen-xl flex-col space-y-6 p-8">
       <div className="flex flex-col space-y-6">
+        {/* Navigation */}
         <div className="flex items-center space-x-2">
           <Link
             href="/agents"
@@ -56,6 +57,7 @@ export default async function AgentPage({ params }: { params: { id: string } }) 
           </Link>
         </div>
 
+        {/* Agent header with avatar, name, and edit button */}
         <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div className="flex items-center space-x-4">
             <div className="h-16 w-16 overflow-hidden rounded-full border border-stone-200 dark:border-stone-700">
@@ -73,9 +75,16 @@ export default async function AgentPage({ params }: { params: { id: string } }) 
               <h1 className="font-cal text-2xl font-bold dark:text-white">
                 {agent.name}
               </h1>
-              <p className="text-sm text-stone-500 dark:text-stone-400">
-                Created {timeAgo}
-              </p>
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm text-stone-500 dark:text-stone-400">
+                  {MODEL_DISPLAY_NAMES[agent.model] || agent.model} • Created {timeAgo}
+                </p>
+                {agent.description && (
+                  <p className="text-sm text-stone-500 dark:text-stone-400">
+                    {agent.description}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -89,23 +98,8 @@ export default async function AgentPage({ params }: { params: { id: string } }) 
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div className="rounded-lg border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-700 dark:bg-stone-900">
-            <h2 className="text-lg font-medium dark:text-white">Description</h2>
-            <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
-              {agent.description || "No description provided."}
-            </p>
-          </div>
-          <div className="rounded-lg border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-700 dark:bg-stone-900">
-            <h2 className="text-lg font-medium dark:text-white">Model</h2>
-            <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
-              {MODEL_DISPLAY_NAMES[agent.model] || agent.model}
-            </p>
-          </div>
-        </div>
-
-        {/* Chat Interface */}
-        <div className="rounded-lg border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900 min-h-[500px] overflow-hidden">
+        {/* Chat Interface - removed border-top */}
+        <div className="rounded-lg border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900 min-h-[500px] overflow-hidden border">
           <ChatInterface agent={agent} />
         </div>
       </div>

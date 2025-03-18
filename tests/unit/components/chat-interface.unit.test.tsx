@@ -1,48 +1,89 @@
-import { vi, describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import ChatInterface from '@/components/chat-interface';
+import { SelectAgent } from '@/lib/schema';
+import * as useChat from '@/hooks/use-chat';
 
-// Mock the useChat hook
-vi.mock('@/hooks/use-chat', () => ({
-  default: vi.fn(() => ({
-    messages: [],
-    input: '',
-    setInput: vi.fn(),
-    handleSubmit: vi.fn(e => e.preventDefault()),
-    isLoading: false
-  }))
-}));
+// Mock useChat hook
+vi.mock('@/hooks/use-chat', () => {
+  return {
+    __esModule: true,
+    default: vi.fn(),
+  };
+});
 
-describe.skip('ChatInterface Component', () => {
-  // Mock agent data
-  const mockAgent = {
-    id: 'agent-123',
+describe('Chat Interface', () => {
+  // Sample agent data
+  const mockAgent: SelectAgent = {
+    id: 'test-agent',
     name: 'Test Agent',
-    description: 'This is a test agent',
+    description: 'A test agent',
+    userId: 'user123',
     model: 'gpt-4',
-    userId: 'user-123',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
-  it('renders the message input field correctly', () => {
-    render(<ChatInterface agent={mockAgent} />);
-    
-    // Check that the input field is rendered
-    expect(screen.getByTestId('message-input')).toBeInTheDocument();
+  // Reset mocks before each test
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(useChat.default).mockReturnValue({
+      messages: [],
+      input: '',
+      setInput: vi.fn(),
+      handleSubmit: vi.fn(),
+      isLoading: false,
+      error: null,
+    });
   });
 
-  it('renders with the correct structure and styling', () => {
+  it('renders properly with no messages', () => {
     render(<ChatInterface agent={mockAgent} />);
     
-    // Check that the main container has the correct classes
-    expect(screen.getByTestId('chat-form')).toBeInTheDocument();
+    // Basic component elements should exist
+    expect(screen.getByTestId('messages-container')).toBeInTheDocument();
+    expect(screen.getByTestId('input-container')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-textarea')).toBeInTheDocument();
+    expect(screen.getByTestId('send-button')).toBeInTheDocument();
+    
+    // We no longer show "Send a message to start chatting" text
   });
 
-  it('shows empty state when no messages are present', () => {
+  it('renders messages correctly', () => {
+    // Mock the hook to return messages
+    vi.mocked(useChat.default).mockReturnValue({
+      messages: [
+        { id: '1', role: 'user', content: 'Hello' },
+        { id: '2', role: 'assistant', content: 'Hi there!' },
+      ],
+      input: '',
+      setInput: vi.fn(),
+      handleSubmit: vi.fn(),
+      isLoading: false,
+      error: null,
+    });
+    
     render(<ChatInterface agent={mockAgent} />);
     
-    // Check for empty state message
-    expect(screen.getByText(/Send a message to start chatting/)).toBeInTheDocument();
+    // Check if messages are displayed
+    expect(screen.getByText('Hello')).toBeInTheDocument();
+    expect(screen.getByText('Hi there!')).toBeInTheDocument();
+  });
+
+  it('shows loading state', () => {
+    // Mock the hook to show loading state
+    vi.mocked(useChat.default).mockReturnValue({
+      messages: [{ id: '1', role: 'user', content: 'Hello' }],
+      input: '',
+      setInput: vi.fn(),
+      handleSubmit: vi.fn(),
+      isLoading: true,
+      error: null,
+    });
+    
+    render(<ChatInterface agent={mockAgent} />);
+    
+    // Check for loading indicator
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 }); 
