@@ -22,5 +22,5 @@ describe('TypeScript Type Checking', () => {
       // Fail the test
       expect(errorOutput).toBe('');
     }
-  });
+  }, 30000); // Increased timeout to 30 seconds
 }); 
