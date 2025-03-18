@@ -204,6 +204,32 @@ export const agents = pgTable(
   },
 );
 
+export const apiConnections = pgTable(
+  "apiConnections",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    service: text("service").notNull(), // 'openai', 'anthropic', etc.
+    encryptedApiKey: text("encryptedApiKey").notNull(),
+    name: text("name").default("Default"),
+    createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt", { mode: "date" })
+      .notNull()
+      .$onUpdate(() => new Date()),
+    userId: text("userId").references(() => users.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  },
+  (table) => {
+    return {
+      userIdIdx: index().on(table.userId),
+      serviceUserIdKey: uniqueIndex().on(table.service, table.userId),
+    };
+  },
+);
+
 export const postsRelations = relations(posts, ({ one }) => ({
   site: one(sites, { references: [sites.id], fields: [posts.siteId] }),
   user: one(users, { references: [users.id], fields: [posts.userId] }),
@@ -226,15 +252,21 @@ export const agentsRelations = relations(agents, ({ one }) => ({
   user: one(users, { references: [users.id], fields: [agents.userId] }),
 }));
 
+export const apiConnectionsRelations = relations(apiConnections, ({ one }) => ({
+  user: one(users, { references: [users.id], fields: [apiConnections.userId] }),
+}));
+
 export const userRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   sites: many(sites),
   posts: many(posts),
   agents: many(agents),
+  apiConnections: many(apiConnections),
 }));
 
 export type SelectSite = typeof sites.$inferSelect;
 export type SelectPost = typeof posts.$inferSelect;
 export type SelectExample = typeof examples.$inferSelect;
 export type SelectAgent = typeof agents.$inferSelect;
+export type SelectApiConnection = typeof apiConnections.$inferSelect;

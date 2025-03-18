@@ -23,7 +23,12 @@ export default defineConfig({
     retry: process.env.CI ? 2 : 0,
     typecheck: {
       enabled: true,
-      tsconfig: './tsconfig.json'
+      tsconfig: './tsconfig.json',
+      ignoreSourceErrors: false,
+      include: [
+        'tests/**/*.test.{ts,tsx}'
+      ],
+      exclude: ['node_modules'],
     }
   },
   resolve: {

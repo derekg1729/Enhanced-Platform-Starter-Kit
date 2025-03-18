@@ -23,7 +23,7 @@ module.exports = {
   // Configure dynamic route handling
   output: 'standalone',
   typescript: {
-    // Dangerously allow production builds to successfully complete even if your project has type errors.
-    ignoreBuildErrors: true,
+    // Enable type checking during build
+    ignoreBuildErrors: false,
   }
 };

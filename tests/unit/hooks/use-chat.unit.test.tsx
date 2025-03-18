@@ -87,17 +87,15 @@ describe('useChat Hook', () => {
   });
 
   it('sets isLoading to true while sending message', async () => {
-    // Mock sendMessage to delay response
+    // Create a promise we can control
+    let resolvePromise: (value: any) => void;
+    const controlledPromise = new Promise((resolve) => {
+      resolvePromise = resolve;
+    });
+    
+    // Mock sendMessage to use our controlled promise
     vi.mocked(sendMessage).mockImplementation(() => {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            id: '123',
-            role: 'assistant',
-            content: 'This is a response',
-          });
-        }, 100);
-      });
+      return controlledPromise as Promise<any>;
     });
     
     const { result } = renderHook(() => useChat(mockAgentId));
@@ -107,30 +105,40 @@ describe('useChat Hook', () => {
       result.current.setInput('Hello, world!');
     });
     
-    // Start submitting the message
-    const submitPromise = act(async () => {
-      await result.current.handleSubmit(new Event('submit') as any);
+    // Start the submission but don't await it yet
+    let submitPromise: Promise<void>;
+    act(() => {
+      submitPromise = result.current.handleSubmit(new Event('submit') as any);
     });
     
-    // Check if isLoading is true during the request
+    // Now the loading state should be updated
+    // We need to wait for React to process the state update
+    await act(async () => {
+      // Small delay to allow React to process state updates
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    
+    // Check if isLoading is true during the operation
     expect(result.current.isLoading).toBe(true);
     
-    // Wait for the request to complete
-    await submitPromise;
+    // Resolve the sendMessage promise
+    await act(async () => {
+      resolvePromise!({
+        id: '123',
+        role: 'assistant',
+        content: 'This is a response',
+      });
+      await submitPromise;
+    });
     
-    // Check if isLoading is false after the request
+    // Verify isLoading is false after the operation completes
     expect(result.current.isLoading).toBe(false);
   });
 
   it('does not submit empty messages', async () => {
     const { result } = renderHook(() => useChat(mockAgentId));
     
-    // Set empty input
-    act(() => {
-      result.current.setInput('');
-    });
-    
-    // Try to submit the empty message
+    // Submit an empty message directly
     await act(async () => {
       await result.current.handleSubmit(new Event('submit') as any);
     });
