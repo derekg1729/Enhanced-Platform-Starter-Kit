@@ -1,20 +1,27 @@
 {
-  "version": "2.11",
+  "version": "2.12",
   "meta": {
     "description": "Core rules for the agent-platform project",
     "stateFile": "docs/systematic-dev/workflow-state.md",
     "priority": [
       "Always check workflow-state.md first to determine current context",
       "Follow the Test-Driven Development workflow strictly",
-      "Never skip writing tests before implementation",
-      "Always run all tests before committing changes",
-      "NEVER bypass pre-commit hooks with --no-verify under ANY circumstances"
+      "Always write tests before functional code changes",
+      "Run all tests frequently during development: pnpm run test",
+      "Think critically and suggest improvements that I haven't thought of"
+    ],
+    "Communication":[
+      "Brief and clear communication, prioritizing concise bullet points",
+      "✅ Use emojis to clearly categorize points",
+      "✅ Provide brief status updates in between actions",
+      "❌ Avoid unnecessary details",
+      "👋 Identify actions the user must take to validate agent changes"
     ]
   },
   "WORKFLOW_KEY": {
     "TDD": {
       "description": "Test-Driven Development is the foundation of our development process",
-      "overview": "This workflow ensures that tests are written before implementation, code changes are minimal and focused, and all tests pass before completion. All other workflows (Bug Resolution, Documentation Updates) must follow these core TDD principles.",
+      "overview": "This workflow ensures that tests are written before implementation, code changes are minimal and focused, and all tests pass before completion.",
       "stages": {
         "DESIGN": {
           "description": "Design the feature and plan implementation",
@@ -24,14 +31,13 @@
           "nextStage": "PRE_TESTING",
           "updateInstructions": "Update workflow-state.md to STAGE_KEY: PRE_TESTING when design is complete",
           "instructions": [
-            "Create a detailed design for the feature implementation",
+            "Create design in docs/features/[feature-key]/feature-design.md",
             "Identify ALL files that will need to be modified",
-            "Identify any new files that need to be created",
-            "Document dependencies between files and the order of changes",
-            "Consider performance, security, and scalability implications",
-            "Check for alignment with architectural principles",
-            "CRITICAL: Identify ALL test files that will be affected by the changes",
-            "CRITICAL: Document this design in docs/systematic-dev/feature-design.md before proceeding"
+            "Identify list of files to be edited and created.",
+            "List designed file changes in docs/features/[feature-name]/feature-design.md",
+            "Document dependencies between files",
+            "Identify ALL test files to be updated or created",
+            "Identify components at high risk of regression, and add tests for them"
           ]
         },
         "PRE_TESTING": {
@@ -42,16 +48,11 @@
           "nextStage": "IMPLEMENTATION",
           "updateInstructions": "Update workflow-state.md to STAGE_KEY: IMPLEMENTATION when tests are verified",
           "instructions": [
-            "Create or update test files for all components/functions that will be modified",
-            "Write comprehensive tests that cover all expected behaviors",
-            "Include tests for edge cases and error handling",
-            "Ensure tests are properly structured and follow testing best practices",
-            "For bug fixes, write tests that reproduce the bug",
-            "CRITICAL: Update ALL existing tests that will be affected by the changes",
-            "CRITICAL: Complete ALL test writing before proceeding to the next step",
-            "Run the newly written tests to confirm they fail",
-            "Verify that tests fail for the expected reasons",
-            "Document the test failures as evidence that the tests are properly checking for the new functionality"
+            "Create/update test files for all modified components",
+            "Write tests that cover expected behaviors and edge cases",
+            "Update existing tests affected by the changes",
+            "Run tests with: pnpm run test:[relevant-area]",
+            "Verify tests fail for the expected reasons"
           ]
         },
         "IMPLEMENTATION": {
@@ -63,12 +64,11 @@
           "updateInstructions": "Update workflow-state.md to STAGE_KEY: VALIDATION when implementation is complete",
           "instructions": [
             "Implement the feature according to the design",
-            "ONLY modify files that were identified in the design phase",
-            "If additional files need modification, return to the design phase",
-            "Follow coding standards and best practices",
-            "Implement the minimal code needed to make tests pass",
-            "Focus on making tests pass first, not perfect code",
-            "Run tests frequently during implementation to track progress"
+            "Only modify files identified in the design phase: docs/features/[feature-key]/feature-design.md",
+            "Write minimal code to make tests pass",
+            "Run targeted tests frequently: pnpm run test:[relevant-area]",
+            "Return to design phase if additional files need modification",
+            "Update docs/features/[feature-key]/implementation-progress.md with status"
           ]
         },
         "VALIDATION": {
@@ -79,19 +79,11 @@
           "nextStage": "COMPLETION",
           "updateInstructions": "Update workflow-state.md to STAGE_KEY: COMPLETION when all tests pass",
           "instructions": [
-            "Run the complete test suite, not just the new tests",
-            "Verify that all tests are now passing",
-            "If any tests are failing, fix the implementation",
-            "If ANY existing tests start failing unexpectedly, stop and investigate immediately",
-            "Failing tests are a signal that something is wrong, not that the tests need to be changed",
-            "CRITICAL: Do not proceed until ALL tests are passing",
-            "CRITICAL: A feature is NOT complete until ALL tests pass, not just the ones you wrote",
-            "Refactor for readability and maintainability if needed",
-            "Optimize performance if needed",
-            "Run tests after each significant change",
-            "Ensure all tests continue to pass",
-            "Run the build process to ensure it completes successfully",
-            "Fix ANY build errors before proceeding - NEVER commit code that doesn't build"
+            "Run the complete test suite: pnpm run test",
+            "Fix implementation if any tests fail",
+            "Address unexpected test failures immediately",
+            "Run build process: pnpm run build",
+            "Update docs/features/[feature-key]/implementation-progress.md with validation status"
           ]
         },
         "COMPLETION": {
@@ -102,24 +94,60 @@
           "nextStage": "DESIGN (new feature)",
           "updateInstructions": "After committing, update workflow-state.md to STAGE_KEY: DESIGN and FEATURE_KEY: NONE",
           "instructions": [
-            "Update the task status in backlog.md",
-            "Commit all changes with a message that includes the task ID and a brief description",
-            "Ensure the commit message follows the conventional commit format",
-            "Manually test the feature to confirm it works as expected",
-            "Verify that the implementation meets all acceptance criteria",
-            "Document any issues or limitations discovered"
+            "Update task status in docs/systematic-dev/backlog.md",
+            "Update bug status in docs/systematic-dev/bug-tracker.md if applicable",
+            "Commit with conventional format: type(scope): message",
+            "Manually verify the feature works as expected",
+            "Finalize docs/features/[feature-key]/README.md with usage instructions"
           ]
         }
       },
-      "warnings": [
-        "Never skip writing tests first - this is the foundation of TDD",
-        "If ANY tests start failing unexpectedly, stop and investigate immediately",
-        "Failing tests are a signal that something is wrong, not that the tests need to be changed",
-        "Always run the full test suite before committing changes",
-        "Tests should be treated as first-class citizens in the codebase",
-        "Bypassing these steps can lead to broken builds and failed deployments",
-        "A feature is NOT complete until ALL tests pass, not just the ones you wrote"
-      ]
+      "testing": {
+        "commands": {
+          "all": "pnpm run test",
+          "unit": "pnpm run test:unit",
+          "integration": "pnpm run test:integration",
+          "components": "pnpm run test:components",
+          "db": "pnpm run test:db",
+          "api": "pnpm run test:api"
+        },
+        "bestPractices": [
+          "Run targeted tests during implementation (e.g., test:db for database changes)",
+          "Run full test suite before completing a feature",
+          "Create tests that validate both success and error paths", 
+          "Identify and run relevant test suites based on the locality of changes"
+        ]
+      },
+      "documentation": {
+        "structure": {
+          "projectRoot": {
+            "README.md": "Project overview and setup instructions (public)",
+            "docs/": "Project documentation directory"
+          },
+          "docs/systematic-dev/": {
+            "workflow-state.md": "Current workflow state (minimal)",
+            "backlog.md": "Task tracking and status",
+            "bug-tracker.md": "Bug tracking"
+          },
+          "docs/features/": {
+            "[feature-key]/": "Feature-specific documentation directory",
+            "[feature-key]/feature-design.md": "Detailed feature design",
+            "[feature-key]/implementation-progress.md": "Implementation status and notes",
+            "[feature-key]/README.md": "Feature usage and limitations"
+          }
+        },
+        "primaryDocs": [
+          "README.md - Public project overview and setup",
+          "docs/systematic-dev/workflow-state.md - Current workflow state",
+          "docs/systematic-dev/backlog.md - Task tracking",
+          "docs/systematic-dev/bug-tracker.md - Bug tracking"
+        ],
+        "featureDocs": [
+          "docs/features/[feature-key]/feature-design.md - Design specifications",
+          "docs/features/[feature-key]/implementation-progress.md - Implementation progress",
+          "docs/features/[feature-key]/README.md - Usage instructions and limitations"
+        ]
+      }
     },
     "CHIP": {
       "description": "Computer Heuristics Improvement Protocol for updating rules",
@@ -132,10 +160,9 @@
           "nextStage": "ANALYSIS",
           "updateInstructions": "Update workflow-state.md to WORKFLOW_KEY: CHIP and STAGE_KEY: PAUSE",
           "instructions": [
-            "⏸️ When the CHIP acronym is triggered, immediately pause the current development process",
-            "💾 Save the current state of development, including any in-progress work",
-            "💾 Use 'git stash --include-untracked' to properly save ALL changes",
-            "✅ Acknowledge the trigger and prepare to evaluate feedback"
+            "⏸️ When the CHIP acronym is triggered, immediately pause current work",
+            "💾 Save work state with: git stash --include-untracked",
+            "✅ Acknowledge the trigger and prepare for analysis"
           ]
         },
         "ANALYSIS": {
@@ -145,10 +172,10 @@
           "nextStage": "IMPLEMENTATION",
           "updateInstructions": "Update workflow-state.md to STAGE_KEY: ANALYSIS",
           "instructions": [
-            "🔍 Review the development history and identify actions that led to the feedback",
-            "📊 Analyze the effectiveness of the current rules in guiding those actions",
-            "⚠️ Identify gaps or weaknesses in the current rules",
-            "📝 Document the findings of the analysis"
+            "🔍 Identify actions or scenarios that prompted feedback",
+            "📊 Analyze effectiveness of current rules",
+            "⚠️ Identify gaps in current rules",
+            "📝 Document findings concisely"
           ]
         },
         "IMPLEMENTATION": {
@@ -158,14 +185,12 @@
           "nextStage": "RESUME",
           "updateInstructions": "Update workflow-state.md to STAGE_KEY: IMPLEMENTATION",
           "instructions": [
-            "✅ Based on the post-mortem analysis, design new or improved rules",
-            "✅ Ensure the new rules are clear, specific, and actionable",
-            "⚠️ Consider edge cases and potential unintended consequences",
-            "📝 Document the rationale behind each new or modified rule",
-            "Increment the version number in the CursorRules file",
-            "Add or modify rules according to the design",
-            "Ensure the updated rules are consistent with existing rules",
-            "Format the rules according to the established structure"
+            "✅ Design new/improved rules based on analysis",
+            "✅ Keep rules clear, specific, and actionable",
+            "⚠️ Consider potential unintended consequences",
+            "📝 Document rationale for changes",
+            "Increment version number in .cursorrules",
+            "Ensure consistency with existing rules"
           ]
         },
         "RESUME": {
@@ -175,94 +200,34 @@
           "nextStage": "(return to previous workflow)",
           "updateInstructions": "Update workflow-state.md to STAGE_KEY: RESUME, then to the appropriate TDD workflow stage",
           "instructions": [
-            "Return to the development process that was paused",
-            "Apply any relevant new rules to the current development task",
-            "Use 'git stash pop' to restore the saved state",
-            "Continue development from where it was paused"
-          ]
-        }
-      },
-      "errorRecovery": {
-        "preCommitHookFailure": {
-          "description": "Steps to take when pre-commit hooks fail",
-          "steps": [
-            "Analyze the specific error message from the pre-commit hook",
-            "Fix the underlying issue that caused the hook to fail",
-            "NEVER bypass the hook with --no-verify",
-            "If the error is unclear, consult with the team before proceeding",
-            "Document any recurring hook issues for future improvement"
+            "Return to paused development process",
+            "Apply new rules to current task",
+            "Restore saved state: git stash pop",
+            "Continue development from pause point"
           ]
         }
       },
       "autoTriggers": {
         "name": "Automatic CHIP Triggers",
-        "description": "Conditions that should automatically trigger the CHIP process",
+        "description": "Conditions that automatically trigger the CHIP process",
         "errorPatterns": [
           {
             "pattern": "Event handlers cannot be passed to Client Component props",
             "category": "Server/Client Boundary",
             "severity": "High",
-            "action": "Immediate CHIP Review",
-            "rationale": "Violations of server/client component boundaries indicate potential architectural issues that need systematic review"
-          },
-          {
-            "pattern": "TypeError: Cannot read properties of undefined",
-            "category": "Runtime Error",
-            "severity": "Medium",
-            "action": "CHIP Review if repeated",
-            "rationale": "Common runtime errors may indicate systemic issues in error handling or type safety"
+            "action": "Immediate CHIP Review"
           },
           {
             "pattern": "Test timed out in",
             "category": "Test Infrastructure",
             "severity": "High",
-            "action": "Immediate CHIP Review",
-            "rationale": "Test timeouts may indicate systemic issues in test infrastructure or performance"
+            "action": "Immediate CHIP Review"
           },
           {
             "pattern": "Failing tests in the full test suite",
             "category": "Test Coverage",
             "severity": "High",
-            "action": "Immediate CHIP Review",
-            "rationale": "Failing tests in the full suite indicate incomplete feature implementation or regression"
-          },
-          {
-            "pattern": "--no-verify flag used in commit",
-            "category": "Process Violation",
-            "severity": "Critical",
-            "action": "Immediate CHIP Review",
-            "rationale": "Bypassing pre-commit hooks undermines code quality and can introduce serious issues"
-          }
-        ],
-        "rules": [
-          "When CHIP is initiated (by the overseer), protocol must be started immediately",
-          "CHIP review MUST include analysis of why existing rules did not prevent the error",
-          "New version of Cursorrules MUST be created based on CHIP analysis"
-        ]
-      },
-      "communicationGuidelines": {
-        "name": "Communication Guidelines",
-        "description": "Concise, action-oriented communication rules",
-        "principles": [
-          {
-            "name": "Conciseness",
-            "description": "Brief and clear communication",
-            "rules": [
-              "✅ Use emojis to clearly categorize points",
-              "✅ Limit bullet points to ~80 characters",
-              "❌ Avoid unnecessary details",
-              "⚠️ Prioritize critical information"
-            ]
-          },
-          {
-            "name": "Action-Oriented",
-            "description": "Bias towards immediate action",
-            "rules": [
-              "✅ Act directly when approval isn't required",
-              "✅ Show results, not explanations",
-              "✅ Use concrete examples",
-              "✅ Demonstrate through implementation"
-            ]
+            "action": "Immediate CHIP Review"
           }
         ]
       }
@@ -286,19 +251,19 @@
     "description": "Specific guidelines for AI agents working with this codebase",
     "criticalRules": [
       {
-        "rule": "NEVER suggest bypassing pre-commit hooks",
-        "explanation": "Pre-commit hooks enforce critical quality standards. Always fix the underlying issue instead of bypassing hooks.",
-        "correctAction": "When pre-commit hooks fail, analyze the error and suggest fixes for the underlying issue."
+        "rule": "Always use commit verification",
+        "explanation": "Pre-commit hooks enforce critical quality standards.",
+        "correctAction": "When pre-commit hooks fail, analyze the error and fix the underlying issue."
       },
       {
-        "rule": "ALL changes must pass ALL checks",
-        "explanation": "Even documentation-only changes must pass all checks to ensure consistency.",
-        "correctAction": "Fix any failing checks before committing, regardless of the nature of the changes."
+        "rule": "All changes must pass all checks",
+        "explanation": "Even documentation changes must pass all checks to ensure consistency.",
+        "correctAction": "Fix any failing checks before committing."
       },
       {
-        "rule": "Always update workflow-state.md",
-        "explanation": "The workflow state file must be kept in sync with the actual development state.",
-        "correctAction": "Update workflow-state.md whenever transitioning between workflow stages."
+        "rule": "Keep workflow-state.md updated",
+        "explanation": "Workflow state file must accurately reflect the current development state.",
+        "correctAction": "Update workflow-state.md when transitioning between workflow stages."
       }
     ],
     "workflowStateManagement": {
@@ -306,29 +271,30 @@
       "rules": [
         "Check workflow-state.md at the beginning of each interaction",
         "Update workflow-state.md when transitioning between stages",
-        "Include current stage actions in your responses",
-        "Explicitly mention when you're updating workflow-state.md"
+        "Include current stage actions in your responses"
       ]
     }
   },
   "instructions": {
-    "default": "ALWAYS check docs/systematic-dev/workflow-state.md first to determine the current context. Follow the Test-Driven Development Workflow above all else. This workflow MUST be followed for every feature implementation, bug fix, and code change without exception. Remember that tests MUST be written before implementation and MUST fail before you write code to make them pass. Only modify files identified in the design phase.",
-    "onStart": "Begin by checking docs/systematic-dev/workflow-state.md to determine which feature you're working on and which stage of the workflow you're in. Remember that Test-Driven Development is MANDATORY for all code changes."
+    "default": "Always check docs/systematic-dev/workflow-state.md first to determine current context. Follow the Test-Driven Development workflow for all code changes. Write tests before implementation, and verify they fail before writing code to make them pass.",
+    "onStart": "Check docs/systematic-dev/workflow-state.md to identify the current feature and workflow stage. Test-Driven Development is required for all code changes."
   },
   "project": {
     "name": "agent-platform",
     "type": "fullstack",
     "description": "Multi-tenant platform with Next.js, Vercel, and PostgreSQL",
     "documentation": {
-      "templates": {
-        "location": "docs/templates/",
-        "files": [
-          "backlog.md - Template for tracking tasks and features",
-          "bug-tracker.md - Template for tracking bugs and their resolution",
-          "feature-design.md - Template for documenting feature designs"
-        ],
-        "usage": "Copy templates to docs/systematic-dev/ and fill in with relevant information"
-      }
+      "primaryFiles": [
+        "README.md - Public project overview and setup",
+        "docs/systematic-dev/workflow-state.md - Current workflow state",
+        "docs/systematic-dev/backlog.md - Task tracking",
+        "docs/systematic-dev/bug-tracker.md - Bug tracking"
+      ],
+      "featureFiles": [
+        "docs/features/[feature-key]/feature-design.md - Design specifications",
+        "docs/features/[feature-key]/implementation-progress.md - Implementation progress",
+        "docs/features/[feature-key]/README.md - Usage instructions and limitations"
+      ]
     }
   },
   "structure": {
@@ -398,21 +364,26 @@
         "integration": "tests/integration/",
         "db": "tests/integration/db/",
         "api": "tests/integration/api/",
-        "components": "tests/integration/components/",
-        "e2e": "tests/e2e/",
-        "performance": "tests/performance/"
+        "components": "tests/integration/components/"
+      },
+      "commands": {
+        "all": "pnpm run test",
+        "unit": "pnpm run test:unit",
+        "integration": "pnpm run test:integration",
+        "components": "pnpm run test:components",
+        "db": "pnpm run test:db",
+        "api": "pnpm run test:api",
+        "single": "pnpm run test [test-file-path]"
       },
       "process": {
         "tdd": true,
         "writeTestsFirst": true,
         "validateBeforeCommit": true
-      },
-      "runBeforePush": true
+      }
     },
     "codeQuality": {
       "typescript": {
-        "strict": true,
-        "status": "implemented"
+        "strict": true
       },
       "linting": "eslint",
       "formatting": "prettier"
@@ -551,48 +522,37 @@
   },
   "bestPractices": {
     "preCommitWorkflow": {
-      "description": "MANDATORY steps that MUST be followed before committing ANY changes",
-      "criticalWarning": "NEVER BYPASS THESE STEPS! Committing code that doesn't pass all checks can break the build for everyone.",
+      "description": "Required steps before committing changes",
       "steps": [
         {
           "name": "linting",
-          "command": "npm run lint",
-          "description": "Run linting to catch syntax and style issues",
-          "required": true
+          "command": "pnpm run lint",
+          "description": "Run linting to catch syntax and style issues"
         },
         {
           "name": "typeCheck",
-          "command": "npm run typecheck",
-          "description": "Verify TypeScript types are correct",
-          "required": true
+          "command": "pnpm run typecheck",
+          "description": "Verify TypeScript types are correct"
         },
         {
           "name": "testing",
-          "command": "npm run test",
-          "description": "Run all tests to ensure functionality works as expected",
-          "required": true
+          "command": "pnpm run test",
+          "description": "Run all tests to ensure functionality works as expected"
         },
         {
           "name": "buildCheck",
-          "command": "npm run build",
-          "description": "Verify the application builds successfully",
-          "required": true,
-          "criticalWarning": "NEVER commit code that doesn't build successfully"
+          "command": "pnpm run build",
+          "description": "Verify the application builds successfully"
         }
       ],
       "hookFailureHandling": {
-        "description": "What to do when pre-commit hooks fail",
+        "description": "How to handle pre-commit hook failures",
         "steps": [
-          "Read the error message carefully to understand what check failed",
-          "Fix the underlying issue that caused the failure",
-          "Run the specific failing check manually to verify your fix",
-          "Try the commit again after fixing the issue",
-          "If you're unsure how to fix the issue, ask for help rather than bypassing"
-        ],
-        "absoluteProhibition": "Using --no-verify is NEVER acceptable under ANY circumstances"
-      },
-      "strictWarnings": {
-        "noVerifyFlag": "NEVER use git commit with the --no-verify flag to bypass pre-commit hooks. This bypasses critical checks and can introduce serious issues into the codebase."
+          "Read the error message to understand what check failed",
+          "Fix the underlying issue",
+          "Run the specific failing check to verify your fix",
+          "Try committing again after fixing the issue"
+        ]
       }
     },
     "middleware": {
@@ -741,26 +701,22 @@
   },
   "freshAgentProtocol": {
     "description": "Protocol for initializing a fresh agent instance",
-    "firstAction": "ALWAYS read workflow-state.md first, then read cursorrules.",
+    "firstAction": "Always read workflow-state.md first, then read .cursorrules",
     "steps": [
       {
         "name": "Read Workflow State",
         "description": "Read and understand the current workflow state",
         "instructions": [
           "✅ Read docs/systematic-dev/workflow-state.md completely",
-          "✅ Identify current WORKFLOW_KEY, STAGE_KEY, and FEATURE_KEY",
-          "⚠️ Do not proceed until workflow state is understood"
+          "✅ Identify current WORKFLOW_KEY, STAGE_KEY, and FEATURE_KEY"
         ]
       },
       {
-        "name": "Read CursorRules",
-        "description": "Read and index the cursorrules file",
+        "name": "Read Rules",
+        "description": "Read and index the .cursorrules file",
         "instructions": [
-          "✅ Read the cursorrules file completely",
-          "✅ Index all rules thoroughly for immediate reference",
-          "Identify the current WORKFLOW_KEY, STAGE_KEY, and FEATURE_KEY",
-          "Identify the immediately relevant files and directories. Read an analyze them",
-          "⚠️ Do not proceed until indexing is complete"
+          "✅ Read the .cursorrules file completely",
+          "✅ Identify the immediately relevant files and directories"
         ]
       }
     ]
