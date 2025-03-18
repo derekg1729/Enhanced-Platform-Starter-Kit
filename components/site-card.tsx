@@ -1,3 +1,5 @@
+"use client";
+
 import BlurImage from "@/components/blur-image";
 import type { SelectSite } from "@/lib/schema";
 import { placeholderBlurhash, random } from "@/lib/utils";

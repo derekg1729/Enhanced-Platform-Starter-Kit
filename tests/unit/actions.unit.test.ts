@@ -40,7 +40,13 @@ describe('Agent Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getSession).mockResolvedValue({
-      user: { id: 'user-123' }
+      user: { 
+        id: 'user-123',
+        name: 'Test User',
+        username: 'testuser',
+        email: 'test@example.com',
+        image: 'https://example.com/avatar.png'
+      }
     });
   });
 
@@ -113,11 +119,11 @@ describe('Agent Actions', () => {
     });
 
     it('should return null if agent is not found', async () => {
-      vi.mocked(db.query.agents.findFirst).mockResolvedValue(null);
+      vi.mocked(db.query.agents.findFirst).mockResolvedValue(undefined);
 
       const result = await getAgent('non-existent-agent');
 
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
 
     it('should handle errors gracefully', async () => {
@@ -134,7 +140,12 @@ describe('Agent Actions', () => {
       // Mock the agent check
       vi.mocked(db.query.agents.findFirst).mockResolvedValue({
         id: 'agent-123',
+        name: 'Test Agent',
+        description: 'Test description',
+        model: 'gpt-4',
         userId: 'user-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await deleteAgent('agent-123');
@@ -144,7 +155,7 @@ describe('Agent Actions', () => {
     });
 
     it('should return an error if agent is not found', async () => {
-      vi.mocked(db.query.agents.findFirst).mockResolvedValue(null);
+      vi.mocked(db.query.agents.findFirst).mockResolvedValue(undefined);
 
       const result = await deleteAgent('agent-123');
 
@@ -187,8 +198,8 @@ describe('Agent Actions', () => {
     });
 
     it('should return an error message if agent is not found', async () => {
-      // Mock getAgent to return null (agent not found)
-      vi.mocked(db.query.agents.findFirst).mockResolvedValue(null);
+      // Mock getAgent to return undefined (agent not found)
+      vi.mocked(db.query.agents.findFirst).mockResolvedValue(undefined);
 
       const result = await sendMessage('non-existent-agent', 'Hello, agent!');
 

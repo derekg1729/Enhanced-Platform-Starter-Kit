@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 import NewAgentPage from '@/app/app/(dashboard)/agents/new/page';
 
 // Mock the AgentForm component
@@ -16,7 +16,9 @@ describe('New Agent Page', () => {
   it('renders the page with correct title', () => {
     render(<NewAgentPage />);
     
-    expect(screen.getByText('Create New Agent')).toBeInTheDocument();
+    // Use a more specific selector to avoid the multiple elements issue
+    const heading = screen.getByRole('heading', { name: 'Create New Agent' });
+    expect(heading).toBeInTheDocument();
     expect(screen.getByTestId('form-title')).toHaveTextContent('Create New Agent');
   });
 
@@ -41,6 +43,6 @@ describe('New Agent Page', () => {
     
     // Check for back button
     expect(screen.getByText('Back to Agents')).toBeInTheDocument();
-    expect(screen.getByText('Back to Agents').closest('a')).toHaveAttribute('href', '/app/agents');
+    expect(screen.getByText('Back to Agents').closest('a')).toHaveAttribute('href', '/agents');
   });
 }); 

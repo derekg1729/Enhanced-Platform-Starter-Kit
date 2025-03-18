@@ -52,4 +52,12 @@ export const trackEngagement = {
 // Feature Usage Events
 export const trackFeature = {
   use: (featureName: string) => va.track("feature_use", { featureName }),
+};
+
+// Agent Management Events
+export const trackAgent = {
+  create: () => va.track("agent_created"),
+  update: (agentId: string) => va.track("agent_updated", { agentId }),
+  delete: (agentId: string) => va.track("agent_deleted", { agentId }),
+  view: (agentId: string) => va.track("agent_viewed", { agentId }),
 }; 

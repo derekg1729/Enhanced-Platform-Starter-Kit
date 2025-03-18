@@ -1,120 +1,74 @@
 import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import AgentsPage from '@/app/app/(dashboard)/agents/page';
-import { Agent } from '@/lib/schema';
 
-// Mock the AgentsList component
-vi.mock('@/components/agents-list', () => ({
-  default: ({ agents, loading }: { agents: Agent[], loading: boolean }) => (
-    <div data-testid="agents-list-mock">
-      <div data-testid="agents-count">{agents.length}</div>
-      <div data-testid="loading-state">{loading.toString()}</div>
+// Mock the Agents component
+vi.mock('@/components/agents', () => ({
+  default: ({ limit }: { limit?: number }) => (
+    <div data-testid="agents-mock">
+      <div data-testid="limit">{limit || 'no-limit'}</div>
     </div>
   ),
 }));
 
-// Mock the getAgents function
-vi.mock('@/lib/actions', () => ({
-  getAgents: vi.fn(),
+// Mock the CreateAgentButton component
+vi.mock('@/components/create-agent-button', () => ({
+  default: ({ children }: { children: React.ReactNode }) => (
+    <button data-testid="create-agent-button">Create New Agent</button>
+  ),
 }));
 
-// Mock the auth session
-vi.mock('next-auth', () => ({
-  getServerSession: vi.fn(() => Promise.resolve({
-    user: { id: 'user-123' }
-  })),
+// Mock the CreateAgentModal component
+vi.mock('@/components/modal/create-agent', () => ({
+  default: () => <div data-testid="create-agent-modal">Modal Content</div>,
 }));
-
-import { getAgents } from '@/lib/actions';
 
 describe('Agents Page', () => {
-  const mockAgents: Agent[] = [
-    {
-      id: '1',
-      name: 'Test Agent 1',
-      description: 'This is a test agent',
-      model: 'gpt-4',
-      userId: 'user-123',
-      createdAt: new Date('2023-01-01'),
-      updatedAt: new Date('2023-01-01'),
-    },
-    {
-      id: '2',
-      name: 'Test Agent 2',
-      description: 'Another test agent',
-      model: 'gpt-3.5-turbo',
-      userId: 'user-123',
-      createdAt: new Date('2023-01-02'),
-      updatedAt: new Date('2023-01-02'),
-    },
-  ];
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders the agents page with correct title', async () => {
-    vi.mocked(getAgents).mockResolvedValue(mockAgents);
-    
     const { container } = render(await AgentsPage());
     
-    expect(screen.getByText('Agents')).toBeInTheDocument();
-    expect(container.querySelector('h1')).toHaveTextContent('Agents');
+    expect(screen.getByText('All Agents')).toBeInTheDocument();
+    expect(container.querySelector('h1')).toHaveTextContent('All Agents');
   });
 
-  it('passes agents to the AgentsList component', async () => {
-    vi.mocked(getAgents).mockResolvedValue(mockAgents);
-    
+  it('renders the Agents component', async () => {
     render(await AgentsPage());
     
-    const agentCount = screen.getByTestId('agents-count');
-    expect(agentCount).toHaveTextContent('2');
+    expect(screen.getByTestId('agents-mock')).toBeInTheDocument();
   });
 
-  it('calls getAgents with the user ID from the session', async () => {
-    vi.mocked(getAgents).mockResolvedValue(mockAgents);
-    
+  it('renders the CreateAgentButton', async () => {
     render(await AgentsPage());
     
-    expect(getAgents).toHaveBeenCalledWith('user-123');
+    expect(screen.getByTestId('create-agent-button')).toBeInTheDocument();
   });
 
-  it('handles loading state correctly', async () => {
-    // Mock getAgents to return a promise that doesn't resolve immediately
-    vi.mocked(getAgents).mockImplementation(() => new Promise((resolve) => {
-      setTimeout(() => resolve(mockAgents), 100);
-    }));
-    
-    // Since we're testing a server component, we need to render the loading state
-    // This is a simplified test since we can't easily test suspense in unit tests
-    const { container } = render(await AgentsPage());
-    
-    // The loading state should be false after the component renders
-    const loadingState = screen.getByTestId('loading-state');
-    expect(loadingState).toHaveTextContent('false');
-  });
-
-  it('handles empty agents array', async () => {
-    vi.mocked(getAgents).mockResolvedValue([]);
-    
+  it('renders the API keys link', async () => {
     render(await AgentsPage());
     
-    const agentCount = screen.getByTestId('agents-count');
-    expect(agentCount).toHaveTextContent('0');
+    const apiKeysLink = screen.getByText('Manage API Keys');
+    expect(apiKeysLink).toBeInTheDocument();
+    expect(apiKeysLink.closest('a')).toHaveAttribute('href', '/api-keys');
   });
 
   it('has the correct page structure', async () => {
-    vi.mocked(getAgents).mockResolvedValue(mockAgents);
-    
     const { container } = render(await AgentsPage());
     
-    // Check for main container
-    expect(container.querySelector('main')).toBeInTheDocument();
+    // Check for container div
+    expect(container.querySelector('div')).toBeInTheDocument();
     
-    // Check for header section
-    expect(container.querySelector('header')).toBeInTheDocument();
+    // Check for h1 title
+    expect(container.querySelector('h1')).toHaveTextContent('All Agents');
     
     // Check for agents list section
-    expect(screen.getByTestId('agents-list-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('agents-mock')).toBeInTheDocument();
+    
+    // Check for API keys link
+    expect(screen.getByText('Manage API Keys')).toBeInTheDocument();
+    expect(screen.getByText('Manage API Keys').closest('a')).toHaveAttribute('href', '/api-keys');
   });
 }); 

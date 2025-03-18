@@ -243,9 +243,10 @@ describe('Build Prerequisites', { timeout: 60000 }, () => {
   })
 
   describe('Code Quality', () => {
-    it.skip('should pass TypeScript compilation', { timeout: 30000 }, () => {
+    it('should pass TypeScript compilation', { timeout: 30000 }, () => {
       try {
-        execSync('pnpm tsc --noEmit', { stdio: 'pipe' })
+        // Use the same typecheck command defined in package.json for consistency
+        execSync('npm run typecheck', { stdio: 'pipe' })
       } catch (error: any) {
         const output = error.stdout?.toString() || error.stderr?.toString() || error.message
         throw new Error(`TypeScript compilation failed: ${output}`)

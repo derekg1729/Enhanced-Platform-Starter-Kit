@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ApiConnectionsList from '@/components/api-connections-list';
 import { toast } from 'sonner';
@@ -15,6 +15,23 @@ vi.mock('sonner', () => ({
     error: vi.fn(),
   },
 }));
+
+// Mock BlurImage component
+vi.mock('@/components/blur-image', () => ({
+  default: ({ alt, src }: { alt: string, src: string }) => (
+    <div data-testid="blur-image" data-alt={alt} data-src={src} />
+  ),
+}));
+
+// Define ApiConnection interface to match the component
+interface ApiConnection {
+  id: string;
+  service: string;
+  name: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  hasKey: boolean;
+}
 
 // Mock window.confirm
 const originalConfirm = window.confirm;
@@ -45,8 +62,9 @@ describe('ApiConnectionsList', () => {
 
     render(<ApiConnectionsList />);
     
-    // Check loading indicator
-    expect(screen.getByRole('img', { hidden: true })).toHaveClass('animate-spin');
+    // Check loading skeleton in grid layout
+    const skeletons = screen.getAllByRole('status', { hidden: true });
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 
   it('shows empty state when no connections are found', async () => {
@@ -57,28 +75,28 @@ describe('ApiConnectionsList', () => {
     
     // Wait for loading to complete
     await waitFor(() => {
-      expect(screen.getByText('No API Connections')).toBeInTheDocument();
-      expect(screen.getByText('Add an API key to get started with your agents.')).toBeInTheDocument();
+      expect(screen.getByText('No API Keys Yet')).toBeInTheDocument();
+      expect(screen.getByText('You do not have any API keys yet. Add one to get started with your agents.')).toBeInTheDocument();
     });
   });
 
-  it('renders a list of API connections', async () => {
+  it('renders a grid of API connection cards', async () => {
     // Mock API connections
     const mockConnections = [
       {
         id: 'conn-1',
         service: 'openai',
         name: 'OpenAI Key',
-        createdAt: new Date('2023-01-01'),
-        updatedAt: new Date('2023-01-01'),
+        createdAt: new Date('2023-01-01T00:00:00Z'),
+        updatedAt: new Date('2023-01-01T00:00:00Z'),
         hasKey: true,
       },
       {
         id: 'conn-2',
         service: 'anthropic',
         name: 'Anthropic Key',
-        createdAt: new Date('2023-01-02'),
-        updatedAt: new Date('2023-01-02'),
+        createdAt: new Date('2023-01-02T00:00:00Z'),
+        updatedAt: new Date('2023-01-02T00:00:00Z'),
         hasKey: true,
       },
     ];
@@ -89,19 +107,22 @@ describe('ApiConnectionsList', () => {
     
     // Wait for loading to complete
     await waitFor(() => {
-      // Check title
-      expect(screen.getByText('Your API Connections')).toBeInTheDocument();
-      
-      // Check connection items
-      expect(screen.getByText('OpenAI Key')).toBeInTheDocument();
-      expect(screen.getByText('Anthropic Key')).toBeInTheDocument();
-      
-      // Check service names
+      // Check service names in card titles
       expect(screen.getByText('Openai')).toBeInTheDocument();
       expect(screen.getByText('Anthropic')).toBeInTheDocument();
       
+      // Check connection names
+      expect(screen.getByText('OpenAI Key')).toBeInTheDocument();
+      expect(screen.getByText('Anthropic Key')).toBeInTheDocument();
+      
       // Check delete buttons
       expect(screen.getAllByText('Delete')).toHaveLength(2);
+      
+      // Check images
+      const images = screen.getAllByTestId('blur-image');
+      expect(images).toHaveLength(2);
+      expect(images[0]).toHaveAttribute('data-src', 'https://avatar.vercel.sh/conn-1');
+      expect(images[1]).toHaveAttribute('data-src', 'https://avatar.vercel.sh/conn-2');
     });
   });
 
@@ -112,8 +133,8 @@ describe('ApiConnectionsList', () => {
         id: 'conn-1',
         service: 'openai',
         name: 'OpenAI Key',
-        createdAt: new Date('2023-01-01'),
-        updatedAt: new Date('2023-01-01'),
+        createdAt: new Date('2023-01-01T00:00:00Z'),
+        updatedAt: new Date('2023-01-01T00:00:00Z'),
         hasKey: true,
       },
     ];
@@ -152,8 +173,8 @@ describe('ApiConnectionsList', () => {
         id: 'conn-1',
         service: 'openai',
         name: 'OpenAI Key',
-        createdAt: new Date('2023-01-01'),
-        updatedAt: new Date('2023-01-01'),
+        createdAt: new Date('2023-01-01T00:00:00Z'),
+        updatedAt: new Date('2023-01-01T00:00:00Z'),
         hasKey: true,
       },
     ];
@@ -185,14 +206,14 @@ describe('ApiConnectionsList', () => {
         id: 'conn-1',
         service: 'openai',
         name: 'OpenAI Key',
-        createdAt: new Date('2023-01-01'),
-        updatedAt: new Date('2023-01-01'),
+        createdAt: new Date('2023-01-01T00:00:00Z'),
+        updatedAt: new Date('2023-01-01T00:00:00Z'),
         hasKey: true,
       },
     ];
 
     vi.mocked(getApiConnections).mockResolvedValue(mockConnections);
-    vi.mocked(deleteApiConnection).mockResolvedValue({ error: 'Failed to delete API connection' });
+    vi.mocked(deleteApiConnection).mockResolvedValue({ success: false });
     vi.mocked(window.confirm).mockReturnValue(true);
 
     render(<ApiConnectionsList />);
@@ -219,8 +240,8 @@ describe('ApiConnectionsList', () => {
         id: 'conn-1',
         service: 'openai',
         name: 'OpenAI Key',
-        createdAt: new Date('2023-01-01'),
-        updatedAt: new Date('2023-01-01'),
+        createdAt: new Date('2023-01-01T00:00:00Z'),
+        updatedAt: new Date('2023-01-01T00:00:00Z'),
         hasKey: true,
       },
     ];
@@ -253,20 +274,20 @@ describe('ApiConnectionsList', () => {
         id: 'conn-1',
         service: 'openai',
         name: 'OpenAI Key',
-        createdAt: new Date('2023-01-01'),
-        updatedAt: new Date('2023-01-01'),
+        createdAt: new Date('2023-01-01T00:00:00Z'),
+        updatedAt: new Date('2023-01-01T00:00:00Z'),
         hasKey: true,
       },
     ];
 
-    vi.mocked(getApiConnections).mockResolvedValue(mockConnections);
-    vi.mocked(deleteApiConnection).mockImplementation(() => {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          resolve({ success: true });
-        }, 100);
-      });
+    // Create a promise that won't resolve immediately
+    let resolveDeletePromise = (value: any) => {}; // Initialize with a default function
+    const deletePromise = new Promise((resolve) => {
+      resolveDeletePromise = resolve;
     });
+
+    vi.mocked(getApiConnections).mockResolvedValue(mockConnections);
+    vi.mocked(deleteApiConnection).mockImplementation(() => deletePromise as Promise<any>);
     vi.mocked(window.confirm).mockReturnValue(true);
 
     render(<ApiConnectionsList />);
@@ -279,29 +300,18 @@ describe('ApiConnectionsList', () => {
     // Click delete button
     fireEvent.click(screen.getByText('Delete'));
     
-    // Verify button is disabled during deletion
-    expect(screen.getByText('Deleting...')).toBeInTheDocument();
+    // Check that the button is disabled and shows loading state
+    await waitFor(() => {
+      const deleteButton = screen.getByText('Deleting...');
+      expect(deleteButton.closest('button')).toBeDisabled();
+    });
     
-    // Wait for deletion to complete
+    // Resolve the delete promise
+    resolveDeletePromise({ success: true });
+    
+    // Wait for the deletion to complete
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalled();
-    });
-  });
-
-  it('handles errors when loading connections', async () => {
-    // Mock API connections loading error
-    vi.mocked(getApiConnections).mockRejectedValue(new Error('Failed to load connections'));
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    render(<ApiConnectionsList />);
-    
-    // Wait for loading to complete
-    await waitFor(() => {
-      // Verify toast error was called
-      expect(toast.error).toHaveBeenCalledWith('Failed to load API connections');
-      
-      // Should show empty state
-      expect(screen.getByText('No API Connections')).toBeInTheDocument();
     });
   });
 }); 

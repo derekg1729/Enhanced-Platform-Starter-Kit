@@ -5,3 +5,141 @@
 .root :global(.react-tweet-theme) a {
   font-weight: 300;
 }
+
+/* MDX Styles */
+.mdx {
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.mdx h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.mdx h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mdx h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.mdx p {
+  margin-bottom: 1rem;
+}
+
+.mdx ul, .mdx ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.mdx ul {
+  list-style-type: disc;
+}
+
+.mdx ol {
+  list-style-type: decimal;
+}
+
+.mdx li {
+  margin-bottom: 0.5rem;
+}
+
+.mdx code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+}
+
+.mdx pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.mdx pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.mdx a {
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.mdx a:hover {
+  text-decoration: underline;
+}
+
+.mdx blockquote {
+  border-left: 4px solid rgba(0, 0, 0, 0.1);
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.mdx hr {
+  border: 0;
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+}
+
+.mdx table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.mdx th, .mdx td {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+}
+
+.mdx th {
+  background-color: rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+}
+
+/* Dark mode styles */
+:global(.dark) .mdx code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .mdx pre {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .mdx a {
+  color: #3B82F6;
+}
+
+:global(.dark) .mdx blockquote {
+  border-left-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .mdx hr {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .mdx th, :global(.dark) .mdx td {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .mdx th {
+  background-color: rgba(255, 255, 255, 0.05);
+}

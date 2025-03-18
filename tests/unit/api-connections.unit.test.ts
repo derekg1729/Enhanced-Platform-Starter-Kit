@@ -31,6 +31,8 @@ vi.mock('@/lib/db', () => ({
 
 vi.mock('@/lib/auth', () => ({
   getSession: vi.fn(),
+  withSiteAuth: vi.fn((action) => action),
+  withPostAuth: vi.fn((action) => action),
 }));
 
 vi.mock('@/lib/encryption', () => ({
@@ -46,7 +48,13 @@ describe('API Connection Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getSession).mockResolvedValue({
-      user: { id: 'user-123' }
+      user: { 
+        id: 'user-123',
+        name: 'Test User',
+        username: 'testuser',
+        email: 'test@example.com',
+        image: 'https://example.com/avatar.png'
+      }
     });
   });
 
@@ -59,7 +67,7 @@ describe('API Connection Actions', () => {
       formData.append('name', 'My OpenAI Key');
 
       // Mock database responses
-      vi.mocked(db.query.apiConnections.findFirst).mockResolvedValue(null);
+      vi.mocked(db.query.apiConnections.findFirst).mockResolvedValue(undefined);
       vi.mocked(db.insert).mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([{
@@ -276,7 +284,12 @@ describe('API Connection Actions', () => {
       // Mock connection exists
       vi.mocked(db.query.apiConnections.findFirst).mockResolvedValue({
         id: 'conn-123',
+        service: 'openai',
+        name: 'Test API Key',
+        encryptedApiKey: 'encrypted-key',
         userId: 'user-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await deleteApiConnection('conn-123');
@@ -303,7 +316,7 @@ describe('API Connection Actions', () => {
 
     it('should return an error if connection not found', async () => {
       // Mock connection not found
-      vi.mocked(db.query.apiConnections.findFirst).mockResolvedValue(null);
+      vi.mocked(db.query.apiConnections.findFirst).mockResolvedValue(undefined);
 
       const result = await deleteApiConnection('conn-123');
 
