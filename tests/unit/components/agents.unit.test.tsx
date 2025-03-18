@@ -17,6 +17,16 @@ vi.mock('@/components/agent-card', () => ({
   ),
 }));
 
+// Mock the EmptyAgentsState component
+vi.mock('@/components/empty-agents-state', () => ({
+  default: () => (
+    <div data-testid="empty-agents-state">
+      <h1>No Agents Yet</h1>
+      <p>You do not have any agents yet. Create one to get started.</p>
+    </div>
+  ),
+}));
+
 // Mock the getSession function
 vi.mock('@/lib/auth', () => ({
   getSession: vi.fn().mockResolvedValue({
@@ -102,7 +112,8 @@ describe('Agents Component', () => {
     const component = await Agents({});
     render(component);
     
-    // Check if the empty state is rendered
+    // Check if the empty state component is rendered
+    expect(screen.getByTestId('empty-agents-state')).toBeInTheDocument();
     expect(screen.getByText('No Agents Yet')).toBeInTheDocument();
     expect(screen.getByText('You do not have any agents yet. Create one to get started.')).toBeInTheDocument();
   });
