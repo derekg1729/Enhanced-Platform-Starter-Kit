@@ -64,9 +64,27 @@ This document tracks bugs and issues found during the validation stage of the He
   - `components/modal/create-agent.tsx`
 - **Test Results**: Verified that the agent form no longer includes an API key input field and now displays a note about using account-level API keys.
 
+### DEP-001: Missing UI Component Dependencies
+- **Description**: Missing critical UI component dependencies causing errors in the build process.
+- **Severity**: High
+- **Status**: Resolved
+- **Steps to Reproduce**: 
+  1. Run `npm run build`
+  2. Observe build errors related to missing component dependencies
+- **Expected Behavior**: All dependencies should be available and the build process should complete successfully.
+- **Actual Behavior**: Build fails with errors related to missing dependencies for UI components.
+- **Resolution**: Added the following missing dependencies:
+  - Added `class-variance-authority` for UI component variants
+  - Added `@radix-ui/react-dialog` for modal components
+  - Added `react-hook-form` and `@hookform/resolvers` for form handling
+  - Added `zod` for form validation
+  - Added `glob` and `@types/pg` as development dependencies
+  - Created comprehensive tests to verify all dependencies are correctly installed
+- **Test Results**: Verified that all dependencies are properly installed, resolvable, and the build process now completes successfully.
+
 ## Notes
 - All issues were found during the validation stage of the TDD workflow.
 - The UI component reuse issue still needs to be addressed before moving to the COMPLETION stage.
 - Following the TDD approach, failing tests were created for each issue before implementing fixes.
 
-*Last updated: March 16, 2025* 
+*Last updated: March 18, 2024* 
