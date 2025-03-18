@@ -1,16 +1,31 @@
 'use client';
 
+import { useState } from 'react';
 import { SelectAgent } from '@/lib/schema';
 import useChat from '@/hooks/use-chat';
-import { SendIcon, Loader2 } from 'lucide-react';
+import { SendIcon, Loader2, AlertCircle, Save } from 'lucide-react';
 import TextareaAutosize from 'react-textarea-autosize';
+import { updateAgent } from '@/lib/actions';
+import { toast } from 'sonner';
+
+// Map model IDs to display names
+const MODEL_OPTIONS = [
+  { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo" },
+  { id: "gpt-4", name: "GPT-4" },
+  { id: "gpt-4-turbo", name: "GPT-4 Turbo" },
+  { id: "claude-3-opus", name: "Claude 3 Opus" },
+  { id: "claude-3-sonnet", name: "Claude 3 Sonnet" },
+  { id: "claude-3-haiku", name: "Claude 3 Haiku" },
+];
 
 interface ChatInterfaceProps {
   agent: SelectAgent;
 }
 
 export default function ChatInterface({ agent }: ChatInterfaceProps) {
-  const { messages, input, setInput, handleSubmit, isLoading } = useChat(agent.id);
+  const [currentModel, setCurrentModel] = useState(agent.model);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { messages, input, setInput, handleSubmit, isLoading, error } = useChat(agent.id);
 
   // Handle the Enter key press to submit the form
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -23,6 +38,36 @@ export default function ChatInterface({ agent }: ChatInterfaceProps) {
     }
   };
 
+  // Handle model change
+  const handleModelChange = async () => {
+    if (currentModel === agent.model) return;
+    
+    setIsUpdating(true);
+    try {
+      const result = await updateAgent({
+        id: agent.id,
+        name: agent.name,
+        description: agent.description || '',
+        model: currentModel,
+      });
+      
+      if (result.error) {
+        toast.error(`Failed to update model: ${result.error}`);
+        setCurrentModel(agent.model); // Reset to original model if failed
+      } else {
+        toast.success('Agent model updated successfully');
+        // Force a page refresh to apply the model change
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error updating model:', error);
+      toast.error('Failed to update model');
+      setCurrentModel(agent.model); // Reset to original model if failed
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Agent info */}
@@ -32,7 +77,33 @@ export default function ChatInterface({ agent }: ChatInterfaceProps) {
       >
         <div>
           <h2 className="text-xl font-bold dark:text-white">{agent.name}</h2>
-          <p className="text-sm text-stone-500 dark:text-stone-400">{agent.model}</p>
+          <div className="flex items-center mt-1 space-x-2">
+            <select
+              value={currentModel}
+              onChange={(e) => setCurrentModel(e.target.value)}
+              className="text-sm bg-transparent border border-stone-200 rounded px-2 py-1 dark:border-stone-700 dark:text-stone-400"
+            >
+              {MODEL_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+            {currentModel !== agent.model && (
+              <button
+                onClick={handleModelChange}
+                disabled={isUpdating}
+                className="inline-flex items-center text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              >
+                {isUpdating ? (
+                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                ) : (
+                  <Save className="h-3 w-3 mr-1" />
+                )}
+                Save
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -60,9 +131,14 @@ export default function ChatInterface({ agent }: ChatInterfaceProps) {
                 className={`max-w-3/4 rounded-lg px-4 py-2 ${
                   message.role === 'user'
                     ? 'ml-auto bg-blue-500 text-white'
-                    : 'mr-auto bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-200'
+                    : message.role === 'error'
+                    ? 'mr-auto bg-red-100 text-red-700 flex items-center space-x-2'
+                    : 'mr-auto bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-white'
                 }`}
               >
+                {message.role === 'error' && (
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                )}
                 {message.content}
               </div>
             </div>
@@ -70,8 +146,16 @@ export default function ChatInterface({ agent }: ChatInterfaceProps) {
         )}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="mr-auto rounded-lg bg-stone-100 px-4 py-2 dark:bg-stone-800">
-              <Loader2 className="h-5 w-5 animate-spin text-stone-500 dark:text-stone-400" />
+            <div className="rounded-lg bg-stone-100 px-4 py-2 dark:bg-stone-700">
+              <Loader2 className="h-4 w-4 animate-spin" role="status" />
+            </div>
+          </div>
+        )}
+        {error && !isLoading && messages.length > 0 && messages[messages.length - 1].role !== 'error' && (
+          <div className="flex justify-start">
+            <div className="mr-auto rounded-lg bg-red-100 px-4 py-2 text-red-800 dark:bg-red-900 dark:text-red-200 flex items-center">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              {error}
             </div>
           </div>
         )}

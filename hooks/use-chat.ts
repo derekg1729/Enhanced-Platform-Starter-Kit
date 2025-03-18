@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid';
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant' | 'system' | 'error';
   content: string;
 }
 
@@ -19,6 +19,7 @@ export default function useChat(agentId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /**
    * Handle form submission to send a message to the agent
@@ -31,6 +32,9 @@ export default function useChat(agentId: string) {
     if (!input.trim()) {
       return;
     }
+
+    // Clear any previous errors
+    setError(null);
 
     // Create a new user message
     const userMessage: Message = {
@@ -54,7 +58,22 @@ export default function useChat(agentId: string) {
       
       // Check for errors
       if ('error' in response) {
-        throw new Error(response.error);
+        const errorMessage = response.error;
+        console.error('Error from AI service:', errorMessage);
+        
+        // Add an error message to the chat
+        setMessages((messages) => [
+          ...messages,
+          {
+            id: nanoid(),
+            role: 'error',
+            content: `Error: ${errorMessage}`,
+          },
+        ]);
+        
+        // Set the error state
+        setError(errorMessage);
+        return;
       }
       
       // Add the assistant's response to the chat
@@ -68,7 +87,19 @@ export default function useChat(agentId: string) {
       ]);
     } catch (error) {
       console.error('Error sending message:', error);
-      // You could add error handling here, such as displaying an error message
+      
+      // Add an error message to the chat
+      setMessages((messages) => [
+        ...messages,
+        {
+          id: nanoid(),
+          role: 'error',
+          content: `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`,
+        },
+      ]);
+      
+      // Set the error state
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
       // Set loading state to false after the message is sent
       setIsLoading(false);
@@ -81,5 +112,6 @@ export default function useChat(agentId: string) {
     setInput,
     handleSubmit,
     isLoading,
+    error,
   };
 } 

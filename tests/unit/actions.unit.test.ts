@@ -27,14 +27,25 @@ vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
 }));
 
+vi.mock('@/lib/db-access', () => ({
+  getApiConnectionByService: vi.fn(),
+}));
+
+vi.mock('@/lib/ai-service', () => ({
+  createAIService: vi.fn(),
+}));
+
 vi.mock('nanoid', () => ({
-  nanoid: () => 'test-id-123',
-  customAlphabet: () => () => 'test-id-123',
+  nanoid: vi.fn().mockReturnValue('test-id-123'),
+  customAlphabet: vi.fn(() => vi.fn().mockReturnValue('test-id-123')),
 }));
 
 // Import mocks after they've been defined
 import db from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { getApiConnectionByService } from '@/lib/db-access';
+import { createAIService } from '@/lib/ai-service';
+import { nanoid } from 'nanoid';
 
 describe('Agent Actions', () => {
   beforeEach(() => {
@@ -175,6 +186,12 @@ describe('Agent Actions', () => {
 
   describe('sendMessage', () => {
     it('should send a message to the agent and return the response', async () => {
+      // Mock session
+      vi.mocked(getSession).mockResolvedValue({
+        user: { id: 'user-123', name: 'Test User', email: 'test@example.com' }
+      } as any);
+
+      // Mock agent
       const mockAgent = {
         id: 'agent-123',
         name: 'Test Agent',
@@ -185,15 +202,53 @@ describe('Agent Actions', () => {
         updatedAt: new Date('2023-01-01'),
       };
 
-      // Mock getAgent to return the mock agent
+      // Mock API connection
+      const mockApiConnection = {
+        id: 'conn-123',
+        name: 'OpenAI',
+        service: 'openai',
+        encryptedApiKey: 'encrypted-key-123',
+        userId: 'user-123',
+        createdAt: new Date('2023-01-01'),
+        updatedAt: new Date('2023-01-01'),
+      };
+
+      // Mock AI service
+      const mockAIService = {
+        generateChatResponse: vi.fn().mockResolvedValue({
+          content: 'This is a mock response from the AI model'
+        })
+      };
+
+      // Set up all mocks
       vi.mocked(db.query.agents.findFirst).mockResolvedValue(mockAgent);
+      vi.mocked(getApiConnectionByService).mockResolvedValue(mockApiConnection);
+      vi.mocked(createAIService).mockReturnValue(mockAIService);
+      vi.mocked(nanoid).mockReturnValue('test-id-123');
 
       const result = await sendMessage('agent-123', 'Hello, agent!');
 
+      // Verify all expected functions were called
+      expect(getSession).toHaveBeenCalled();
+      expect(db.query.agents.findFirst).toHaveBeenCalled();
+      expect(getApiConnectionByService).toHaveBeenCalledWith('openai', 'user-123');
+      expect(createAIService).toHaveBeenCalledWith('gpt-4', 'encrypted-key-123');
+      expect(mockAIService.generateChatResponse).toHaveBeenCalledWith(
+        [
+          { role: 'system', content: 'You are Test Agent, This is a test agent' },
+          { role: 'user', content: 'Hello, agent!' }
+        ],
+        {
+          temperature: 0.7,
+          maxTokens: 1000,
+        }
+      );
+
+      // Verify result matches expected format
       expect(result).toEqual({
         id: 'test-id-123',
         role: 'assistant',
-        content: expect.stringContaining('This is a mock response'),
+        content: 'This is a mock response from the AI model',
       });
     });
 
@@ -209,13 +264,14 @@ describe('Agent Actions', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      // Mock the database to throw an error
-      vi.mocked(db.query.agents.findFirst).mockRejectedValueOnce(new Error('Database error'));
+      // Mock getSession to throw an error instead of the database query
+      // This will trigger the outer catch block
+      vi.mocked(getSession).mockRejectedValueOnce(new Error('Session error'));
       
       const result = await sendMessage('agent-123', 'Hello, agent!');
       
       expect(result).toEqual({
-        error: 'Agent not found',
+        error: 'Failed to send message',
       });
     });
   });

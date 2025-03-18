@@ -33,7 +33,8 @@ export function ApiKeyForm({
   title = 'Add API Key',
   description = 'Add your API key to use with your agents.',
   initialService = 'openai',
-}: ApiKeyFormProps) {
+  onSuccess,
+}: ApiKeyFormProps & { onSuccess?: () => void }) {
   const [service, setService] = useState(initialService);
   const [name, setName] = useState('');
   const [apiKey, setApiKey] = useState('');
@@ -72,6 +73,10 @@ export function ApiKeyForm({
         setService(initialService);
         setName('');
         setApiKey('');
+        // Call the onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
       }
     } catch (error) {
       console.error('Error adding API key:', error);

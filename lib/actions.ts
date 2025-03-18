@@ -14,6 +14,8 @@ import { revalidateTag } from "next/cache";
 import { withPostAuth, withSiteAuth } from "./auth";
 import db from "./db";
 import { SelectPost, SelectSite, posts, sites, users, agents, apiConnections } from "./schema";
+import { createAIService } from './ai-service';
+import { getApiConnectionByService } from './db-access';
 
 const nanoid = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
@@ -503,10 +505,7 @@ export const getAgent = async (id: string) => {
 };
 
 /**
- * Send a message to an agent and get a response
- * @param agentId - The agent ID to send the message to
- * @param message - The message to send
- * @returns The agent's response
+ * Send a message to an agent and get a response from the AI model
  */
 export const sendMessage = async (agentId: string, message: string) => {
   try {
@@ -532,15 +531,53 @@ export const sendMessage = async (agentId: string, message: string) => {
       };
     }
 
-    // In a real implementation, we would call the AI service API here
-    // For now, we'll just return a mock response
-    const response = {
-      id: nanoid(),
-      role: "assistant",
-      content: `This is a mock response from the ${agent.name} agent using the ${agent.model} model. You said: "${message}"`,
-    };
+    // Determine which service to use based on the model
+    const service = agent.model.startsWith('gpt') ? 'openai' : 
+                    agent.model.startsWith('claude') ? 'anthropic' : '';
+    
+    // Get the API connection for the service
+    const apiConnection = await getApiConnectionByService(service, session.user.id);
+    if (!apiConnection) {
+      return {
+        error: "No API key found for this model. Please add an API key in your settings.",
+      };
+    }
 
-    return response;
+    // Create an AI service instance
+    const aiService = createAIService(agent.model, apiConnection.encryptedApiKey);
+    
+    // Define a simple system prompt based on the agent's description
+    const systemPrompt = agent.description 
+      ? `You are ${agent.name}, ${agent.description}`
+      : `You are ${agent.name}, a helpful AI assistant.`;
+    
+    // Format the messages
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: message }
+    ];
+    
+    // Generate a response from the AI service
+    try {
+      const aiResponse = await aiService.generateChatResponse(messages, {
+        temperature: 0.7,
+        maxTokens: 1000,
+      });
+      
+      // Format the response
+      const response = {
+        id: nanoid(),
+        role: "assistant",
+        content: aiResponse.content,
+      };
+      
+      return response;
+    } catch (error) {
+      console.error("Error generating AI response:", error);
+      return {
+        error: `Failed to generate AI response: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
+    }
   } catch (error) {
     console.error("Error sending message:", error);
     return {

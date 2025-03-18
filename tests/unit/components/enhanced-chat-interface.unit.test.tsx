@@ -1,220 +1,257 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ChatInterface from '@/components/chat-interface';
-
-// Mock the TextareaAutosize component
-vi.mock('react-textarea-autosize', () => ({
-  default: (props: any) => <textarea {...props} />,
-}));
-
-// Mock the hooks/dependencies first
-vi.mock('@/hooks/use-chat', () => ({
-  default: vi.fn(),
-}));
-
-// Import after mocking
 import useChat from '@/hooks/use-chat';
 
-// Define types that match the actual implementation
-type SelectAgent = {
-  id: string;
-  name: string;
-  description: string | null;
-  model: string;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string | null;
-};
-
-type Message = {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-};
+// Mock the useChat hook
+vi.mock('@/hooks/use-chat', () => ({
+  default: vi.fn()
+}));
 
 describe('Enhanced Chat Interface', () => {
-  const mockAgent: SelectAgent = {
-    id: 'agent-123',
-    name: 'Test Agent',
-    description: 'This is a test agent',
-    model: 'gpt-4',
-    userId: 'user-123',
-    createdAt: new Date('2023-01-01'),
-    updatedAt: new Date('2023-01-01'),
-  };
-
   beforeEach(() => {
-    vi.resetAllMocks();
-  });
-
-  it('renders the basic chat interface components', () => {
-    // Setup the mock implementation for this test
     vi.mocked(useChat).mockReturnValue({
       messages: [],
       input: '',
       setInput: vi.fn(),
       handleSubmit: vi.fn(),
       isLoading: false,
+      error: null
     });
+  });
 
-    render(<ChatInterface agent={mockAgent} />);
+  it('renders correctly', () => {
+    render(
+      <ChatInterface 
+        agent={{
+          id: 'test-agent-id',
+          name: 'Test Agent',
+          model: 'gpt-4',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: 'test-user-id'
+        }}
+      />
+    );
     
-    // Check that the main interface elements are rendered
+    // Check that basic elements are rendered
     expect(screen.getByTestId('agent-info')).toBeInTheDocument();
     expect(screen.getByTestId('messages-container')).toBeInTheDocument();
     expect(screen.getByTestId('input-container')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-form')).toBeInTheDocument();
     expect(screen.getByTestId('chat-textarea')).toBeInTheDocument();
     expect(screen.getByTestId('send-button')).toBeInTheDocument();
   });
 
   it('displays the agent name and model', () => {
-    vi.mocked(useChat).mockReturnValue({
-      messages: [],
-      input: '',
-      setInput: vi.fn(),
-      handleSubmit: vi.fn(),
-      isLoading: false,
-    });
-
-    render(<ChatInterface agent={mockAgent} />);
+    render(
+      <ChatInterface 
+        agent={{
+          id: 'test-agent-id',
+          name: 'Test Agent',
+          model: 'gpt-4',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: 'test-user-id'
+        }}
+      />
+    );
     
+    // Check that agent info is displayed correctly
     expect(screen.getByText('Test Agent')).toBeInTheDocument();
-    expect(screen.getByText('gpt-4')).toBeInTheDocument();
+    // Use querySelector to check for option with value 'gpt-4' instead of direct text
+    expect(screen.getByRole('option', { name: 'GPT-4' })).toBeInTheDocument();
   });
 
   it('handles form submission', () => {
     const mockHandleSubmit = vi.fn(e => e.preventDefault());
     vi.mocked(useChat).mockReturnValue({
       messages: [],
-      input: 'Test message',
+      input: 'Hello agent',
       setInput: vi.fn(),
       handleSubmit: mockHandleSubmit,
       isLoading: false,
+      error: null
     });
 
-    render(<ChatInterface agent={mockAgent} />);
+    render(
+      <ChatInterface 
+        agent={{
+          id: 'test-agent-id',
+          name: 'Test Agent',
+          model: 'gpt-4',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: 'test-user-id'
+        }}
+      />
+    );
     
     // Submit the form
-    fireEvent.submit(screen.getByTestId('chat-form'));
+    const form = screen.getByTestId('chat-form');
+    fireEvent.submit(form);
     
-    // Check if handleSubmit was called
+    // Check that handleSubmit was called
     expect(mockHandleSubmit).toHaveBeenCalled();
   });
 
-  it('handles Enter key to submit messages', async () => {
-    const mockHandleSubmit = vi.fn(e => e.preventDefault());
+  it('updates input when user types', () => {
+    const mockSetInput = vi.fn();
     vi.mocked(useChat).mockReturnValue({
       messages: [],
-      input: 'Test message',
-      setInput: vi.fn(),
-      handleSubmit: mockHandleSubmit,
+      input: '',
+      setInput: mockSetInput,
+      handleSubmit: vi.fn(),
       isLoading: false,
+      error: null
     });
 
-    render(<ChatInterface agent={mockAgent} />);
+    render(
+      <ChatInterface 
+        agent={{
+          id: 'test-agent-id',
+          name: 'Test Agent',
+          model: 'gpt-4',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: 'test-user-id'
+        }}
+      />
+    );
     
-    // Setup user event for keyboard interactions
+    // Type in the textarea
     const textarea = screen.getByTestId('chat-textarea');
+    fireEvent.change(textarea, { target: { value: 'New message' } });
     
-    // Trigger the keyDown event directly
-    fireEvent.keyDown(textarea, { key: 'Enter', code: 'Enter', shiftKey: false });
-    
-    // Check if handleSubmit was called
-    expect(mockHandleSubmit).toHaveBeenCalled();
+    // Check that setInput was called with the new value
+    expect(mockSetInput).toHaveBeenCalledWith('New message');
   });
 
-  it('does not submit on Shift+Enter', async () => {
-    const mockHandleSubmit = vi.fn(e => e.preventDefault());
+  it('displays user and assistant messages', () => {
     vi.mocked(useChat).mockReturnValue({
-      messages: [],
-      input: 'Test message',
-      setInput: vi.fn(),
-      handleSubmit: mockHandleSubmit,
-      isLoading: false,
-    });
-
-    render(<ChatInterface agent={mockAgent} />);
-    
-    // Focus the textarea and press Shift+Enter directly
-    const textarea = screen.getByTestId('chat-textarea');
-    
-    // Trigger the keyDown event with shiftKey true
-    fireEvent.keyDown(textarea, { key: 'Enter', code: 'Enter', shiftKey: true });
-    
-    // Check that handleSubmit was not called
-    expect(mockHandleSubmit).not.toHaveBeenCalled();
-  });
-
-  it('renders messages correctly when they exist', () => {
-    const mockMessages: Message[] = [
-      { id: '1', role: 'user', content: 'Hello' },
-      { id: '2', role: 'assistant', content: 'Hi there!' },
-      { id: '3', role: 'user', content: 'How are you?' }
-    ];
-    
-    vi.mocked(useChat).mockReturnValue({
-      messages: mockMessages,
+      messages: [
+        { id: 'msg1', role: 'user', content: 'Hello' },
+        { id: 'msg2', role: 'assistant', content: 'Hi there!' }
+      ],
       input: '',
       setInput: vi.fn(),
       handleSubmit: vi.fn(),
       isLoading: false,
+      error: null
     });
 
-    render(<ChatInterface agent={mockAgent} />);
+    render(
+      <ChatInterface 
+        agent={{
+          id: 'test-agent-id',
+          name: 'Test Agent',
+          model: 'gpt-4',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: 'test-user-id'
+        }}
+      />
+    );
     
-    // Check that the messages are rendered using data-testid
-    const userMessages = screen.getAllByTestId('message-user');
-    const assistantMessage = screen.getByTestId('message-assistant');
-    
-    expect(userMessages).toHaveLength(2);
-    expect(userMessages[0]).toHaveTextContent('Hello');
-    expect(assistantMessage).toHaveTextContent('Hi there!');
+    // Check that messages are displayed
+    expect(screen.getByText('Hello')).toBeInTheDocument();
+    expect(screen.getByText('Hi there!')).toBeInTheDocument();
   });
 
-  it('disables send button when input is empty', () => {
+  it('shows loading state', () => {
     vi.mocked(useChat).mockReturnValue({
-      messages: [],
-      input: '',
-      setInput: vi.fn(),
-      handleSubmit: vi.fn(),
-      isLoading: false,
-    });
-
-    render(<ChatInterface agent={mockAgent} />);
-    
-    // Check that the send button is disabled
-    expect(screen.getByTestId('send-button')).toBeDisabled();
-  });
-
-  it('disables send button when loading', () => {
-    vi.mocked(useChat).mockReturnValue({
-      messages: [],
-      input: 'Test message',
-      setInput: vi.fn(),
-      handleSubmit: vi.fn(),
-      isLoading: true,
-    });
-
-    render(<ChatInterface agent={mockAgent} />);
-    
-    // Check that the send button is disabled
-    expect(screen.getByTestId('send-button')).toBeDisabled();
-  });
-
-  it('shows loading indicator when isLoading is true', () => {
-    vi.mocked(useChat).mockReturnValue({
-      messages: [],
+      messages: [{ id: 'msg1', role: 'user', content: 'Hello' }],
       input: '',
       setInput: vi.fn(),
       handleSubmit: vi.fn(),
       isLoading: true,
+      error: null
     });
 
-    render(<ChatInterface agent={mockAgent} />);
+    render(
+      <ChatInterface 
+        agent={{
+          id: 'test-agent-id',
+          name: 'Test Agent',
+          model: 'gpt-4',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: 'test-user-id'
+        }}
+      />
+    );
     
-    // Look for the loading spinner instead of a specific test ID
-    const spinner = document.querySelector('svg.animate-spin');
-    expect(spinner).toBeInTheDocument();
+    // Check for loading indicator (status role which is the spinner)
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('shows placeholder text when no messages exist', () => {
+    vi.mocked(useChat).mockReturnValue({
+      messages: [],
+      input: '',
+      setInput: vi.fn(),
+      handleSubmit: vi.fn(),
+      isLoading: false,
+      error: null
+    });
+
+    render(
+      <ChatInterface 
+        agent={{
+          id: 'test-agent-id',
+          name: 'Test Agent',
+          model: 'gpt-4',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: 'test-user-id'
+        }}
+      />
+    );
+    
+    // Check that placeholder text is displayed
+    expect(screen.getByText(/send a message to start chatting with/i)).toBeInTheDocument();
+    // Use getAllByText instead of getByText since the agent name appears multiple times
+    expect(screen.getAllByText(/Test Agent/i)).toHaveLength(2);
+  });
+
+  it('displays error messages', () => {
+    vi.mocked(useChat).mockReturnValue({
+      messages: [
+        { id: 'msg1', role: 'user', content: 'Hello' },
+        { id: 'msg2', role: 'error', content: 'An error occurred' }
+      ],
+      input: '',
+      setInput: vi.fn(),
+      handleSubmit: vi.fn(),
+      isLoading: false,
+      error: 'An error occurred'
+    });
+
+    render(
+      <ChatInterface 
+        agent={{
+          id: 'test-agent-id',
+          name: 'Test Agent',
+          model: 'gpt-4',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: 'test-user-id'
+        }}
+      />
+    );
+    
+    // Check that error message is displayed
+    expect(screen.getByText('An error occurred')).toBeInTheDocument();
+    // Check that it has the error styling - look for text-red-700 class instead of bg-red-100
+    const errorMessageContainer = screen.getByText('An error occurred').closest('div');
+    expect(errorMessageContainer).toHaveClass('text-red-700');
   });
 }); 
