@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { createApiConnection } from '@/lib/actions';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Key } from 'lucide-react';
-import { Button } from './ui/button';
+import { Eye, EyeOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ApiKeyFormProps {
   title?: string;
@@ -12,52 +12,96 @@ interface ApiKeyFormProps {
   initialService?: string;
 }
 
-export default function ApiKeyForm({
-  title = "Add API Key",
-  description = "Add your API key to use with your agents.",
-  initialService = "openai",
-}: ApiKeyFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [service, setService] = useState(initialService);
+// Define the possible response types
+type ApiConnectionSuccess = {
+  id: string;
+  name: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string | null;
+  service: string;
+  encryptedApiKey: string;
+};
 
-  const handleSubmit = async (formData: FormData) => {
-    setIsLoading(true);
+type ApiConnectionError = {
+  error: string;
+};
+
+type ApiConnectionResponse = ApiConnectionSuccess | ApiConnectionError;
+
+export function ApiKeyForm({
+  title = 'Add API Key',
+  description = 'Add your API key to use with your agents.',
+  initialService = 'openai',
+}: ApiKeyFormProps) {
+  const [service, setService] = useState(initialService);
+  const [name, setName] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!service || !apiKey) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
     try {
-      const response = await createApiConnection(formData);
+      // Create a FormData object to pass to the server action
+      const formData = new FormData();
+      formData.append('service', service);
+      formData.append('apiKey', apiKey);
+      if (name) {
+        formData.append('name', name);
+      }
       
-      if ('error' in response) {
-        toast.error(response.error);
-      } else {
-        toast.success(`${service.charAt(0).toUpperCase() + service.slice(1)} API key added successfully!`);
-        // Reset the form
-        const form = document.getElementById('api-key-form') as HTMLFormElement;
-        form.reset();
+      const result = await createApiConnection(formData) as ApiConnectionResponse;
+      
+      // Check if the result is an error response
+      if ('error' in result) {
+        toast.error(`Error adding API key: ${result.error}`);
+      } 
+      // Otherwise it's a success response
+      else {
+        toast.success('API key added successfully');
+        // Reset form
+        setService(initialService);
+        setName('');
+        setApiKey('');
       }
     } catch (error) {
+      console.error('Error adding API key:', error);
       toast.error('Failed to add API key');
-      console.error(error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
+  };
+
+  const toggleApiKeyVisibility = () => {
+    setShowApiKey(!showApiKey);
   };
 
   return (
     <div className="rounded-lg border border-stone-200 bg-white p-6 shadow-md dark:border-stone-700 dark:bg-stone-800">
       <h2 className="text-xl font-bold">{title}</h2>
-      <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">{description}</p>
+      <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+        {description}
+      </p>
       
-      <form id="api-key-form" action={handleSubmit} className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit} className="mt-4 space-y-4" role="form">
         <div>
           <label htmlFor="service" className="block text-sm font-medium text-stone-700 dark:text-stone-300">
             Service
           </label>
           <select
             id="service"
-            name="service"
             value={service}
             onChange={(e) => setService(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-stone-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-stone-600 dark:bg-stone-700 dark:text-white"
+            className="mt-1 block w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-stone-600 dark:bg-stone-700 dark:text-white"
             required
           >
             <option value="openai">OpenAI</option>
@@ -67,52 +111,56 @@ export default function ApiKeyForm({
         
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-stone-700 dark:text-stone-300">
-            Name (Optional)
+            Name
           </label>
           <input
             type="text"
             id="name"
-            name="name"
-            placeholder="My API Key"
-            className="mt-1 block w-full rounded-md border border-stone-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-stone-600 dark:bg-stone-700 dark:text-white"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="My OpenAI Key"
+            className="mt-1 block w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-stone-600 dark:bg-stone-700 dark:text-white"
           />
         </div>
         
         <div>
           <label htmlFor="apiKey" className="block text-sm font-medium text-stone-700 dark:text-stone-300">
-            API Key
+            API Key Value
           </label>
           <div className="relative mt-1">
             <input
               type={showApiKey ? 'text' : 'password'}
               id="apiKey"
-              name="apiKey"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
               placeholder={service === 'openai' ? 'sk-...' : 'sk-ant-...'}
-              className="block w-full rounded-md border border-stone-300 bg-white px-3 py-2 pr-10 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-stone-600 dark:bg-stone-700 dark:text-white"
+              className="block w-full rounded-md border border-stone-300 bg-white px-3 py-2 pr-10 text-sm text-stone-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-stone-600 dark:bg-stone-700 dark:text-white"
               required
             />
             <button
               type="button"
+              onClick={toggleApiKeyVisibility}
               className="absolute inset-y-0 right-0 flex items-center px-3 text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
-              onClick={() => setShowApiKey(!showApiKey)}
+              aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
             >
               {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
-            Your API key is encrypted and stored securely.
+            Your API key will be encrypted before storage.
           </p>
         </div>
         
         <Button
           type="submit"
-          disabled={isLoading}
-          className="flex w-full items-center justify-center gap-2"
+          disabled={isSubmitting || !apiKey}
+          className="w-full"
         >
-          <Key className="h-4 w-4" />
-          {isLoading ? 'Adding...' : 'Add API Key'}
+          {isSubmitting ? 'Adding...' : 'Add API Key'}
         </Button>
       </form>
     </div>
   );
-} 
+}
+
+export default ApiKeyForm; 

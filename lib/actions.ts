@@ -8,7 +8,7 @@ import {
 } from "@/lib/domains";
 import { getBlurDataURL } from "@/lib/utils";
 import { put } from "@vercel/blob";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { customAlphabet } from "nanoid";
 import { revalidateTag } from "next/cache";
 import { withPostAuth, withSiteAuth } from "./auth";
@@ -741,6 +741,73 @@ export const createAgent = async (formData: FormData) => {
     console.error("Error creating agent:", error);
     return {
       error: error.message || "Failed to create agent",
+    };
+  }
+};
+
+/**
+ * Update an existing agent
+ * @param data - Object containing agent details to update
+ * @returns The updated agent or an error
+ */
+export const updateAgent = async (data: {
+  id: string;
+  name: string;
+  description?: string;
+  model: string;
+}) => {
+  try {
+    const session = await getSession();
+    if (!session?.user.id) {
+      return {
+        error: "Not authenticated",
+      };
+    }
+
+    // Check if the agent exists and belongs to the user
+    const agent = await db.query.agents.findFirst({
+      where: (agents, { eq, and }) => 
+        and(eq(agents.id, data.id), eq(agents.userId, session.user.id)),
+    });
+
+    if (!agent) {
+      return {
+        error: "Agent not found or you don't have permission to update it",
+      };
+    }
+
+    // Validate input
+    if (!data.name) {
+      return {
+        error: "Name is required",
+      };
+    }
+
+    // Update the agent
+    await db.update(agents)
+      .set({
+        name: data.name,
+        description: data.description,
+        model: data.model,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(agents.id, data.id),
+          eq(agents.userId, session.user.id)
+        )
+      );
+
+    // Revalidate the agents cache
+    revalidateTag("agents");
+
+    return {
+      success: true,
+    };
+  } catch (error: any) {
+    console.error("Error updating agent:", error);
+    return {
+      error: error.message || "Failed to update agent",
     };
   }
 };
