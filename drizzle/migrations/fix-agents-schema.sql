@@ -1,3 +1,4 @@
--- Drop extra columns from agents table to match the current schema
-ALTER TABLE "agents" DROP COLUMN IF EXISTS "instructions";
-ALTER TABLE "agents" DROP COLUMN IF EXISTS "temperature"; 
+-- Fix agents schema by ensuring the temperature and instructions columns exist
+-- Instead of dropping columns, we'll make sure they exist
+ALTER TABLE "agents" ADD COLUMN IF NOT EXISTS "temperature" REAL NOT NULL DEFAULT 0.7;
+ALTER TABLE "agents" ADD COLUMN IF NOT EXISTS "instructions" TEXT; 

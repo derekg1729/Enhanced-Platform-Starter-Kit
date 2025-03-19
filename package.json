@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run typecheck && npm run verify-schema && drizzle-kit push && next build",
+    "build": "npm run typecheck && npm run verify-schema && npm run deployment-migrations && drizzle-kit push && next build",
     "format:write": "prettier --write \"**/*.{css,js,json,jsx,ts,tsx}\"",
     "format": "prettier \"**/*.{css,js,json,jsx,ts,tsx}\"",
     "start": "next start",
@@ -22,6 +22,7 @@
     "setup-hooks": "npx husky init && chmod +x .husky/pre-commit",
     "check-env": "node scripts/check-env-consistency.js",
     "verify-schema": "node scripts/verify-schema.js",
+    "deployment-migrations": "node scripts/run-deployment-migrations.js",
     "prepare": "husky"
   },
   "lint-staged": {
