@@ -6,6 +6,12 @@ import {
 import { DomainVerificationStatusProps } from "@/lib/types";
 import { NextResponse } from "next/server";
 
+/**
+ * Force this route to be dynamically rendered
+ * This prevents static rendering issues with domain verification
+ */
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   _req: Request,
   { params }: { params: { slug: string } },
