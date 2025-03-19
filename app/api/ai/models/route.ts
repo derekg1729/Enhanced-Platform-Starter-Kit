@@ -6,8 +6,31 @@ import { getAllAvailableModels, getAvailableModels } from '@/lib/actions/model-a
 /**
  * GET /api/ai/models - Get all available models for all providers
  * GET /api/ai/models?provider=openai - Get all available models for a specific provider
+ * 
+ * This route is designed to work in both build-time static generation and runtime contexts.
+ * During build time, it returns a minimal static response.
+ * During runtime, it uses server-side features to provide the full functionality.
  */
 export async function GET(req: NextRequest) {
+  // Check if we're in a static build context by seeing if headers() is available
+  // This approach avoids needing force-dynamic
+  let isStaticBuild = false;
+  try {
+    // This will throw during static build
+    req.headers;
+  } catch (e) {
+    isStaticBuild = true;
+  }
+
+  // If we're in a static build context, return a minimal static response
+  if (isStaticBuild) {
+    return NextResponse.json({ 
+      models: {}, 
+      note: "This is a static build response. Full model list available at runtime." 
+    });
+  }
+
+  // Normal runtime behavior
   try {
     // Get session
     const session = await getServerSession(authOptions);
