@@ -351,4 +351,42 @@
   - Proper error handling
   - Working chat interface
 - **Priority**: High
-- **Status**: Done 
+- **Status**: Done
+
+### [TASK-041]
+- **Title**: Fix API Key Refresh Issue
+- **Description**: Fix the issue where users need to manually refresh the page to see newly added API keys.
+- **Acceptance Criteria**:
+  - New API keys appear in the UI immediately after being added without requiring page refresh
+  - State management is properly implemented to update the UI after API operations
+  - Add tests to verify the automatic refresh functionality
+  - Ensure the fix works across all browsers
+- **Priority**: Medium
+- **Status**: To Do
+- **Related Bug**: [BUG-004]
+
+### [TASK-042]
+- **Title**: Improve API Key Form Styling
+- **Description**: Enhance the styling of the API key form to match the rest of the application's UI design.
+- **Acceptance Criteria**:
+  - API key form uses consistent styling with other forms in the application
+  - Form elements follow the application's design system
+  - Form is responsive and works well on all screen sizes
+  - Form validation styling is consistent with other forms
+  - Accessibility standards are maintained
+- **Priority**: Low
+- **Status**: To Do
+- **Related Bug**: [BUG-005]
+
+### [TASK-043]
+- **Title**: Fix 500 Error on New Site Post Creation
+- **Description**: Investigate and fix the server error that occurs when creating a new post for a site.
+- **Acceptance Criteria**:
+  - Root cause of the 500 error is identified
+  - Fix is implemented to prevent the error
+  - Tests are added to cover the fix and prevent regression
+  - Error handling is improved to provide better user feedback
+  - Documentation is updated if the fix involves API changes
+- **Priority**: High
+- **Status**: To Do
+- **Related Bug**: [BUG-006] 

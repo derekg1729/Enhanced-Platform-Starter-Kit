@@ -2,7 +2,38 @@
 
 ## Active Bugs
 
-No active bugs at this time.
+### [BUG-004]
+- **Title**: API Key Refresh Issue
+- **Description**: After adding a new API key, users need to manually refresh the page before the key appears in the list.
+- **Root Cause**: Likely a client-side state refresh issue where the UI isn't updated after successful API key creation.
+- **Steps to Reproduce**: 
+  1. Navigate to the API Keys page
+  2. Add a new API key
+  3. Observe that the new key does not appear until page refresh
+- **Priority**: Medium
+- **Status**: Open
+
+### [BUG-005]
+- **Title**: API Key Form Missing Styling
+- **Description**: The form for adding API keys lacks proper styling, making it inconsistent with the rest of the application UI.
+- **Root Cause**: Missing styling classes or components for the API key form elements.
+- **Steps to Reproduce**: 
+  1. Navigate to the API Keys page
+  2. View the "Add API Key" form
+  3. Observe the unstyled or improperly styled form elements
+- **Priority**: Low
+- **Status**: Open
+
+### [BUG-006]
+- **Title**: 500 Error When Creating New Site Post
+- **Description**: Users encounter a 500 server error when attempting to create a new post for a site.
+- **Root Cause**: Unknown - needs investigation. Possibly related to database schema, server-side validation, or API errors.
+- **Steps to Reproduce**: 
+  1. Navigate to a site
+  2. Attempt to create a new post
+  3. Observe 500 error response
+- **Priority**: High
+- **Status**: Open
 
 ## Resolved Bugs
 
