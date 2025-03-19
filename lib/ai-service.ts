@@ -137,6 +137,9 @@ export class AnthropicService implements AIService {
 
       // Set default max tokens if not provided
       const maxTokens = options.maxTokens || 1000;
+      
+      // Set default temperature if not provided
+      const temperature = options.temperature !== undefined ? options.temperature : 0.7;
 
       // Make the API call with proper error handling
       const response = await this.anthropic.messages.create({
@@ -144,7 +147,7 @@ export class AnthropicService implements AIService {
         messages: formattedMessages,
         system: systemPrompt || undefined,
         max_tokens: maxTokens,
-        temperature: options.temperature,
+        temperature: temperature,
       });
 
       // Handle the response content blocks correctly
