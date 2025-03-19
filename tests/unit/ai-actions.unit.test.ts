@@ -115,6 +115,8 @@ describe('SendMessage with AI Service', () => {
     name: 'Test Agent',
     description: 'Test agent description',
     model: 'gpt-4',
+    temperature: 0.7,
+    instructions: 'You are a helpful assistant for testing purposes',
     userId: 'user-123',
     createdAt: new Date(),
     updatedAt: new Date(),

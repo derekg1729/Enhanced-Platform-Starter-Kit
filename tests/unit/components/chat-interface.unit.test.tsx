@@ -20,6 +20,8 @@ describe('Chat Interface', () => {
     description: 'A test agent',
     userId: 'user123',
     model: 'gpt-4',
+    temperature: 0.7,
+    instructions: 'You are a test agent for unit testing',
     createdAt: new Date(),
     updatedAt: new Date(),
   };

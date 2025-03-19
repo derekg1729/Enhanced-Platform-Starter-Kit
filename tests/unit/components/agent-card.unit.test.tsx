@@ -23,6 +23,8 @@ describe('AgentCard Component', () => {
     description: 'This is a test agent',
     model: 'gpt-4',
     userId: 'user-123',
+    temperature: 0.7,
+    instructions: 'Example instructions for the agent',
     createdAt: new Date('2022-12-31'),
     updatedAt: new Date('2022-12-31'),
   };

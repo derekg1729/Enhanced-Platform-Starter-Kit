@@ -546,10 +546,10 @@ export const sendMessage = async (agentId: string, message: string) => {
     // Create an AI service instance
     const aiService = createAIService(agent.model, apiConnection.encryptedApiKey);
     
-    // Define a simple system prompt based on the agent's description
-    const systemPrompt = agent.description 
+    // Use custom instructions if available, otherwise use a default system prompt
+    const systemPrompt = agent.instructions || (agent.description 
       ? `You are ${agent.name}, ${agent.description}`
-      : `You are ${agent.name}, a helpful AI assistant.`;
+      : `You are ${agent.name}, a helpful AI assistant.`);
     
     // Format the messages
     const messages = [
@@ -560,7 +560,7 @@ export const sendMessage = async (agentId: string, message: string) => {
     // Generate a response from the AI service
     try {
       const aiResponse = await aiService.generateChatResponse(messages, {
-        temperature: 0.7,
+        temperature: agent.temperature || 0.7,
         maxTokens: 1000,
       });
       
@@ -752,10 +752,22 @@ export const createAgent = async (formData: FormData) => {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const model = formData.get("model") as string;
+    const temperatureStr = formData.get("temperature") as string;
+    const instructions = formData.get("instructions") as string;
+    
+    // Parse temperature as a float or use default
+    const temperature = temperatureStr ? parseFloat(temperatureStr) : 0.7;
 
     if (!name) {
       return {
         error: "Name is required",
+      };
+    }
+
+    // Validate temperature
+    if (isNaN(temperature) || temperature < 0 || temperature > 2) {
+      return {
+        error: "Temperature must be a number between 0 and 2",
       };
     }
 
@@ -766,6 +778,8 @@ export const createAgent = async (formData: FormData) => {
         name,
         description,
         model: model || "gpt-4",
+        temperature,
+        instructions,
         userId: session.user.id,
       })
       .returning();
@@ -792,6 +806,8 @@ export const updateAgent = async (data: {
   name: string;
   description?: string;
   model: string;
+  temperature?: number;
+  instructions?: string;
 }) => {
   try {
     const session = await getSession();
@@ -820,12 +836,22 @@ export const updateAgent = async (data: {
       };
     }
 
+    // Validate temperature if provided
+    if (data.temperature !== undefined && 
+       (isNaN(data.temperature) || data.temperature < 0 || data.temperature > 2)) {
+      return {
+        error: "Temperature must be a number between 0 and 2",
+      };
+    }
+
     // Update the agent
     await db.update(agents)
       .set({
         name: data.name,
         description: data.description,
         model: data.model,
+        temperature: data.temperature !== undefined ? data.temperature : undefined,
+        instructions: data.instructions,
         updatedAt: new Date(),
       })
       .where(

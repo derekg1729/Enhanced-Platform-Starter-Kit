@@ -69,6 +69,8 @@ describe('Agent Actions', () => {
           name: 'Test Agent 1',
           description: 'This is a test agent',
           model: 'gpt-4',
+          temperature: 0.7,
+          instructions: 'You are a helpful assistant for testing purposes',
           userId: 'user-123',
           createdAt: new Date('2023-01-01'),
           updatedAt: new Date('2023-01-01'),
@@ -78,6 +80,8 @@ describe('Agent Actions', () => {
           name: 'Test Agent 2',
           description: 'Another test agent',
           model: 'gpt-3.5-turbo',
+          temperature: 0.9,
+          instructions: 'You are another helpful assistant for testing',
           userId: 'user-123',
           createdAt: new Date('2023-01-02'),
           updatedAt: new Date('2023-01-02'),
@@ -116,6 +120,8 @@ describe('Agent Actions', () => {
         name: 'Test Agent',
         description: 'This is a test agent',
         model: 'gpt-4',
+        temperature: 0.7,
+        instructions: 'You are a helpful assistant for testing purposes',
         userId: 'user-123',
         createdAt: new Date('2023-01-01'),
         updatedAt: new Date('2023-01-01'),
@@ -154,6 +160,8 @@ describe('Agent Actions', () => {
         name: 'Test Agent',
         description: 'Test description',
         model: 'gpt-4',
+        temperature: 0.7,
+        instructions: 'You are a helpful assistant for testing purposes',
         userId: 'user-123',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -197,6 +205,8 @@ describe('Agent Actions', () => {
         name: 'Test Agent',
         description: 'This is a test agent',
         model: 'gpt-4',
+        temperature: 0.7,
+        instructions: 'You are a helpful assistant for testing purposes',
         userId: 'user-123',
         createdAt: new Date('2023-01-01'),
         updatedAt: new Date('2023-01-01'),
@@ -235,7 +245,7 @@ describe('Agent Actions', () => {
       expect(createAIService).toHaveBeenCalledWith('gpt-4', 'encrypted-key-123');
       expect(mockAIService.generateChatResponse).toHaveBeenCalledWith(
         [
-          { role: 'system', content: 'You are Test Agent, This is a test agent' },
+          { role: 'system', content: 'You are a helpful assistant for testing purposes' },
           { role: 'user', content: 'Hello, agent!' }
         ],
         {

@@ -28,7 +28,7 @@ async function verifySchema() {
     const tables = [
       { 
         name: 'agents', 
-        expectedColumns: ['id', 'name', 'description', 'model', 'createdAt', 'updatedAt', 'userId'] 
+        expectedColumns: ['id', 'name', 'description', 'model', 'temperature', 'instructions', 'createdAt', 'updatedAt', 'userId'] 
       },
       { 
         name: 'apiConnections', 

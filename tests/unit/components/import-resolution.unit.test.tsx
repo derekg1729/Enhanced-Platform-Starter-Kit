@@ -78,7 +78,7 @@ describe('Import Resolution', () => {
     }
   });
 
-  it('should have the correct schema import in agents/[id]/page.tsx', () => {
+  it('should have the correct actions import in agents/[id]/page.tsx', () => {
     const sourceFilePath = 'app/app/(dashboard)/agents/[id]/page.tsx';
     
     // Verify source file exists
@@ -87,20 +87,30 @@ describe('Import Resolution', () => {
     // Parse imports
     const imports = parseImports(sourceFilePath);
     
-    // Find the import for schema
-    const schemaImport = imports.find(imp => imp.importPath.includes('schema'));
+    // Find the import for actions
+    const actionsImport = imports.find(imp => imp.importPath.includes('actions'));
     
-    expect(schemaImport).toBeDefined();
+    expect(actionsImport).toBeDefined();
     
-    if (schemaImport) {
-      // Check if it's trying to import from '@/lib/db/schema'
-      if (schemaImport.importPath === '@/lib/db/schema') {
-        // This is the incorrect import path, it should be '@/lib/schema'
-        expect(fileExists('lib/db/schema.ts')).toBe(false);
-        
-        // The correct file should exist
-        expect(fileExists('lib/schema.ts')).toBe(true);
-      }
+    if (actionsImport) {
+      // Check if it's trying to import from '@/lib/actions'
+      expect(actionsImport.importPath).toBe('@/lib/actions');
+      
+      // The file should exist
+      expect(fileExists('lib/actions.ts')).toBe(true);
+    }
+    
+    // Find the import for agent-details
+    const agentDetailsImport = imports.find(imp => imp.importPath.includes('agent-details'));
+    
+    expect(agentDetailsImport).toBeDefined();
+    
+    if (agentDetailsImport) {
+      // Check if it's trying to import from '@/components/agent-details'
+      expect(agentDetailsImport.importPath).toBe('@/components/agent-details');
+      
+      // The file should exist
+      expect(fileExists('components/agent-details.tsx')).toBe(true);
     }
   });
 

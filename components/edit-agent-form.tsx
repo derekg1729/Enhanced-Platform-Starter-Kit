@@ -25,9 +25,12 @@ export default function EditAgentForm({ agent }: { agent: any }) {
   const [name, setName] = useState(agent.name);
   const [description, setDescription] = useState(agent.description || "");
   const [model, setModel] = useState(agent.model);
+  const [temperature, setTemperature] = useState(agent.temperature || 0.7);
+  const [instructions, setInstructions] = useState(agent.instructions || "");
   
   const [nameError, setNameError] = useState("");
   const [descriptionError, setDescriptionError] = useState("");
+  const [temperatureError, setTemperatureError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +38,7 @@ export default function EditAgentForm({ agent }: { agent: any }) {
     // Reset errors
     setNameError("");
     setDescriptionError("");
+    setTemperatureError("");
     
     // Validate inputs
     let hasError = false;
@@ -52,6 +56,11 @@ export default function EditAgentForm({ agent }: { agent: any }) {
       hasError = true;
     }
     
+    if (temperature < 0 || temperature > 2) {
+      setTemperatureError("Temperature must be between 0 and 2");
+      hasError = true;
+    }
+    
     if (hasError) return;
     
     startTransition(async () => {
@@ -61,6 +70,8 @@ export default function EditAgentForm({ agent }: { agent: any }) {
           name,
           description,
           model,
+          temperature,
+          instructions,
         });
         
         if (result.error) {
@@ -140,6 +151,59 @@ export default function EditAgentForm({ agent }: { agent: any }) {
             </option>
           ))}
         </select>
+      </div>
+      
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label htmlFor="temperature" className="text-sm font-medium text-stone-500 dark:text-stone-400">
+            Temperature
+          </label>
+          <span className="text-sm text-stone-500 dark:text-stone-400">
+            {temperature}
+          </span>
+        </div>
+        <div className="relative w-full">
+          <input
+            id="temperature"
+            name="temperature"
+            type="range"
+            min="0"
+            max="2"
+            step="0.1"
+            value={temperature}
+            onChange={(e) => setTemperature(parseFloat(e.target.value))}
+            aria-label="temperature"
+            className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer dark:bg-stone-700"
+            style={{
+              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(temperature / 2) * 100}%, rgb(229 231 235) ${(temperature / 2) * 100}%, rgb(229 231 235) 100%)`,
+              WebkitAppearance: 'none'
+            }}
+          />
+        </div>
+        {temperatureError && (
+          <p className="text-xs text-red-500">{temperatureError}</p>
+        )}
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          Controls randomness: lower values give more predictable outputs while higher values are more creative.
+        </p>
+      </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="instructions" className="text-sm font-medium text-stone-500 dark:text-stone-400">
+          Instructions
+        </label>
+        <textarea
+          id="instructions"
+          name="instructions"
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
+          placeholder="Specific instructions for how the agent should behave or respond"
+          rows={4}
+          className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
+        />
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          Optional instructions that guide the agent&apos;s behavior and responses.
+        </p>
       </div>
       
       <div className="flex justify-end">

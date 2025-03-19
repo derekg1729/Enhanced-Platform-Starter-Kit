@@ -28,6 +28,8 @@ describe('Enhanced Chat Interface', () => {
           name: 'Test Agent',
           model: 'gpt-4',
           description: 'Test description',
+          temperature: 0.7,
+          instructions: 'Test instructions',
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: 'test-user-id'
@@ -51,6 +53,8 @@ describe('Enhanced Chat Interface', () => {
           name: 'Test Agent',
           model: 'gpt-4',
           description: 'Test description',
+          temperature: 0.7,
+          instructions: 'Test instructions',
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: 'test-user-id'
@@ -80,6 +84,8 @@ describe('Enhanced Chat Interface', () => {
           name: 'Test Agent',
           model: 'gpt-4',
           description: 'Test description',
+          temperature: 0.7,
+          instructions: 'Test instructions',
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: 'test-user-id'
@@ -113,6 +119,8 @@ describe('Enhanced Chat Interface', () => {
           name: 'Test Agent',
           model: 'gpt-4',
           description: 'Test description',
+          temperature: 0.7,
+          instructions: 'Test instructions',
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: 'test-user-id'
@@ -148,6 +156,8 @@ describe('Enhanced Chat Interface', () => {
           name: 'Test Agent',
           model: 'gpt-4',
           description: 'Test description',
+          temperature: 0.7,
+          instructions: 'Test instructions',
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: 'test-user-id'
@@ -177,6 +187,8 @@ describe('Enhanced Chat Interface', () => {
           name: 'Test Agent',
           model: 'gpt-4',
           description: 'Test description',
+          temperature: 0.7,
+          instructions: 'Test instructions',
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: 'test-user-id'
@@ -205,6 +217,8 @@ describe('Enhanced Chat Interface', () => {
           name: 'Test Agent',
           model: 'gpt-4',
           description: 'Test description',
+          temperature: 0.7,
+          instructions: 'Test instructions',
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: 'test-user-id'
@@ -240,6 +254,8 @@ describe('Enhanced Chat Interface', () => {
           name: 'Test Agent',
           model: 'gpt-4',
           description: 'Test description',
+          temperature: 0.7,
+          instructions: 'Test instructions',
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: 'test-user-id'

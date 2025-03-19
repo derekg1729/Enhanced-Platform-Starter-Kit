@@ -140,6 +140,8 @@ describe('Integrated Agent Chat Page', () => {
       userId: 'user-123',
       description: 'A test agent for chat functionality',
       model: 'gpt-4',
+      temperature: 0.7,
+      instructions: 'You are a helpful assistant for testing purposes',
       createdAt: new Date(),
       updatedAt: new Date()
     });

@@ -27,6 +27,8 @@ describe('AI Integration Tests', () => {
     name: 'Test Agent',
     description: 'A test agent',
     model: 'gpt-4',
+    temperature: 0.7,
+    instructions: 'You are a test agent for integration testing',
     userId: 'user-123',
     createdAt: new Date(),
     updatedAt: new Date()

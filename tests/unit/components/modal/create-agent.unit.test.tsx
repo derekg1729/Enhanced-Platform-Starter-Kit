@@ -94,6 +94,8 @@ describe('CreateAgentModal Component', () => {
       name: 'Test Agent',
       description: 'This is a test agent',
       model: 'gpt-4',
+      temperature: 0.7,
+      instructions: 'You are a helpful assistant for testing purposes',
       userId: 'user-123',
       createdAt: new Date(),
       updatedAt: new Date()

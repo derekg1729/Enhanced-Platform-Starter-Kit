@@ -10,6 +10,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  real,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -188,6 +189,8 @@ export const agents = pgTable(
     name: text("name").notNull(),
     description: text("description"),
     model: text("model").notNull().default("gpt-4"),
+    temperature: real("temperature").notNull().default(0.7),
+    instructions: text("instructions"),
     createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updatedAt", { mode: "date" })
       .notNull()

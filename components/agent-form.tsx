@@ -19,6 +19,8 @@ export default function AgentForm({
     name: "",
     description: "",
     model: "gpt-4",
+    temperature: 0.7,
+    instructions: "",
   },
   onSubmit,
 }: {
@@ -28,10 +30,13 @@ export default function AgentForm({
     name: string;
     description: string;
     model: string;
+    temperature?: number;
+    instructions?: string;
   };
   onSubmit?: (data: FormData) => Promise<{ error?: string; success?: boolean }>;
 }) {
   const router = useRouter();
+  const [temperatureValue, setTemperatureValue] = useState(initialValues.temperature || 0.7);
 
   const defaultSubmitHandler = async (formData: FormData) => {
     const result = await onSubmit?.(formData);
@@ -127,6 +132,56 @@ export default function AgentForm({
               <option value="claude-3-haiku">Claude 3 Haiku</option>
             </select>
           </div>
+        </div>
+
+        {/* Temperature Slider */}
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="temperature" className="text-sm font-medium text-stone-500 dark:text-stone-400">
+              Temperature
+            </label>
+            <span className="text-sm text-stone-500 dark:text-stone-400">
+              {temperatureValue}
+            </span>
+          </div>
+          <div className="relative w-full max-w-sm">
+            <input
+              id="temperature"
+              name="temperature"
+              type="range"
+              min="0"
+              max="2"
+              step="0.1"
+              value={temperatureValue}
+              onChange={(e) => setTemperatureValue(parseFloat(e.target.value))}
+              className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer dark:bg-stone-700"
+              style={{
+                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(temperatureValue / 2) * 100}%, rgb(229 231 235) ${(temperatureValue / 2) * 100}%, rgb(229 231 235) 100%)`,
+                WebkitAppearance: 'none'
+              }}
+            />
+          </div>
+          <p className="text-xs text-stone-500 dark:text-stone-400">
+            Controls randomness: lower values give more predictable outputs while higher values are more creative.
+          </p>
+        </div>
+
+        {/* Instructions */}
+        <div className="flex flex-col space-y-2">
+          <label htmlFor="instructions" className="text-sm font-medium text-stone-500 dark:text-stone-400">
+            Instructions
+          </label>
+          <textarea
+            id="instructions"
+            name="instructions"
+            defaultValue={initialValues.instructions}
+            placeholder="Specific instructions for how the agent should behave or respond"
+            rows={4}
+            className="w-full max-w-xl rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
+          />
+          <p className="text-xs text-stone-500 dark:text-stone-400">
+            Optional instructions that guide the agent&apos;s behavior and responses.
+          </p>
         </div>
 
         {/* API Key Note */}

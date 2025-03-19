@@ -182,4 +182,45 @@ export function createAIService(modelId: string, encryptedApiKey: string): AISer
   } else {
     throw new Error(`Unsupported model: ${modelId}`);
   }
+}
+
+/**
+ * Sends a message to the AI service using the specified agent configuration
+ * 
+ * @param agent - The agent configuration with model, temperature, and instructions
+ * @param messages - An array of message objects with role and content
+ * @param apiKey - The encrypted API key for the service
+ * @returns A promise that resolves to the AI response
+ */
+export async function sendMessageToAI(
+  agent: { model: string; temperature?: number; instructions?: string },
+  messages: Message[],
+  apiKey: string
+): Promise<AIResponse> {
+  try {
+    // Create the AI service based on the agent model
+    const aiService = createAIService(agent.model, apiKey);
+    
+    // Prepare messages with system instructions if available
+    let processedMessages = [...messages];
+    
+    // Add instructions as a system message if provided
+    if (agent.instructions) {
+      processedMessages.unshift({
+        role: 'system',
+        content: agent.instructions
+      });
+    }
+    
+    // Get response with the specified temperature
+    const options: AIServiceOptions = {};
+    if (agent.temperature !== undefined) {
+      options.temperature = agent.temperature;
+    }
+    
+    return await aiService.generateChatResponse(processedMessages, options);
+  } catch (error) {
+    console.error('Error in sendMessageToAI:', error);
+    throw error;
+  }
 } 

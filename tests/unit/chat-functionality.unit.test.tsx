@@ -30,6 +30,8 @@ const mockAgent: SelectAgent = {
   description: 'A test agent for unit testing',
   userId: 'user-123',
   model: 'claude-3-sonnet',
+  temperature: 0.7,
+  instructions: 'You are a helpful assistant for testing purposes',
   createdAt: new Date(),
   updatedAt: new Date(),
 };
