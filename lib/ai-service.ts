@@ -25,15 +25,6 @@ export interface AIService {
   ): Promise<AIResponse>;
 }
 
-// Currently supported Anthropic models - using the correct ID format
-const SUPPORTED_ANTHROPIC_MODELS = {
-  'claude-3-opus': 'claude-3-opus-20240229',
-  'claude-3-sonnet': 'claude-3-opus-20240229', // Temporarily using opus as a fallback for sonnet
-  'claude-3-haiku': 'claude-3-haiku-20240307',
-  'claude-2': 'claude-2.1',
-  'claude-instant-1': 'claude-instant-1.2',
-};
-
 export class OpenAIService implements AIService {
   private openai: OpenAI;
   private modelId: string;
@@ -172,17 +163,18 @@ export async function createAIService(modelId: string, encryptedApiKey: string):
   
   if (modelId.startsWith('gpt')) {
     provider = 'openai';
-    fullModelId = modelId; // OpenAI models use the same ID
   } else if (modelId.startsWith('claude')) {
     provider = 'anthropic';
-    fullModelId = await getFullModelId(modelId, provider);
   } else {
     throw new Error(`Unsupported model: ${modelId}`);
   }
+  
+  // Get the full model ID for any provider using the unified getFullModelId function
+  fullModelId = await getFullModelId(modelId, provider);
 
   // Create the appropriate service based on the model
   if (provider === 'openai') {
-    return new OpenAIService(modelId, apiKey);
+    return new OpenAIService(fullModelId, apiKey);
   } else if (provider === 'anthropic') {
     return new AnthropicService(fullModelId, apiKey);
   } else {

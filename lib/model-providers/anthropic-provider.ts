@@ -2,6 +2,95 @@ import Anthropic from '@anthropic-ai/sdk';
 import { AIModel, ModelProvider } from './types';
 
 /**
+ * Definition of all supported Anthropic models
+ * This is the single source of truth for Anthropic model information
+ */
+interface AnthropicModelDefinition {
+  id: string;               // Full versioned ID used by the API
+  name: string;             // Human-readable name
+  userFriendlyId?: string;  // Optional simplified ID for user input
+  capabilities: {
+    vision: boolean;
+    functionCalling: boolean;
+  };
+  maxTokens: number;
+  defaultTemperature: number;
+}
+
+/**
+ * Central registry of all supported Anthropic models
+ * This is the ONLY place models should be defined
+ */
+const ANTHROPIC_MODELS: AnthropicModelDefinition[] = [
+  {
+    id: 'claude-3-opus-20240229',
+    name: 'Claude 3 Opus',
+    userFriendlyId: 'claude-3-opus',
+    capabilities: {
+      vision: true,
+      functionCalling: false
+    },
+    maxTokens: 4096,
+    defaultTemperature: 0.7
+  },
+  {
+    id: 'claude-3-5-sonnet-20241022',
+    name: 'Claude 3.5 Sonnet',
+    userFriendlyId: 'claude-3.5-sonnet',
+    capabilities: {
+      vision: true,
+      functionCalling: false
+    },
+    maxTokens: 4096,
+    defaultTemperature: 0.7
+  },
+  {
+    id: 'claude-3.7-sonnet-20240229',
+    name: 'Claude 3.7 Sonnet',
+    userFriendlyId: 'claude-3.7-sonnet',
+    capabilities: {
+      vision: true,
+      functionCalling: false
+    },
+    maxTokens: 4096,
+    defaultTemperature: 0.7
+  },
+  {
+    id: 'claude-3-5-haiku-20241022',
+    name: 'Claude 3.5 Haiku',
+    userFriendlyId: 'claude-3.5-haiku',
+    capabilities: {
+      vision: true,
+      functionCalling: false
+    },
+    maxTokens: 4096,
+    defaultTemperature: 0.7
+  },
+  {
+    id: 'claude-2.1',
+    name: 'Claude 2',
+    userFriendlyId: 'claude-2',
+    capabilities: {
+      vision: false,
+      functionCalling: false
+    },
+    maxTokens: 4096,
+    defaultTemperature: 0.7
+  },
+  {
+    id: 'claude-instant-1.2',
+    name: 'Claude Instant',
+    userFriendlyId: 'claude-instant-1',
+    capabilities: {
+      vision: false,
+      functionCalling: false
+    },
+    maxTokens: 4096,
+    defaultTemperature: 0.7
+  }
+];
+
+/**
  * Anthropic model provider implementation
  * 
  * This provider handles fetching and validating models from Anthropic.
@@ -13,43 +102,6 @@ export class AnthropicProvider implements ModelProvider {
   /** Provider name */
   readonly name = 'Anthropic';
   
-  /** Default models that will be returned if API fails */
-  readonly defaultModels: AIModel[] = [
-    {
-      id: 'claude-3-opus-20240229',
-      name: 'Claude 3 Opus',
-      provider: 'anthropic',
-      capabilities: {
-        vision: true,
-        functionCalling: false
-      },
-      maxTokens: 4096,
-      defaultTemperature: 0.7
-    },
-    {
-      id: 'claude-3-sonnet-20240229',
-      name: 'Claude 3 Sonnet',
-      provider: 'anthropic',
-      capabilities: {
-        vision: true,
-        functionCalling: false
-      },
-      maxTokens: 4096,
-      defaultTemperature: 0.7
-    },
-    {
-      id: 'claude-3-haiku-20240307',
-      name: 'Claude 3 Haiku',
-      provider: 'anthropic',
-      capabilities: {
-        vision: true,
-        functionCalling: false
-      },
-      maxTokens: 4096,
-      defaultTemperature: 0.7
-    }
-  ];
-  
   /** Cache for models */
   private modelsCache: AIModel[] | null = null;
   
@@ -59,47 +111,20 @@ export class AnthropicProvider implements ModelProvider {
   /** Cache TTL in milliseconds (1 hour) */
   private cacheTTL = 3600000;
   
-  /** Model mappings for user-friendly names */
-  private modelNameMappings: Record<string, string> = {
-    'claude-3-opus-20240229': 'Claude 3 Opus',
-    'claude-3-sonnet-20240229': 'Claude 3 Sonnet',
-    'claude-3-haiku-20240307': 'Claude 3 Haiku',
-    'claude-2.1': 'Claude 2',
-    'claude-instant-1.2': 'Claude Instant'
-  };
-  
-  /** Model capabilities */
-  private modelCapabilities: Record<string, Record<string, boolean>> = {
-    'claude-3-opus-20240229': {
-      vision: true,
-      functionCalling: false
-    },
-    'claude-3-sonnet-20240229': {
-      vision: true,
-      functionCalling: false
-    },
-    'claude-3-haiku-20240307': {
-      vision: true,
-      functionCalling: false
-    },
-    'claude-2.1': {
-      vision: false,
-      functionCalling: false
-    },
-    'claude-instant-1.2': {
-      vision: false,
-      functionCalling: false
-    }
-  };
-  
-  /** Model max tokens */
-  private modelMaxTokens: Record<string, number> = {
-    'claude-3-opus-20240229': 4096,
-    'claude-3-sonnet-20240229': 4096,
-    'claude-3-haiku-20240307': 4096, 
-    'claude-2.1': 4096,
-    'claude-instant-1.2': 4096
-  };
+  /**
+   * Convert the internal model definitions to the AIModel format
+   * @returns Array of AIModel objects
+   */
+  private getModelDefinitions(): AIModel[] {
+    return ANTHROPIC_MODELS.map(model => ({
+      id: model.id,
+      name: model.name,
+      provider: this.id,
+      capabilities: model.capabilities,
+      maxTokens: model.maxTokens,
+      defaultTemperature: model.defaultTemperature
+    }));
+  }
   
   /**
    * Create an Anthropic client with the provided API key
@@ -128,61 +153,23 @@ export class AnthropicProvider implements ModelProvider {
       return this.modelsCache;
     }
     
+    // Get the default models
+    const defaultModels = this.getModelDefinitions();
+    
     // If no API key, return default models
     if (!apiKey) {
-      return this.defaultModels;
+      return defaultModels;
     }
     
     try {
       // Validate the API key
       const isValid = await this.validateApiKey(apiKey);
       if (!isValid) {
-        return this.defaultModels;
+        return defaultModels;
       }
       
       // Anthropic doesn't have a models endpoint, so we use our predefined list
-      const models: AIModel[] = [
-        {
-          id: 'claude-3-opus-20240229',
-          name: 'Claude 3 Opus',
-          provider: this.id,
-          capabilities: this.modelCapabilities['claude-3-opus-20240229'],
-          maxTokens: this.modelMaxTokens['claude-3-opus-20240229'],
-          defaultTemperature: 0.7
-        },
-        {
-          id: 'claude-3-sonnet-20240229',
-          name: 'Claude 3 Sonnet',
-          provider: this.id,
-          capabilities: this.modelCapabilities['claude-3-sonnet-20240229'],
-          maxTokens: this.modelMaxTokens['claude-3-sonnet-20240229'],
-          defaultTemperature: 0.7
-        },
-        {
-          id: 'claude-3-haiku-20240307',
-          name: 'Claude 3 Haiku',
-          provider: this.id,
-          capabilities: this.modelCapabilities['claude-3-haiku-20240307'],
-          maxTokens: this.modelMaxTokens['claude-3-haiku-20240307'],
-          defaultTemperature: 0.7
-        },
-        {
-          id: 'claude-2.1',
-          name: 'Claude 2',
-          provider: this.id,
-          capabilities: this.modelCapabilities['claude-2.1'],
-          maxTokens: this.modelMaxTokens['claude-2.1'],
-          defaultTemperature: 0.7
-        },
-        {
-          id: 'claude-instant-1.2',
-          name: 'Claude Instant',
-          provider: this.id,
-          capabilities: this.modelCapabilities['claude-instant-1.2'],
-          maxTokens: this.modelMaxTokens['claude-instant-1.2'],
-          defaultTemperature: 0.7
-        }
-      ];
+      const models = this.getModelDefinitions();
       
       // Cache the models
       this.modelsCache = models;
@@ -191,7 +178,7 @@ export class AnthropicProvider implements ModelProvider {
       return models;
     } catch (error) {
       console.error('Failed to fetch Anthropic models:', error);
-      return this.defaultModels;
+      return defaultModels;
     }
   }
   
@@ -210,7 +197,7 @@ export class AnthropicProvider implements ModelProvider {
       // Make a minimal request to validate the API key
       // We'll use messages.create with minimal parameters
       await client.messages.create({
-        model: 'claude-3-haiku-20240307',
+        model: ANTHROPIC_MODELS[0].id, // Use first available model ID
         max_tokens: 1,
         messages: [{ role: 'user', content: 'Hello' }]
       });
@@ -229,16 +216,17 @@ export class AnthropicProvider implements ModelProvider {
    * @returns Fully qualified model ID
    */
   getFriendlyModelId(modelId: string): string {
-    // Map user-friendly model IDs to full IDs
-    const friendlyModelMap: Record<string, string> = {
-      'claude-3-opus': 'claude-3-opus-20240229',
-      'claude-3-sonnet': 'claude-3-sonnet-20240229',
-      'claude-3-haiku': 'claude-3-haiku-20240307',
-      'claude-2': 'claude-2.1',
-      'claude-instant-1': 'claude-instant-1.2'
-    };
+    // Check if the model ID is already a fully qualified ID
+    const exactMatch = ANTHROPIC_MODELS.find(model => model.id === modelId);
+    if (exactMatch) {
+      return modelId;
+    }
     
-    return friendlyModelMap[modelId] || modelId;
+    // Try to find a model with the corresponding user-friendly ID
+    const model = ANTHROPIC_MODELS.find(m => m.userFriendlyId === modelId);
+    
+    // Return the fully qualified ID if found, otherwise return the original ID
+    return model ? model.id : modelId;
   }
 }
 
