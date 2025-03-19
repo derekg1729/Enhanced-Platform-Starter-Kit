@@ -56,7 +56,7 @@ describe('AI Integration Tests', () => {
     // Set up mock implementations
     vi.mocked(getAgent).mockResolvedValue(mockAgent);
     vi.mocked(getApiConnectionByService).mockResolvedValue(mockApiConnection);
-    vi.mocked(createAIService).mockReturnValue(mockAIService);
+    vi.mocked(createAIService).mockResolvedValue(mockAIService);
     
     // Mock sendMessage implementation
     vi.mocked(sendMessage).mockImplementation(async (agentId: string, content: string) => {

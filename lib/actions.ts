@@ -544,7 +544,7 @@ export const sendMessage = async (agentId: string, message: string) => {
     }
 
     // Create an AI service instance
-    const aiService = createAIService(agent.model, apiConnection.encryptedApiKey);
+    const aiService = await createAIService(agent.model, apiConnection.encryptedApiKey);
     
     // Use custom instructions if available, otherwise use a default system prompt
     const systemPrompt = agent.instructions || (agent.description 

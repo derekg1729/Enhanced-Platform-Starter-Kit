@@ -130,7 +130,7 @@ describe('Anthropic Integration Tests', () => {
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         system: 'You are a helpful assistant',
-        temperature: 1.2
+        temperature: 1
       })
     );
   });

@@ -92,7 +92,7 @@ describe('sendMessage API Service Integration', () => {
 
   it('should handle errors from the AI service', async () => {
     // Override the createAIService mock for this test only
-    vi.mocked(createAIService).mockReturnValueOnce({
+    vi.mocked(createAIService).mockResolvedValueOnce({
       generateChatResponse: vi.fn().mockRejectedValueOnce(new Error('AI service error'))
     });
 

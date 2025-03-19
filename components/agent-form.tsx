@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import LoadingDots from "@/components/icons/loading-dots";
 import { cn } from "@/lib/utils";
 import va from "@vercel/analytics";
 import { useFormStatus } from "react-dom";
+import { AIModel } from "@/lib/model-providers/types";
 
 /**
  * Agent configuration form component
@@ -37,6 +38,39 @@ export default function AgentForm({
 }) {
   const router = useRouter();
   const [temperatureValue, setTemperatureValue] = useState(initialValues.temperature || 0.7);
+  const [models, setModels] = useState<Record<string, AIModel[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Fetch available models
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/ai/models');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch models: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setModels(data.models);
+      } catch (err) {
+        console.error('Error fetching models:', err);
+        setError('Failed to load available models');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchModels();
+  }, []);
+  
+  // Organize models by provider for display
+  const modelsByProvider: Record<string, { name: string, models: AIModel[] }> = {
+    'openai': { name: 'OpenAI', models: models['openai'] || [] },
+    'anthropic': { name: 'Anthropic', models: models['anthropic'] || [] },
+  };
 
   const defaultSubmitHandler = async (formData: FormData) => {
     const result = await onSubmit?.(formData);
@@ -124,14 +158,44 @@ export default function AgentForm({
               defaultValue={initialValues.model}
               className="w-full rounded-none border-none bg-white px-4 py-2 text-sm font-medium text-stone-700 focus:outline-none focus:ring-black dark:bg-black dark:text-stone-200 dark:focus:ring-white"
             >
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-              <option value="gpt-4">GPT-4</option>
-              <option value="gpt-4-turbo">GPT-4 Turbo</option>
-              <option value="claude-3-opus">Claude 3 Opus</option>
-              <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-              <option value="claude-3-haiku">Claude 3 Haiku</option>
+              {loading ? (
+                <option value="">Loading models...</option>
+              ) : error ? (
+                <option value="">Error loading models</option>
+              ) : (
+                Object.entries(modelsByProvider).map(([providerId, provider]) => (
+                  provider.models && provider.models.length > 0 ? (
+                    <optgroup key={providerId} label={provider.name}>
+                      {provider.models.map((model) => (
+                        <option key={model.id} value={model.id.split(':')[1] || model.id}>
+                          {model.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null
+                ))
+              )}
+              
+              {/* Fallback models in case API fails */}
+              {(loading || error || Object.keys(models).length === 0) && (
+                <>
+                  <optgroup label="OpenAI">
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                  </optgroup>
+                  <optgroup label="Anthropic">
+                    <option value="claude-3-opus">Claude 3 Opus</option>
+                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                    <option value="claude-3-haiku">Claude 3 Haiku</option>
+                  </optgroup>
+                </>
+              )}
             </select>
           </div>
+          {error && (
+            <p className="text-xs text-red-500">{error}</p>
+          )}
         </div>
 
         {/* Temperature Slider */}

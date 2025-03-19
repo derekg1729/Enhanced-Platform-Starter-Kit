@@ -233,7 +233,7 @@ describe('Agent Actions', () => {
       // Set up all mocks
       vi.mocked(db.query.agents.findFirst).mockResolvedValue(mockAgent);
       vi.mocked(getApiConnectionByService).mockResolvedValue(mockApiConnection);
-      vi.mocked(createAIService).mockReturnValue(mockAIService);
+      vi.mocked(createAIService).mockResolvedValue(mockAIService);
       vi.mocked(nanoid).mockReturnValue('test-id-123');
 
       const result = await sendMessage('agent-123', 'Hello, agent!');

@@ -39,7 +39,7 @@ vi.mock('@/components/delete-confirmation-dialog', () => ({
     return (
       <div data-testid="delete-dialog">
         <div>{title}</div>
-        <div>Are you sure you want to delete "{entityName}"? This action cannot be undone.</div>
+        <div>Are you sure you want to delete &quot;{entityName}&quot;? This action cannot be undone.</div>
         <button onClick={onClose} data-testid="cancel-button">Cancel</button>
         <button onClick={onConfirm} data-testid="confirm-button" disabled={isDeleting}>
           {isDeleting ? "Deleting..." : "Delete"}

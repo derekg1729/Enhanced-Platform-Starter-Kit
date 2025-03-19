@@ -1,24 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { updateAgent, deleteAgent } from "@/lib/actions";
 import LoadingDots from "@/components/loading-dots";
 import { Trash } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog";
-
-// Map model IDs to display names
-const MODEL_OPTIONS = [
-  { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo" },
-  { id: "gpt-4", name: "GPT-4" },
-  { id: "gpt-4-turbo", name: "GPT-4 Turbo" },
-  { id: "claude-2", name: "Claude 2" },
-  { id: "claude-instant-1", name: "Claude Instant" },
-  { id: "claude-3-opus", name: "Claude 3 Opus" },
-  { id: "claude-3-sonnet", name: "Claude 3 Sonnet" },
-  { id: "claude-3-haiku", name: "Claude 3 Haiku" },
-];
+import { AIModel } from "@/lib/model-providers/types";
 
 export default function EditAgentForm({ agent }: { agent: any }) {
   const router = useRouter();
@@ -35,6 +24,40 @@ export default function EditAgentForm({ agent }: { agent: any }) {
   const [nameError, setNameError] = useState("");
   const [descriptionError, setDescriptionError] = useState("");
   const [temperatureError, setTemperatureError] = useState("");
+  
+  const [models, setModels] = useState<Record<string, AIModel[]>>({});
+  const [loadingModels, setLoadingModels] = useState(true);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+  
+  // Fetch available models
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        setLoadingModels(true);
+        const response = await fetch('/api/ai/models');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch models: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setModels(data.models);
+      } catch (err) {
+        console.error('Error fetching models:', err);
+        setModelsError('Failed to load available models');
+      } finally {
+        setLoadingModels(false);
+      }
+    }
+    
+    fetchModels();
+  }, []);
+  
+  // Organize models by provider for display
+  const modelsByProvider: Record<string, { name: string, models: AIModel[] }> = {
+    'openai': { name: 'OpenAI', models: models['openai'] || [] },
+    'anthropic': { name: 'Anthropic', models: models['anthropic'] || [] },
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,12 +210,43 @@ export default function EditAgentForm({ agent }: { agent: any }) {
             onChange={(e) => setModel(e.target.value)}
             className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
           >
-            {MODEL_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
+            {loadingModels ? (
+              <option value={model}>Loading models...</option>
+            ) : modelsError ? (
+              <option value={model}>Error loading models</option>
+            ) : (
+              Object.entries(modelsByProvider).map(([providerId, provider]) => (
+                provider.models && provider.models.length > 0 ? (
+                  <optgroup key={providerId} label={provider.name}>
+                    {provider.models.map((availableModel) => (
+                      <option key={availableModel.id} value={availableModel.id.split(':')[1] || availableModel.id}>
+                        {availableModel.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null
+              ))
+            )}
+            
+            {/* Fallback models in case API fails */}
+            {(loadingModels || modelsError || Object.keys(models).length === 0) && (
+              <>
+                <optgroup label="OpenAI">
+                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <option value="gpt-4">GPT-4</option>
+                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                </optgroup>
+                <optgroup label="Anthropic">
+                  <option value="claude-3-opus">Claude 3 Opus</option>
+                  <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                  <option value="claude-3-haiku">Claude 3 Haiku</option>
+                </optgroup>
+              </>
+            )}
           </select>
+          {modelsError && (
+            <p className="text-xs text-red-500">{modelsError}</p>
+          )}
         </div>
         
         <div className="space-y-2">

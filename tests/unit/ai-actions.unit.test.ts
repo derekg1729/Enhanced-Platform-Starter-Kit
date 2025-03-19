@@ -41,8 +41,8 @@ vi.mock('@/lib/actions', () => {
           };
         }
         
-        // Create the AI service
-        const aiService = createAIService(agent.model, apiConnection.encryptedApiKey);
+        // Create the AI service - properly await the async function
+        const aiService = await createAIService(agent.model, apiConnection.encryptedApiKey);
         
         // Generate the response
         const messages = [
@@ -147,7 +147,7 @@ describe('SendMessage with AI Service', () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(getAgent).mockResolvedValue(mockAgent);
     vi.mocked(getApiConnectionByService).mockResolvedValue(mockApiConnection);
-    vi.mocked(createAIService).mockReturnValue(mockAIService);
+    vi.mocked(createAIService).mockResolvedValue(mockAIService);
   });
 
   it('should send a message to an agent and get a response from AI service', async () => {
@@ -214,7 +214,7 @@ describe('SendMessage with AI Service', () => {
   });
 
   it('should handle AI service errors gracefully', async () => {
-    vi.mocked(createAIService).mockReturnValue(mockAIServiceWithError);
+    vi.mocked(createAIService).mockResolvedValue(mockAIServiceWithError);
 
     const result = await sendMessage('agent-123', 'Hello, agent!');
 

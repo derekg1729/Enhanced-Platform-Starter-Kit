@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { decrypt } from './encryption';
+import { getFullModelId } from './actions/model-actions';
 
 // Types
 export interface Message {
@@ -85,26 +86,10 @@ export class AnthropicService implements AIService {
   private modelId: string;
 
   constructor(modelId: string, apiKey: string) {
-    // Map user-friendly model names to the actual model IDs that work with Anthropic's API
-    let mappedModelId = '';
+    // Store the full model ID
+    this.modelId = modelId;
     
-    // If it's a known model, use the known working ID
-    if (modelId.startsWith('claude-3-sonnet')) {
-      mappedModelId = SUPPORTED_ANTHROPIC_MODELS['claude-3-opus']; // Use opus as fallback for sonnet
-    } else if (modelId.startsWith('claude-3-opus')) {
-      mappedModelId = SUPPORTED_ANTHROPIC_MODELS['claude-3-opus'];
-    } else if (modelId.startsWith('claude-3-haiku')) {
-      mappedModelId = SUPPORTED_ANTHROPIC_MODELS['claude-3-haiku'];
-    } else if (modelId.startsWith('claude-2')) {
-      mappedModelId = SUPPORTED_ANTHROPIC_MODELS['claude-2'];
-    } else {
-      // If it's not a known model, use claude-3-opus as a fallback
-      mappedModelId = SUPPORTED_ANTHROPIC_MODELS['claude-3-opus'];
-    }
-    
-    this.modelId = mappedModelId;
-    
-    console.log(`Using Anthropic model: ${this.modelId} (requested: ${modelId})`);
+    console.log(`Using Anthropic model: ${this.modelId}`);
     
     this.anthropic = new Anthropic({ 
       apiKey: apiKey,
@@ -138,8 +123,12 @@ export class AnthropicService implements AIService {
       // Set default max tokens if not provided
       const maxTokens = options.maxTokens || 1000;
       
-      // Set default temperature if not provided
-      const temperature = options.temperature !== undefined ? options.temperature : 0.7;
+      // Set default temperature if not provided and ensure it's within valid range (0-1)
+      // Anthropic API requires temperature to be between 0 and 1
+      let temperature = options.temperature !== undefined ? options.temperature : 0.7;
+      
+      // Clamp temperature to valid range for Anthropic API
+      temperature = Math.min(Math.max(temperature, 0), 1);
 
       // Make the API call with proper error handling
       const response = await this.anthropic.messages.create({
@@ -169,7 +158,7 @@ export class AnthropicService implements AIService {
   }
 }
 
-export function createAIService(modelId: string, encryptedApiKey: string): AIService {
+export async function createAIService(modelId: string, encryptedApiKey: string): Promise<AIService> {
   // Get the encryption key from environment
   const encryptionKey = process.env.ENCRYPTION_KEY || 
     'd2e372921d15fe9312e6d45740ded074a019027122525ec390889154ba85d72f';
@@ -177,13 +166,27 @@ export function createAIService(modelId: string, encryptedApiKey: string): AISer
   // Decrypt the API key
   const apiKey = decrypt(encryptedApiKey, encryptionKey);
 
-  // Create the appropriate service based on the model
+  // Determine provider and get full model ID
+  let provider: string;
+  let fullModelId: string;
+  
   if (modelId.startsWith('gpt')) {
-    return new OpenAIService(modelId, apiKey);
+    provider = 'openai';
+    fullModelId = modelId; // OpenAI models use the same ID
   } else if (modelId.startsWith('claude')) {
-    return new AnthropicService(modelId, apiKey);
+    provider = 'anthropic';
+    fullModelId = await getFullModelId(modelId, provider);
   } else {
     throw new Error(`Unsupported model: ${modelId}`);
+  }
+
+  // Create the appropriate service based on the model
+  if (provider === 'openai') {
+    return new OpenAIService(modelId, apiKey);
+  } else if (provider === 'anthropic') {
+    return new AnthropicService(fullModelId, apiKey);
+  } else {
+    throw new Error(`Unsupported provider: ${provider}`);
   }
 }
 
@@ -202,7 +205,7 @@ export async function sendMessageToAI(
 ): Promise<AIResponse> {
   try {
     // Create the AI service based on the agent model
-    const aiService = createAIService(agent.model, apiKey);
+    const aiService = await createAIService(agent.model, apiKey);
     
     // Prepare messages with system instructions if available
     let processedMessages = [...messages];
@@ -218,7 +221,12 @@ export async function sendMessageToAI(
     // Get response with the specified temperature
     const options: AIServiceOptions = {};
     if (agent.temperature !== undefined) {
-      options.temperature = agent.temperature;
+      // If this is an Anthropic model, ensure temperature is in range 0-1
+      if (agent.model.includes('claude')) {
+        options.temperature = Math.min(Math.max(agent.temperature, 0), 1);
+      } else {
+        options.temperature = agent.temperature;
+      }
     }
     
     return await aiService.generateChatResponse(processedMessages, options);

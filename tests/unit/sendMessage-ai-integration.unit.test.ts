@@ -60,7 +60,7 @@ vi.mock('@/lib/actions', () => {
           return { error: 'No API key found for this model. Please add an API key in your settings.' };
         }
         
-        const aiService = createAIService(agent.model, apiConnection.encryptedApiKey);
+        const aiService = await createAIService(agent.model, apiConnection.encryptedApiKey);
         const response = await aiService.generateChatResponse(
           [
             { role: 'system', content: `You are ${agent.name}, ${agent.description}` },
@@ -130,7 +130,7 @@ describe('sendMessage AI Integration', () => {
     vi.mocked(getSession).mockResolvedValue(mockSession as any);
     vi.mocked(getAgent).mockResolvedValue(mockAgent);
     vi.mocked(getApiConnectionByService).mockResolvedValue(mockApiConnection);
-    vi.mocked(createAIService).mockReturnValue(mockAIService);
+    vi.mocked(createAIService).mockResolvedValue(mockAIService);
     vi.mocked(mockAIService.generateChatResponse).mockResolvedValue({
       content: 'This is a response from the AI service.'
     });
