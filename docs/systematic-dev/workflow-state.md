@@ -2,7 +2,7 @@
 
 ## Current State
 - **WORKFLOW_KEY**: TDD
-- **STAGE_KEY**: DESIGN
-- **FEATURE_KEY**: NONE
+- **STAGE_KEY**: VALIDATION
+- **FEATURE_KEY**: AGENT-DELETE-BUTTON
 
 <!-- IMPORTANT: Keep this file minimal. Do not add additional notes or information here. --> 

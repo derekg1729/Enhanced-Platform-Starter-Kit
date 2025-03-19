@@ -3,8 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { updateAgent } from "@/lib/actions";
+import { updateAgent, deleteAgent } from "@/lib/actions";
 import LoadingDots from "@/components/loading-dots";
+import { Trash } from "lucide-react";
+import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog";
 
 // Map model IDs to display names
 const MODEL_OPTIONS = [
@@ -21,6 +23,8 @@ const MODEL_OPTIONS = [
 export default function EditAgentForm({ agent }: { agent: any }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const [name, setName] = useState(agent.name);
   const [description, setDescription] = useState(agent.description || "");
@@ -88,133 +92,181 @@ export default function EditAgentForm({ agent }: { agent: any }) {
     });
   };
 
+  const handleDelete = async () => {
+    // Show the custom confirmation dialog
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    
+    try {
+      const result = await deleteAgent(agent.id);
+      
+      if (result.error) {
+        toast.error(result.error);
+        setIsDeleting(false);
+        setShowDeleteDialog(false);
+        return;
+      }
+      
+      toast.success("Agent deleted successfully");
+      router.push("/agents");
+      router.refresh();
+    } catch (error) {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+      toast.error(`Error deleting agent: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <label htmlFor="name" className="text-sm font-medium text-stone-500 dark:text-stone-400">
-          Name
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="My Agent"
-          maxLength={32}
-          className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
-        />
-        {nameError && (
-          <p className="text-xs text-red-500">{nameError}</p>
-        )}
-        <p className="text-xs text-stone-500 dark:text-stone-400">
-          {name.length}/32 characters
-        </p>
-      </div>
+    <>
+      <DeleteConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDelete}
+        title="Delete Agent"
+        entityName={name}
+        isDeleting={isDeleting}
+      />
       
-      <div className="space-y-2">
-        <label htmlFor="description" className="text-sm font-medium text-stone-500 dark:text-stone-400">
-          Description (optional)
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="A brief description of your agent"
-          maxLength={140}
-          rows={3}
-          className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
-        />
-        {descriptionError && (
-          <p className="text-xs text-red-500">{descriptionError}</p>
-        )}
-        <p className="text-xs text-stone-500 dark:text-stone-400">
-          {description.length}/140 characters
-        </p>
-      </div>
-      
-      <div className="space-y-2">
-        <label htmlFor="model" className="text-sm font-medium text-stone-500 dark:text-stone-400">
-          Model
-        </label>
-        <select
-          id="model"
-          name="model"
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
-        >
-          {MODEL_OPTIONS.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label htmlFor="temperature" className="text-sm font-medium text-stone-500 dark:text-stone-400">
-            Temperature
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <label htmlFor="name" className="text-sm font-medium text-stone-500 dark:text-stone-400">
+            Name
           </label>
-          <span className="text-sm text-stone-500 dark:text-stone-400">
-            {temperature}
-          </span>
-        </div>
-        <div className="relative w-full">
           <input
-            id="temperature"
-            name="temperature"
-            type="range"
-            min="0"
-            max="2"
-            step="0.1"
-            value={temperature}
-            onChange={(e) => setTemperature(parseFloat(e.target.value))}
-            aria-label="temperature"
-            className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer dark:bg-stone-700"
-            style={{
-              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(temperature / 2) * 100}%, rgb(229 231 235) ${(temperature / 2) * 100}%, rgb(229 231 235) 100%)`,
-              WebkitAppearance: 'none'
-            }}
+            id="name"
+            name="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="My Agent"
+            maxLength={32}
+            className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
           />
+          {nameError && (
+            <p className="text-xs text-red-500">{nameError}</p>
+          )}
+          <p className="text-xs text-stone-500 dark:text-stone-400">
+            {name.length}/32 characters
+          </p>
         </div>
-        {temperatureError && (
-          <p className="text-xs text-red-500">{temperatureError}</p>
-        )}
-        <p className="text-xs text-stone-500 dark:text-stone-400">
-          Controls randomness: lower values give more predictable outputs while higher values are more creative.
-        </p>
-      </div>
-      
-      <div className="space-y-2">
-        <label htmlFor="instructions" className="text-sm font-medium text-stone-500 dark:text-stone-400">
-          Instructions
-        </label>
-        <textarea
-          id="instructions"
-          name="instructions"
-          value={instructions}
-          onChange={(e) => setInstructions(e.target.value)}
-          placeholder="Specific instructions for how the agent should behave or respond"
-          rows={4}
-          className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
-        />
-        <p className="text-xs text-stone-500 dark:text-stone-400">
-          Optional instructions that guide the agent&apos;s behavior and responses.
-        </p>
-      </div>
-      
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-stone-700 dark:hover:bg-stone-600 dark:focus:ring-stone-500"
-        >
-          {isPending ? <LoadingDots color="white" /> : "Save Changes"}
-        </button>
-      </div>
-    </form>
+        
+        <div className="space-y-2">
+          <label htmlFor="description" className="text-sm font-medium text-stone-500 dark:text-stone-400">
+            Description (optional)
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="A brief description of your agent"
+            maxLength={140}
+            rows={3}
+            className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
+          />
+          {descriptionError && (
+            <p className="text-xs text-red-500">{descriptionError}</p>
+          )}
+          <p className="text-xs text-stone-500 dark:text-stone-400">
+            {description.length}/140 characters
+          </p>
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="model" className="text-sm font-medium text-stone-500 dark:text-stone-400">
+            Model
+          </label>
+          <select
+            id="model"
+            name="model"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
+          >
+            {MODEL_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="temperature" className="text-sm font-medium text-stone-500 dark:text-stone-400">
+              Temperature
+            </label>
+            <span className="text-sm text-stone-500 dark:text-stone-400">
+              {temperature}
+            </span>
+          </div>
+          <div className="relative w-full">
+            <input
+              id="temperature"
+              name="temperature"
+              type="range"
+              min="0"
+              max="2"
+              step="0.1"
+              value={temperature}
+              onChange={(e) => setTemperature(parseFloat(e.target.value))}
+              aria-label="temperature"
+              className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer dark:bg-stone-700"
+              style={{
+                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(temperature / 2) * 100}%, rgb(229 231 235) ${(temperature / 2) * 100}%, rgb(229 231 235) 100%)`,
+                WebkitAppearance: 'none'
+              }}
+            />
+          </div>
+          {temperatureError && (
+            <p className="text-xs text-red-500">{temperatureError}</p>
+          )}
+          <p className="text-xs text-stone-500 dark:text-stone-400">
+            Controls randomness: lower values give more predictable outputs while higher values are more creative.
+          </p>
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="instructions" className="text-sm font-medium text-stone-500 dark:text-stone-400">
+            Instructions
+          </label>
+          <textarea
+            id="instructions"
+            name="instructions"
+            value={instructions}
+            onChange={(e) => setInstructions(e.target.value)}
+            placeholder="Specific instructions for how the agent should behave or respond"
+            rows={4}
+            className="w-full rounded-md border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white dark:placeholder-stone-500 dark:focus:border-stone-500 dark:focus:ring-stone-500"
+          />
+          <p className="text-xs text-stone-500 dark:text-stone-400">
+            Optional instructions that guide the agent&apos;s behavior and responses.
+          </p>
+        </div>
+        
+        <div className="flex justify-between">
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-red-700 dark:hover:bg-red-600 dark:focus:ring-red-500"
+          >
+            <Trash className="h-4 w-4 inline-block mr-1" />
+            Delete
+          </button>
+          
+          <button
+            type="submit"
+            disabled={isPending}
+            className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-stone-700 dark:hover:bg-stone-600 dark:focus:ring-stone-500"
+          >
+            {isPending ? <LoadingDots color="white" /> : "Save Changes"}
+          </button>
+        </div>
+      </form>
+    </>
   );
 } 
