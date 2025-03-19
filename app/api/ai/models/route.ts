@@ -4,13 +4,6 @@ import { authOptions } from '@/lib/auth';
 import { getAllAvailableModels, getAvailableModels } from '@/lib/actions/model-actions';
 
 /**
- * Force this route to be dynamically rendered
- * This is required because this route uses cookies/headers (via getServerSession)
- * which are not available during static build
- */
-export const dynamic = 'force-dynamic';
-
-/**
  * GET /api/ai/models - Get all available models for all providers
  * GET /api/ai/models?provider=openai - Get all available models for a specific provider
  */
