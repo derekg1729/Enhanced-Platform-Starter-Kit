@@ -75,3 +75,17 @@
 - **Resolution**: Added sample agents to the database to demonstrate that the system actually works correctly. The "No Agents Yet" message was technically accurate since there were no agents in the database.
 - **Fixed By**: Inserting sample data into the agents table to validate the functionality.
 - **Date Resolved**: 2023-11-07 
+
+### [BUG-007]
+- **Title**: Mobile Navigation Menu Not Visible on All Pages
+- **Description**: The hamburger menu button for mobile navigation was not consistently visible across all pages, particularly on the "All Agents" page, making it difficult for mobile users to access navigation.
+- **Root Cause**: Insufficient z-index value (z-20) for the menu button, causing it to be hidden behind other page elements, especially on pages with complex layouts like the Agents page.
+- **TDD Approach**: 
+  1. Created failing tests in `tests/unit/components/nav.unit.test.tsx` to verify the menu button visibility and z-index on all pages
+  2. Confirmed the issue by showing that the menu button wasn't properly visible on certain pages
+  3. Modified the `components/nav.tsx` component to increase the z-index from z-20 to z-50
+  4. Updated tests to reflect the new z-index value
+  5. Verified the fix by running the tests and confirming all tests pass
+- **Resolution**: Increased the z-index of the menu button to ensure it's always visible above other page elements and improved its fixed positioning.
+- **Fixed By**: Updating the z-index of the menu button from z-20 to z-50 in the `components/nav.tsx` component.
+- **Date Resolved**: 2024-07-17
