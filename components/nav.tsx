@@ -16,7 +16,6 @@ import {
   Github,
   Bot,
   Key,
-  X,
 } from "lucide-react";
 import {
   useParams,
@@ -170,67 +169,24 @@ export default function Nav({ children }: { children: ReactNode }) {
     setShowSidebar(false);
   }, [pathname]);
 
-  // Close sidebar when pressing escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showSidebar) {
-        setShowSidebar(false);
-      }
-    };
-    
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [showSidebar]);
-
   return (
     <>
-      {/* Mobile menu overlay - only visible when sidebar is open */}
-      {showSidebar && (
-        <div 
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out sm:hidden"
-          onClick={() => setShowSidebar(false)}
-          data-testid="nav-overlay"
-          aria-hidden="true"
-        />
-      )}
-      
-      {/* Mobile menu button - with increased z-index to ensure visibility */}
       <button
-        className={`fixed z-50 ${
+        className={`fixed z-20 ${
           // left align for Editor, right align for other pages
           segments[0] === "post" && segments.length === 2 && !showSidebar
             ? "left-5 top-5"
             : "right-5 top-7"
-        } block rounded-md bg-stone-100 p-1.5 shadow-md sm:hidden dark:bg-stone-800`}
+        } sm:hidden`}
         onClick={() => setShowSidebar(!showSidebar)}
-        aria-label="Toggle navigation menu"
-        aria-expanded={showSidebar}
-        aria-controls="sidebar-menu"
-        style={{ position: 'fixed' }} // Ensure position is explicitly set
       >
         <Menu width={20} />
       </button>
-      
-      {/* Sidebar navigation */}
       <div
-        id="sidebar-menu"
-        data-testid="nav-sidebar"
         className={`transform ${
-          showSidebar ? "translate-x-0" : "-translate-x-full"
-        } fixed z-40 flex h-full w-4/5 max-w-[280px] flex-col justify-between border-r border-stone-200 bg-stone-100 p-4 shadow-lg transition-all duration-300 ease-in-out sm:w-60 sm:translate-x-0 sm:shadow-none dark:border-stone-700 dark:bg-stone-900`}
+          showSidebar ? "w-full translate-x-0" : "-translate-x-full"
+        } fixed z-10 flex h-full flex-col justify-between border-r border-stone-200 bg-stone-100 p-4 transition-all sm:w-60 sm:translate-x-0 dark:border-stone-700 dark:bg-stone-900`}
       >
-        {/* Close button - only visible on mobile */}
-        {showSidebar && (
-          <button 
-            onClick={() => setShowSidebar(false)}
-            className="absolute right-4 top-4 rounded-full p-1 text-stone-500 hover:bg-stone-200 sm:hidden dark:text-stone-400 dark:hover:bg-stone-700"
-            aria-label="Close navigation menu"
-            data-testid="nav-close-button"
-          >
-            <X width={20} />
-          </button>
-        )}
-      
         <div className="grid gap-2">
           <div className="flex items-center space-x-2 rounded-lg px-2 py-1.5">
             <a
@@ -274,7 +230,6 @@ export default function Nav({ children }: { children: ReactNode }) {
                 className={`flex items-center space-x-3 ${
                   isActive ? "bg-stone-200 text-black dark:bg-stone-700" : ""
                 } rounded-lg px-2 py-1.5 transition-all duration-150 ease-in-out hover:bg-stone-200 active:bg-stone-300 dark:text-white dark:hover:bg-stone-700 dark:active:bg-stone-800`}
-                onClick={() => setShowSidebar(false)}
               >
                 {icon}
                 <span className="text-sm font-medium">{name}</span>

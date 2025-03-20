@@ -389,17 +389,4 @@
   - Documentation is updated if the fix involves API changes
 - **Priority**: High
 - **Status**: To Do
-- **Related Bug**: [BUG-006]
-
-### [TASK-044]
-- **Title**: Fix Mobile Navigation Menu Visibility
-- **Description**: Fix the issue where the mobile navigation menu hamburger button is not consistently visible across all pages, particularly on the "All Agents" page.
-- **Acceptance Criteria**:
-  - Mobile navigation hamburger button is consistently visible on all pages, including the "All Agents" page
-  - Button has proper z-index to appear above other page elements
-  - Fixed positioning ensures the button is always accessible
-  - Tests verify the menu button visibility and proper z-index
-  - Implementation follows TDD approach
-- **Priority**: High
-- **Status**: Done
-- **Related Bug**: [BUG-007] 
+- **Related Bug**: [BUG-006] 
